@@ -40,24 +40,29 @@ function openMusic() {
 }
 
 function closeMusic() {
-    // 兼容旧调用：仅关闭歌单 popover（如打开）
+    // 兼容旧调用：收起歌单抽屉
     const popover = document.getElementById('mpListPopover');
-    if (popover) popover.style.display = 'none';
+    if (popover) {
+        popover.classList.remove('active');
+        popover.setAttribute('aria-hidden', 'true');
+    }
     const listBtn = document.getElementById('mpListBtn');
     if (listBtn) listBtn.classList.remove('is-open');
     showOverlay(false);
 }
 
-/** 切换歌单 popover 显隐（顶栏 ☰ 按钮调用） */
+/** 切换歌单抽屉显隐（顶栏 ☰ 按钮调用） */
 function toggleMusicListPopover() {
     const popover = document.getElementById('mpListPopover');
     const listBtn = document.getElementById('mpListBtn');
     if (!popover) return;
-    const willOpen = popover.style.display === 'none' || !popover.style.display;
-    popover.style.display = willOpen ? '' : 'none';
+    const willOpen = !popover.classList.contains('active');
+    popover.classList.toggle('active', willOpen);
     popover.setAttribute('aria-hidden', willOpen ? 'false' : 'true');
     if (listBtn) listBtn.classList.toggle('is-open', willOpen);
-    if (willOpen) renderMusicPlayerUI();
+    if (willOpen && typeof renderMusicPlayerUI === 'function') {
+        renderMusicPlayerUI();
+    }
 }
 
 /** 播放按钮 / 封面旋转同步（顶栏内联版） */
@@ -89,11 +94,26 @@ function renderMusicPlayerUI() {
     const cur = getCurrentSong ? getCurrentSong() : null;
     if (cur) {
         if (titleEl) titleEl.textContent = `${cur.name}${cur.artist ? ' - ' + cur.artist : ''}`;
-        if (coverImg && cur.picUrl) {
-            coverImg.src = cur.picUrl;
-            coverImg.onerror = function () { this.src = 'img/img6.jpg'; };
-        } else if (coverImg && !coverImg.src) {
-            coverImg.src = 'img/img6.jpg';
+        if (coverImg) {
+            const container = coverImg.closest('.mp-inline-cover');
+            const showGoldFallback = () => {
+                coverImg.classList.add('img-hidden');
+                if (container) container.classList.add('has-gold-fallback');
+            };
+            const showRealCover = (url) => {
+                coverImg.classList.remove('img-hidden');
+                if (container) container.classList.remove('has-gold-fallback');
+                coverImg.src = url;
+            };
+
+            if (cur.picUrl) {
+                showRealCover(cur.picUrl);
+                coverImg.onerror = function () {
+                    showGoldFallback();
+                };
+            } else {
+                showGoldFallback();
+            }
         }
     } else if (titleEl) {
         titleEl.textContent = state.musicPlaylist.length ? '未播放' : '未播放（歌单为空）';
@@ -141,59 +161,47 @@ function playSongByIndex(idx, autoPlay) {
     const titleEl = document.getElementById('mpTitle');
     const coverImg = document.getElementById('mpCover');
     if (titleEl) titleEl.textContent = `${meta.name}${meta.artist ? ' - ' + meta.artist : ''}`;
-    if (coverImg && meta.picUrl) {
-        coverImg.src = meta.picUrl;
-        coverImg.onerror = function () { this.src = 'img/img6.jpg'; };
+    if (coverImg) {
+        const container = coverImg.closest('.mp-inline-cover');
+        if (meta.picUrl) {
+            coverImg.classList.remove('img-hidden');
+            if (container) container.classList.remove('has-gold-fallback');
+            coverImg.src = meta.picUrl;
+            coverImg.onerror = function () {
+                coverImg.classList.add('img-hidden');
+                if (container) container.classList.add('has-gold-fallback');
+            };
+        } else {
+            coverImg.classList.add('img-hidden');
+            if (container) container.classList.add('has-gold-fallback');
+        }
     }
 
     _isChangingSong = true;
 
-    // 1) 同步指派音源 URL（防浏览器跨异步 Promise 阻断用户手势授权导致的立刻暂停）
-    let targetUrl = meta.url || '';
-    if (!targetUrl && meta.id) {
-        targetUrl = `https://api.injahow.cn/meting/?type=url&id=${meta.id}`;
-    }
-
+    // 优先采用高可用多源解析（如果配置了 meta.url 或可以用在线流解解析）
     const shouldPlay = (autoPlay === undefined) ? true : !!autoPlay;
 
-    if (targetUrl) {
-        audio.src = targetUrl;
-        localStorage.removeItem('bgAudioTime');
-        state.musicPlaying = shouldPlay;
-        localStorage.setItem(STORAGE_KEYS.musicPlaying, shouldPlay ? 'true' : 'false');
-        renderMusicPlayerUI();
-        if (shouldPlay) {
-            const p = audio.play();
-            if (p && typeof p.catch === 'function') {
-                p.catch(err => {
-                    console.warn('[播放拦截，尝试备用音源]', err);
-                    _isChangingSong = false;
-                });
-            }
-        } else {
-            audio.pause();
-        }
-        setTimeout(() => { _isChangingSong = false; }, 400);
-        return Promise.resolve(true);
-    }
-
-    // 2) 备用异步解析通路
-    return (typeof getNeteaseSongUrl === 'function' ? getNeteaseSongUrl(meta, 192) : Promise.resolve({ url: null, reason: 'no-url' }))
+    return (typeof getNeteaseSongUrl === 'function' ? getNeteaseSongUrl(meta, 192) : Promise.resolve({ url: null }))
         .then(result => {
-            const url = result ? result.url : null;
-            if (!url) {
+            let finalUrl = (result && result.url) ? result.url : (meta.url || `https://api.injahow.cn/meting/?type=url&id=${meta.id}`);
+            if (!finalUrl) {
                 _isChangingSong = false;
-                alert(`无法获取「${meta.name}」的播放地址，请切换其他歌曲。`);
+                if (typeof showToast === 'function') showToast(`无法获取「${meta.name}」的播放地址，请切换其他歌曲。`);
                 return false;
             }
-            audio.src = url;
+            audio.src = finalUrl;
             localStorage.removeItem('bgAudioTime');
             state.musicPlaying = shouldPlay;
             localStorage.setItem(STORAGE_KEYS.musicPlaying, shouldPlay ? 'true' : 'false');
             renderMusicPlayerUI();
             if (shouldPlay) {
                 const p = audio.play();
-                if (p && typeof p.catch === 'function') p.catch(() => {});
+                if (p && typeof p.catch === 'function') {
+                    p.catch(err => {
+                        console.warn('[音频自动播放阻止/拦截]', err);
+                    });
+                }
             } else {
                 audio.pause();
             }
@@ -1293,8 +1301,8 @@ function renderSocialEditorList() {
     const socials = getProfileSocials();
     container.innerHTML = socials.map(item => `
         <div class="social-edit-row">
-            <input type="text" class="social-label-input" placeholder="名称(如 QQ/微信)" value="${item.label || ''}" style="width:120px;">
-            <input type="text" class="social-value-input" placeholder="内容/链接(如 12345 或 URL)" value="${item.value || ''}" style="flex:1;">
+            <input type="text" class="social-label-input" placeholder="名称(如 GitHub/QQ)" value="${item.label || ''}" style="width:120px;">
+            <input type="text" class="social-value-input" placeholder="内容/用户名(如 用户名 或 URL)" value="${item.value || ''}" style="flex:1;">
             <button type="button" class="action-btn delete-btn remove-social-row-btn" style="padding:6px 10px;" title="删除此项">🗑️</button>
         </div>
     `).join('');
@@ -1314,8 +1322,8 @@ function addSocialEditorRow(label = '', value = '') {
     const div = document.createElement('div');
     div.className = 'social-edit-row';
     div.innerHTML = `
-        <input type="text" class="social-label-input" placeholder="名称(如 QQ/微信)" value="${label}" style="width:120px;">
-        <input type="text" class="social-value-input" placeholder="内容/链接(如 12345 或 URL)" value="${value}" style="flex:1;">
+        <input type="text" class="social-label-input" placeholder="名称(如 GitHub/QQ)" value="${label}" style="width:120px;">
+        <input type="text" class="social-value-input" placeholder="内容/用户名(如 用户名 或 URL)" value="${value}" style="flex:1;">
         <button type="button" class="action-btn delete-btn remove-social-row-btn" style="padding:6px 10px;" title="删除此项">🗑️</button>
     `;
 
@@ -1559,7 +1567,7 @@ function showToast(message) {
     }
     const toast = document.createElement('div');
     toast.className = 'toast-message';
-    toast.innerHTML = `${getIcon('check', '', 14)} <span>${message}</span>`;
+    toast.innerHTML = `<span>${message}</span>`;
     container.appendChild(toast);
     setTimeout(() => {
         toast.style.opacity = '0';

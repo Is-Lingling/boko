@@ -259,7 +259,9 @@
             state.isAdmin = false;
             renderAdminUI();
             renderArticles();
-            alert('已退出管理员模式');
+            if (typeof showToast === 'function') {
+                showToast('已退出管理员模式', 'info');
+            }
         }
         function handleAdminDelete(id) {
             if (!confirm('确定删除这篇文章吗？')) return;

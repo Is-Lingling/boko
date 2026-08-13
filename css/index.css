@@ -118,7 +118,7 @@
             backdrop-filter: saturate(180%) blur(16px);
             -webkit-backdrop-filter: saturate(180%) blur(16px);
             height: 58px;
-            padding: 0 20px;
+            padding: 0;
             border-radius: 18px;
             border: 1px solid rgba(226, 232, 240, 0.8);
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
@@ -143,12 +143,24 @@
             display: inline-block;
             z-index: 21;
         }
-        /* 顶栏左侧区域：只包含 logo，尺寸完全固定，不受其它元素影响 */
+        /* 顶栏左侧区域：精准对齐下方左侧边栏 (box1 230px) 的右侧切线边框 */
         .top-left {
             display: flex;
             align-items: center;
-            flex: none;           /* 不伸不缩，宽度由 logo 决定后绝对固定 */
+            justify-content: center;
+            width: calc(230px + var(--grid-gap-x, 6px) / 2);
+            min-width: calc(230px + var(--grid-gap-x, 6px) / 2);
+            max-width: calc(230px + var(--grid-gap-x, 6px) / 2);
+            height: 58px;
+            flex: none;
+            border-right: 1px solid var(--border-color);
+            border-radius: 18px 0 0 18px;
+            box-sizing: border-box;
             overflow: visible;
+            transition: border-color 0.2s ease;
+        }
+        body.dark .top-left {
+            border-right-color: rgba(51, 65, 85, 0.8);
         }
         /* 顶栏公告栏：正常显示，当搜索框展开时平滑隐退给搜索框让出 280px 空间 */
         .top-notice-banner {
@@ -171,8 +183,8 @@
             cursor: pointer;
             opacity: 1;
         }
-        /* 临界与接近防护：当窗口 <= 1250px 或搜索框边缘逼近公告栏时，平滑隐退公告栏 */
-        @media (max-width: 1250px) {
+        /* 仅在屏幕宽度小于 960px 时隐退公告栏 */
+        @media (max-width: 960px) {
             .top-notice-banner {
                 opacity: 0 !important;
                 max-width: 0 !important;
@@ -219,14 +231,14 @@
             min-width: 0;
             margin-left: auto;
         }
-        /* 搜索框：默认 195px 宽度 */
+        /* 搜索框：默认 140px 宽度，避免挤压公告栏 */
         .search-form {
             position: relative;
             display: inline-flex;
             align-items: center;
             justify-content: flex-end;
             height: 38px;
-            width: 195px;
+            width: 140px;
             transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             flex-shrink: 0;
         }
@@ -4005,23 +4017,24 @@
             .mp-list { max-height: 38vh; overflow: auto; }
         }
 
-        /* 融入顶栏的极简内联音乐播放器 (高度与 div.top 的 58px 高度完全一致，只保留左侧分割线) */
+        /* 融入顶栏的极简内联音乐播放器 (右侧边缘与顶栏最右侧卡片边框完美重合) */
         .mp-inline {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
-            padding: 0 0 0 16px;
-            border-radius: 0;
+            gap: 12px;
+            padding: 0 16px;
+            border-radius: 0 18px 18px 0;
             background: transparent;
             border: none;
             border-left: 1px solid var(--border-color);
-            width: 260px;
-            max-width: 260px;
+            width: 290px;
+            min-width: 280px;
+            max-width: 380px;
+            flex: 1 1 auto;
             height: 58px;
             box-sizing: border-box;
-            flex-shrink: 0;
             vertical-align: middle;
-            transition: border-color 0.2s ease;
+            transition: border-color 0.2s ease, width 0.25s ease;
         }
         .mp-inline:hover {
             border-left-color: var(--primary);
@@ -4033,28 +4046,59 @@
             border-left: 1px solid rgba(51, 65, 85, 0.8);
         }
 
-        /* 极简旋转/方形缩略图 */
+        /* 奢华黑金黑胶唱片 (Vinyl Record) 极致视觉 */
         .mp-inline-cover {
             position: relative;
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.15);
             padding: 0;
             cursor: pointer;
             flex-shrink: 0;
             overflow: hidden;
-            background: #1e293b;
+            background: #111827;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .mp-inline-cover:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(234, 179, 8, 0.5);
+        }
+        /* 真实黑胶唱片的细腻同心刻痕 + 优雅黑金中央红胶/金胶贴标 (无空洞) */
+        .mp-inline-cover.has-gold-fallback {
+            background: 
+                /* 中央精致黑金红唱片贴标 */
+                radial-gradient(circle at center, #991b1b 0%, #7f1d1d 24%, #b45309 25%, #d97706 28%, transparent 29%),
+                /* 唱片黑胶声轨物理微沟槽 */
+                repeating-radial-gradient(circle at center, #18181b 0px, #18181b 2px, #09090b 3px, #09090b 4px);
+        }
+        .mp-inline-cover.has-gold-fallback::before {
+            content: '🎵';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 11px;
+            line-height: 1;
+            z-index: 3;
+            pointer-events: none;
+            opacity: 0.9;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
         }
         .mp-inline-cover img {
             width: 100%;
             height: 100%;
-            border-radius: 8px;
+            border-radius: 50%;
             object-fit: cover;
             pointer-events: none;
+            display: block;
         }
-        .mp-inline.is-playing .mp-inline-cover img {
-            animation: mp-inline-spin 12s linear infinite;
+        .mp-inline-cover img.img-hidden {
+            display: none !important;
+        }
+        .mp-inline.is-playing .mp-inline-cover {
+            animation: mp-inline-spin 8s linear infinite;
         }
         @keyframes mp-inline-spin {
             from { transform: rotate(0deg); }
@@ -4157,71 +4201,93 @@
         }
         body.dark .mp-inline-list.is-open { color: var(--primary); background: var(--primary-light); }
 
-        /* 齿轮（管理员可见，在 popover 头部） */
-        .mp-list-popover-head .mp-gear {
+        /* 齿轮（管理员可见，绝对定位在播放器右上角） */
+        .mp-inline .mp-gear {
+            position: absolute;
+            top: 6px;
+            right: 12px;
+            z-index: 2;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             border: none;
             background: none;
-            color: #64748b;
+            color: var(--text-muted);
             cursor: pointer;
             border-radius: 50%;
             transition: all 0.2s ease;
-            vertical-align: middle;
             padding: 0;
         }
-        .mp-list-popover-head .mp-gear:hover {
-            color: #2563eb;
+        .mp-inline .mp-gear:hover {
+            color: var(--primary);
             transform: rotate(45deg);
-            background: rgba(59,130,246,0.1);
+            background: var(--primary-light);
         }
-        body.dark .mp-list-popover-head .mp-gear { color: #cbd5e1; }
-        body.dark .mp-list-popover-head .mp-gear:hover { color: #93c5fd; background: rgba(96,165,250,0.15); }
+        body.dark .mp-inline .mp-gear { color: var(--text-muted); }
+        body.dark .mp-inline .mp-gear:hover { color: var(--primary); background: var(--primary-light); }
 
-        /* ========== 歌单弹出层（顶栏 ☰ 按钮触发，替代浮窗） ========== */
+        /* ========== 歌单下拉抽屉（整个播放器组件宽度向下拉出） ========== */
         .mp-list-popover {
             position: absolute;
-            top: calc(100% + 10px);
+            top: 100%;
+            left: 0;
             right: 0;
-            width: 340px;
-            max-height: 60vh;
+            width: 100%;
+            max-height: 420px;
             z-index: 2147483641;
-            border-radius: 16px;
+            border-radius: 0 0 16px 16px;
             overflow: hidden;
-            background: #ffffff;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(15, 23, 42, 0.06);
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-top: none;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.16), 0 6px 16px rgba(15, 23, 42, 0.08);
             display: flex;
             flex-direction: column;
             color: #111827;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transform-origin: top center;
+            transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                        visibility 0.22s ease;
+        }
+        .mp-list-popover.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
         body.dark .mp-list-popover {
-            background: #0f172a;
-            border-color: rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.96);
+            border-color: rgba(51, 65, 85, 0.7);
             color: #e5e7eb;
+            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.5), 0 6px 16px rgba(0, 0, 0, 0.3);
         }
         .mp-list-popover-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            padding: 10px 14px;
-            background: linear-gradient(135deg, rgba(219,234,254,0.6), rgba(252,231,243,0.35));
-            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(236,72,153,0.05));
+            border-bottom: 1px solid rgba(226, 232, 240, 0.7);
             font-size: 13px;
         }
         body.dark .mp-list-popover-head {
-            background: linear-gradient(135deg, rgba(30,58,138,0.4), rgba(127,29,29,0.2));
-            border-bottom-color: rgba(148,163,184,0.2);
+            background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(236,72,153,0.1));
+            border-bottom-color: rgba(51, 65, 85, 0.6);
         }
         .mp-list-popover-title {
             font-weight: 800;
-            color: #0f172a;
+            color: var(--primary);
+            display: inline-flex;
+            align-items: center;
         }
-        body.dark .mp-list-popover-title { color: #f8fafc; }
+        body.dark .mp-list-popover-title { color: var(--primary); }
         .mp-list-popover-meta {
             display: inline-flex;
             align-items: center;
@@ -4238,21 +4304,24 @@
             font-size: 18px;
             line-height: 1;
             color: #64748b;
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             transition: all 0.15s ease;
         }
         .mp-list-popover-close:hover {
-            color: #b91c1c;
-            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
         }
         body.dark .mp-list-popover-close:hover { color: #f87171; background: rgba(248,113,113,0.15); }
 
-        /* 让 popover 内的 .mp-list 适配高度（覆盖原浮窗样式） */
+        /* 让抽屉内的歌单列表自适应及平滑滚动 */
         .mp-list-popover .mp-list {
             margin: 0;
-            padding: 6px 0 10px 0;
+            padding: 8px 0;
             overflow-y: auto;
             flex: 1;
             max-height: none;
@@ -4272,7 +4341,7 @@
                 right: 8px;
                 left: 8px;
                 width: auto;
-                top: 56px;
+                top: calc(100% + 8px);
             }
         }
 
@@ -4521,10 +4590,10 @@
             }
         }
 
-        /* ========== 极简 Toast 提示框 ========== */
+        /* ========== 极简 Toast 提示框（顶部显示） ========== */
         #toastContainer {
             position: fixed;
-            bottom: 30px;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 10000;
@@ -4554,7 +4623,7 @@
             color: #0f172a;
         }
         @keyframes toastIn {
-            0% { opacity: 0; transform: translateY(20px) scale(0.9); }
+            0% { opacity: 0; transform: translateY(-20px) scale(0.9); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
@@ -5132,54 +5201,36 @@ body.dark .preview-sample-card {
     transition: background 0.2s ease;
 }
 
-/* ========== 左上角管理员下拉登录 Popover ========== */
+/* ========== 左上角管理员下拉登录抽屉 Drawer ========== */
 .admin-login-dropdown {
     position: absolute;
-    top: calc(100% + 14px);
+    top: 100%;
     left: 0;
-    width: 260px;
-    padding: 16px;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.92);
+    width: 100%;
+    min-width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border-radius: 0 0 16px 16px;
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     border: 1px solid var(--primary-border, #bfdbfe);
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-10px) scale(0.96);
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease, visibility 0.2s ease;
+    transform: translateY(-8px) scale(0.97);
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, visibility 0.22s ease;
 }
 body.dark .admin-login-dropdown {
-    background: rgba(15, 23, 42, 0.92);
+    background: rgba(15, 23, 42, 0.95);
     border-color: #334155;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
 }
 .admin-login-dropdown.active {
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
-}
-.dropdown-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-.dropdown-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-main);
-}
-.dropdown-close-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: var(--text-muted);
-    cursor: pointer;
-    line-height: 1;
-    padding: 0 4px;
 }
 .dropdown-input-group {
     margin-bottom: 10px;

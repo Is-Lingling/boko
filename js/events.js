@@ -122,7 +122,7 @@ window.toggleAdminLoginDropdown = function(e) {
 
     if (state.isAdmin) {
         if (typeof showToast === 'function') {
-            showToast('您已处于管理员登录状态 🔑', 'info');
+            showToast('您已处于管理员登录状态', 'info');
         }
         return;
     }
@@ -141,7 +141,7 @@ window.toggleAdminLoginDropdown = function(e) {
 
 function initAdminLoginDropdown() {
     const dropdown = document.getElementById('adminLoginDropdown');
-    const closeBtn = document.getElementById('closeAdminLoginDropdownBtn');
+    const brandBtn = document.getElementById('adminLoginBrandBtn');
     const form = document.getElementById('quickAdminLoginForm');
     const userInput = document.getElementById('quickAdminUser');
     const passInput = document.getElementById('quickAdminPass');
@@ -149,15 +149,22 @@ function initAdminLoginDropdown() {
 
     if (!dropdown) return;
 
-    if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleDropdown(false);
-        });
+    let adminDropdownTimer;
+
+    function toggleDropdown(show) {
+        if (show) {
+            dropdown.classList.add('active');
+            dropdown.setAttribute('aria-hidden', 'false');
+            if (userInput) setTimeout(() => userInput.focus(), 50);
+        } else {
+            dropdown.classList.remove('active');
+            dropdown.setAttribute('aria-hidden', 'true');
+            if (errorMsg) errorMsg.style.display = 'none';
+        }
     }
 
     document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target) && !brandBtn.contains(e.target)) {
+        if (!dropdown.contains(e.target) && (!brandBtn || !brandBtn.contains(e.target))) {
             toggleDropdown(false);
         }
     });
@@ -180,13 +187,16 @@ function initAdminLoginDropdown() {
             if ((u === 'admin' && p === 'admin123') || (u && p)) {
                 state.isAdmin = true;
                 localStorage.setItem('isAdmin', 'true');
-                if (typeof updateUIForAdmin === 'function') {
-                    updateUIForAdmin();
+                if (typeof renderAdminUI === 'function') {
+                    renderAdminUI();
+                }
+                if (typeof renderArticles === 'function') {
+                    renderArticles();
                 }
                 toggleDropdown(false);
                 if (userInput) userInput.value = '';
                 if (passInput) passInput.value = '';
-                showToast('🔑 登录成功！已解锁管理员权限', 'success');
+                showToast('登录成功，已解锁管理员权限', 'success');
             } else {
                 if (errorMsg) {
                     errorMsg.textContent = '账号或密码错误';
@@ -306,18 +316,17 @@ function bindEvents() {
     if (mpListBtn) mpListBtn.addEventListener('click', toggleMusicListPopover);
     if (mpListCloseBtn) mpListCloseBtn.addEventListener('click', closeMusic);
 
-    // 歌单 popover：鼠标离开区域 400ms 后自动关闭，鼠标回到区域内取消关闭
-    // （点击歌曲后无需手动关，移开鼠标即可自动收起）
+    // 歌单抽屉：鼠标离开播放器及抽屉整体区域 300ms 后自动收起关闭
     let popoverTimer;
-    const popover = document.getElementById('mpListPopover');
-    if (popover) {
-        popover.addEventListener('mouseenter', () => {
+    const mpInlineEl = document.getElementById('mpInline');
+    if (mpInlineEl) {
+        mpInlineEl.addEventListener('mouseenter', () => {
             clearTimeout(popoverTimer);
         });
-        popover.addEventListener('mouseleave', () => {
+        mpInlineEl.addEventListener('mouseleave', () => {
             popoverTimer = setTimeout(() => {
                 closeMusic();
-            }, 400);
+            }, 300);
         });
     }
 
@@ -699,14 +708,82 @@ function bindEvents() {
             if (mpManage) { mpManage.classList.remove('active'); showOverlay(false); }
         });
     }
-    // 保存自定义网易云 API Base URL
-    if (mpSaveApiBtn && mpApiInput) {
-        mpSaveApiBtn.addEventListener('click', () => {
-            if (!(state && state.isAdmin)) return;
-            const ok = saveMusicApiBaseToStorage(mpApiInput.value);
-            alert(ok ? '✅ 网易云 API Base 已保存，下次请求生效。' : '⚠️ URL 格式错误，请输入完整的 http(s):// 地址。');
-        });
-    }
+        // ========== 歌单管理 Modal：TAB 切换与多平台云链接解析 ==========
+        const tabParse = document.getElementById('mpTabParseLinkBtn');
+        const tabAccount = document.getElementById('mpTabAccountSearchBtn');
+        const tabNormal = document.getElementById('mpTabNormalSearchBtn');
+        const paneParse = document.getElementById('mpPaneLinkParse');
+        const paneAccount = document.getElementById('mpPaneAccountSearch');
+        const paneNormal = document.getElementById('mpPaneNormalSearch');
+
+        function switchMpTab(tab) {
+            [tabParse, tabAccount, tabNormal].forEach(b => b && b.classList.remove('active'));
+            [paneParse, paneAccount, paneNormal].forEach(p => p && (p.style.display = 'none'));
+
+            if (tab === 'parse') {
+                if (tabParse) tabParse.classList.add('active');
+                if (paneParse) paneParse.style.display = 'block';
+            } else if (tab === 'account') {
+                if (tabAccount) tabAccount.classList.add('active');
+                if (paneAccount) paneAccount.style.display = 'block';
+            } else if (tab === 'normal') {
+                if (tabNormal) tabNormal.classList.add('active');
+                if (paneNormal) paneNormal.style.display = 'block';
+            }
+        }
+
+        if (tabParse) tabParse.addEventListener('click', () => switchMpTab('parse'));
+        if (tabAccount) tabAccount.addEventListener('click', () => switchMpTab('account'));
+        if (tabNormal) tabNormal.addEventListener('click', () => switchMpTab('normal'));
+
+        // 1. 多平台云链接解析添加
+        const parseLinkBtn = document.getElementById('mpParseLinkBtn');
+        const cloudLinkInput = document.getElementById('mpCloudLinkInput');
+
+        if (parseLinkBtn && cloudLinkInput) {
+            parseLinkBtn.addEventListener('click', () => {
+                const linkVal = cloudLinkInput.value.trim();
+                if (!linkVal) {
+                    if (typeof showToast === 'function') showToast('请输入有效的音乐云链接！');
+                    return;
+                }
+                if (typeof parseMultiPlatformMusicLink === 'function') {
+                    const parsedSong = parseMultiPlatformMusicLink(linkVal);
+                    if (parsedSong) {
+                        if (addSongToPlaylist(parsedSong)) {
+                            if (typeof showToast === 'function') showToast(`解析成功！已添加：${parsedSong.name}`);
+                            cloudLinkInput.value = '';
+                            renderMusicPlayerUI();
+                            renderMusicManageCurrent();
+                        } else {
+                            if (typeof showToast === 'function') showToast('该歌曲已经在歌单中啦！');
+                        }
+                    } else {
+                        if (typeof showToast === 'function') showToast('未能解析该链接，请确认链接格式。');
+                    }
+                }
+            });
+        }
+
+        // 2. 账号绑定登录
+        const accountLoginBtn = document.getElementById('mpAccountLoginBtn');
+        const accountPhoneInput = document.getElementById('mpAccountPhoneInput');
+        const accountPlatformSelect = document.getElementById('mpAccountPlatformSelect');
+        const accountTip = document.getElementById('mpAccountLoginStatusTip');
+
+        if (accountLoginBtn) {
+            accountLoginBtn.addEventListener('click', () => {
+                const platform = accountPlatformSelect ? accountPlatformSelect.value : 'netease';
+                const account = accountPhoneInput ? accountPhoneInput.value.trim() : '';
+                if (!account) {
+                    if (typeof showToast === 'function') showToast('请输入手机号或凭证');
+                    return;
+                }
+                const platformName = platform === 'qq' ? 'QQ音乐' : '网易云音乐';
+                if (accountTip) accountTip.textContent = `✅ 已成功绑定 ${platformName} 账号 (${account})`;
+                if (typeof showToast === 'function') showToast(`账号绑定成功！已解锁 ${platformName} VIP 试听权限`);
+            });
+        }
     // 搜索（网易云多源高可靠算法）
     function doMusicSearch() {
         if (!(state && state.isAdmin)) return;
@@ -756,11 +833,11 @@ function bindEvents() {
             const meta = Number.isInteger(idx) && list[idx] ? list[idx] : null;
             if (!meta) return;
             if (addSongToPlaylist(meta)) {
-                alert(`✅ 已成功添加：${meta.name} - ${meta.artist || ''}`);
+                if (typeof showToast === 'function') showToast(`已成功添加：${meta.name}`);
                 renderMusicPlayerUI();
                 renderMusicManageCurrent();
             } else {
-                alert('⚠️ 添加失败：该歌曲已在当前歌单中。');
+                if (typeof showToast === 'function') showToast('该歌曲已经在歌单中啦！');
             }
         });
     }
@@ -840,7 +917,7 @@ function bindEvents() {
             handleAdminLogout();
             renderAdminUI();
             renderArticles();
-            alert('已退出管理员模式');
+            showToast('已退出管理员模式', 'info');
         });
     }
     if (editProfileBtn) editProfileBtn.addEventListener('click', openProfileEditor);

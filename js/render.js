@@ -20,12 +20,26 @@ function renderProfile() {
     if (leftSocialList) {
         const socials = getProfileSocials();
         leftSocialList.innerHTML = socials.map(item => {
-            const val = item.value || '';
-            const isUrl = /^https?:\/\//i.test(val);
-            const valHtml = isUrl 
-                ? `<a href="${val}" target="_blank" rel="noopener" style="color:#2563eb;">${val}</a>`
-                : `<span>${val}</span>`;
-            return `<p class="social-line" style="margin:2px 0; font-size:13px;"><strong>${item.label}：</strong>${valHtml}</p>`;
+            let val = (item.value || '').trim();
+            const labelLower = (item.label || '').toLowerCase();
+            let href = '';
+            let displayText = val;
+
+            // GitHub 专项规则：支持输入用户名（如 "Is-Lingling"）或完整链接（如 "https://github.com/Is-Lingling"）
+            if (labelLower === 'github' || /^https?:\/\/(www\.)?github\.com/i.test(val)) {
+                let username = val.replace(/^https?:\/\/(www\.)?github\.com\/?/i, '').replace(/^\/+|\/+$/g, '');
+                if (!username) username = 'Is-Lingling';
+                displayText = username;
+                href = `https://github.com/${username}`;
+            } else if (/^https?:\/\//i.test(val)) {
+                href = val;
+                displayText = val.replace(/^https?:\/\/(www\.)?/i, '');
+            }
+
+            const valHtml = href 
+                ? `<a href="${href}" target="_blank" rel="noopener" style="color:var(--primary); font-weight:600; text-decoration:none;">${escapeHtml(displayText)}</a>`
+                : `<span>${escapeHtml(val)}</span>`;
+            return `<p class="social-line" style="margin:3px 0; font-size:13px;"><strong>${escapeHtml(item.label)}：</strong>${valHtml}</p>`;
         }).join('');
     }
 }
@@ -42,7 +56,7 @@ function getProfileSocials() {
     else list.push({ label: '微信', value: 'lingling_blog' });
 
     if (profile.github) list.push({ label: 'GitHub', value: profile.github });
-    else list.push({ label: 'GitHub', value: 'https://github.com' });
+    else list.push({ label: 'GitHub', value: 'Is-Lingling' });
 
     return list;
 }
@@ -830,12 +844,16 @@ function renderLeftNav() {
                     const origin = window.location.origin || window.location.href;
                     window.open(origin, '_blank', 'noopener');
                 } else if (nav === 'repo') {
-                    const gh = (profile && profile.github) ? String(profile.github).trim() : '';
-                    if (!gh || gh === '#' || !/^https?:\/\//i.test(gh)) {
-                        alert('尚未设置仓库地址。请在【管理控制台 → 编辑个人资料】里填写 GitHub（或其它代码仓库）URL。');
-                        return;
+                    const rawGh = (profile && profile.github) ? String(profile.github).trim() : '';
+                    let targetUrl = '';
+                    if (!rawGh || rawGh === '#') {
+                        targetUrl = 'https://github.com/Is-Lingling';
+                    } else if (/^https?:\/\//i.test(rawGh)) {
+                        targetUrl = rawGh;
+                    } else {
+                        targetUrl = `https://github.com/${rawGh}`;
                     }
-                    window.open(gh, '_blank', 'noopener');
+                    window.open(targetUrl, '_blank', 'noopener');
                 }
             });
         });
@@ -1156,10 +1174,14 @@ function renderFeedTimeline(autoOpenFeedId) {
     }
 
     container.innerHTML = feeds.map(feed => {
+        const imagesCount = feed.images ? feed.images.length : 0;
+        const gridCols = imagesCount === 1 ? '1fr' : (imagesCount === 2 ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(140px, 1fr))');
         const imagesHtml = (feed.images && feed.images.length)
-            ? `<div class="feed-gallery" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin-top:12px;">
+            ? `<div class="feed-gallery" style="display:grid; grid-template-columns:${gridCols}; gap:10px; margin-top:12px;">
                 ${feed.images.map((imgUrl, i) => `
-                    <img src="${imgUrl}" alt="动态图片" onclick="openSpaceImageViewer('${feed.id}', ${i})" style="width:100%; height:140px; object-fit:cover; border-radius:10px; cursor:pointer; border:1px solid var(--border-color); transition:transform 0.2s ease;">
+                    <div style="background:var(--bg-body, rgba(0,0,0,0.03)); border-radius:12px; border:1px solid var(--border-color); padding:6px; display:flex; align-items:center; justify-content:center; max-height:360px; overflow:hidden;">
+                        <img src="${imgUrl}" alt="动态图片" onclick="openSpaceImageViewer('${feed.id}', ${i})" style="max-width:100%; max-height:340px; width:auto; height:auto; object-fit:contain; border-radius:8px; cursor:pointer; transition:transform 0.2s ease;">
+                    </div>
                 `).join('')}
                </div>`
             : '';
@@ -1180,7 +1202,10 @@ function renderFeedTimeline(autoOpenFeedId) {
                         </div>
                     </div>
                     ${(state && state.isAdmin) ? `
-                        <button type="button" class="mini-admin-btn danger" onclick="deleteSpaceFeedItem(${feed.id})" style="padding:4px 10px; font-size:11.5px; border-radius:999px; cursor:pointer; border:1px solid var(--danger); background:var(--danger-light); color:var(--danger);">删除</button>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button type="button" class="mini-admin-btn" onclick="editSpaceFeedItem(${feed.id})" style="padding:4px 10px; font-size:11.5px; border-radius:999px; cursor:pointer; border:1px solid var(--primary-border); background:var(--primary-light); color:var(--primary);">编辑</button>
+                            <button type="button" class="mini-admin-btn danger" onclick="deleteSpaceFeedItem(${feed.id})" style="padding:4px 10px; font-size:11.5px; border-radius:999px; cursor:pointer; border:1px solid var(--danger); background:var(--danger-light); color:var(--danger);">删除</button>
+                        </div>
                     ` : ''}
                 </div>
 
@@ -1322,7 +1347,8 @@ function renderActivityCalendar() {
     const todayDate = now.getDate();
 
     if (monthTitle) {
-        monthTitle.textContent = `${calendarYear}年${calendarMonth + 1}月`;
+        const yrShort = String(calendarYear).slice(-2);
+        monthTitle.textContent = `${yrShort}年${calendarMonth + 1}月`;
     }
 
     const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
@@ -1580,12 +1606,97 @@ function handleFeedImageSelect(input) {
             if (wrap) {
                 const img = document.createElement('img');
                 img.src = e.target.result;
-                img.style.cssText = 'width:60px; height:60px; object-fit:cover; border-radius:8px; border:1px solid var(--border-color);';
+                img.style.cssText = 'max-width:80px; max-height:80px; width:auto; height:auto; object-fit:contain; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-body); padding:2px;';
                 wrap.appendChild(img);
             }
         };
         reader.readAsDataURL(file);
     });
+}
+
+let currentEditingFeedId = null;
+
+function editSpaceFeedItem(feedId) {
+    const feeds = (typeof getSpaceFeeds === 'function') ? getSpaceFeeds() : [];
+    const target = feeds.find(f => f.id === Number(feedId));
+    if (!target) return;
+
+    currentEditingFeedId = target.id;
+    tempFeedImages = Array.isArray(target.images) ? [...target.images] : [];
+
+    const publishCard = document.getElementById('spacePublishCard');
+    const titleText = document.getElementById('feedPublishTitleText');
+    const textEl = document.getElementById('feedPublishText');
+    const submitBtn = document.getElementById('feedSubmitBtn');
+    const cancelBtn = document.getElementById('cancelFeedEditBtn');
+    const wrap = document.getElementById('feedImagePreviewWrap');
+    const tip = document.getElementById('feedImageTip');
+
+    if (publishCard) publishCard.style.display = 'block';
+    if (titleText) titleText.textContent = '编辑动态';
+    if (textEl) textEl.value = target.content || '';
+    if (submitBtn) submitBtn.textContent = '保存修改';
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+    if (tip) tip.textContent = tempFeedImages.length ? `现有 ${tempFeedImages.length} 张图片` : '';
+
+    if (wrap) {
+        wrap.innerHTML = '';
+        tempFeedImages.forEach((imgUrl, idx) => {
+            const container = document.createElement('div');
+            container.style.cssText = 'position:relative; display:inline-block;';
+            container.innerHTML = `
+                <img src="${imgUrl}" style="max-width:80px; max-height:80px; width:auto; height:auto; object-fit:contain; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-body); padding:2px;">
+                <button type="button" style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:#fff; border:none; border-radius:50%; width:18px; height:18px; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" onclick="removeTempFeedImage(${idx})">×</button>
+            `;
+            wrap.appendChild(container);
+        });
+    }
+
+    if (publishCard && typeof publishCard.scrollIntoView === 'function') {
+        publishCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function removeTempFeedImage(idx) {
+    if (idx >= 0 && idx < tempFeedImages.length) {
+        tempFeedImages.splice(idx, 1);
+        const wrap = document.getElementById('feedImagePreviewWrap');
+        const tip = document.getElementById('feedImageTip');
+        if (tip) tip.textContent = tempFeedImages.length ? `现有 ${tempFeedImages.length} 张图片` : '';
+        if (wrap) {
+            wrap.innerHTML = '';
+            tempFeedImages.forEach((imgUrl, i) => {
+                const container = document.createElement('div');
+                container.style.cssText = 'position:relative; display:inline-block;';
+                container.innerHTML = `
+                    <img src="${imgUrl}" style="max-width:80px; max-height:80px; width:auto; height:auto; object-fit:contain; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-body); padding:2px;">
+                    <button type="button" style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:#fff; border:none; border-radius:50%; width:18px; height:18px; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;" onclick="removeTempFeedImage(${i})">×</button>
+                `;
+                wrap.appendChild(container);
+            });
+        }
+    }
+}
+
+function cancelFeedEdit() {
+    currentEditingFeedId = null;
+    tempFeedImages = [];
+
+    const titleText = document.getElementById('feedPublishTitleText');
+    const textEl = document.getElementById('feedPublishText');
+    const submitBtn = document.getElementById('feedSubmitBtn');
+    const cancelBtn = document.getElementById('cancelFeedEditBtn');
+    const wrap = document.getElementById('feedImagePreviewWrap');
+    const tip = document.getElementById('feedImageTip');
+    const input = document.getElementById('feedImageInput');
+
+    if (titleText) titleText.textContent = '发布新动态';
+    if (textEl) textEl.value = '';
+    if (submitBtn) submitBtn.textContent = '发布动态';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (wrap) wrap.innerHTML = '';
+    if (tip) tip.textContent = '';
+    if (input) input.value = '';
 }
 
 function submitNewFeed() {
@@ -1596,17 +1707,15 @@ function submitNewFeed() {
         return;
     }
 
-    createSpaceFeed({ content, images: [...tempFeedImages] });
-    if (textEl) textEl.value = '';
-    tempFeedImages = [];
-    const wrap = document.getElementById('feedImagePreviewWrap');
-    if (wrap) wrap.innerHTML = '';
-    const tip = document.getElementById('feedImageTip');
-    if (tip) tip.textContent = '';
-    const input = document.getElementById('feedImageInput');
-    if (input) input.value = '';
+    if (currentEditingFeedId) {
+        updateSpaceFeed(currentEditingFeedId, { content, images: [...tempFeedImages] });
+        if (typeof showToast === 'function') showToast('动态修改成功！');
+    } else {
+        createSpaceFeed({ content, images: [...tempFeedImages] });
+        if (typeof showToast === 'function') showToast('动态发布成功！');
+    }
 
-    if (typeof showToast === 'function') showToast('动态发布成功！');
+    cancelFeedEdit();
     renderSpaceView();
 }
 

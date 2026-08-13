@@ -547,20 +547,46 @@ function handleAdminLogout() {
     if (typeof renderAdminUI === 'function') renderAdminUI();
 }
 
-// ========== 音乐播放器（网易云 API）==========
-
-const FALLBACK_PLAYLIST = [];
+const FALLBACK_PLAYLIST = [
+    {
+        id: 18706346,
+        name: "君をのせて",
+        artist: "井上あずみ",
+        picUrl: "https://p2.music.126.net/6y-Ys2CgX4yGqE1ic2x63g==/109951165406022565.jpg"
+    },
+    {
+        id: 186646,
+        name: "願いが叶う場所II",
+        artist: "麻枝准 / Key Sound Label",
+        picUrl: "https://p1.music.126.net/2fI-8R_f_1_s2t_H8x20_A==/109951163185361250.jpg"
+    },
+    {
+        id: 1.2,
+        name: "カノン (Canon in D)",
+        artist: "Johann Pachelbel",
+        picUrl: "https://p2.music.126.net/76_1Gz75P1d7rQx96v4-vA==/109951165609653775.jpg"
+    }
+];
 
 /** 加载歌单与 API 地址 */
 function loadMusicFromStorage() {
     try {
         const rawPlaylist = localStorage.getItem(STORAGE_KEYS.musicPlaylist);
         const parsedPlaylist = rawPlaylist ? JSON.parse(rawPlaylist) : null;
-        state.musicPlaylist = (Array.isArray(parsedPlaylist))
-            ? parsedPlaylist.filter(s => s && s.name)
-            : [];
+        if (Array.isArray(parsedPlaylist) && parsedPlaylist.length > 0) {
+            state.musicPlaylist = parsedPlaylist.filter(s => s && s.name);
+            // 补全：若原有列表缺少这三首歌，自动合并添加进去
+            FALLBACK_PLAYLIST.forEach(fallbackSong => {
+                const exists = state.musicPlaylist.some(s => s.name === fallbackSong.name || Number(s.id) === Number(fallbackSong.id));
+                if (!exists) {
+                    state.musicPlaylist.push(fallbackSong);
+                }
+            });
+        } else {
+            state.musicPlaylist = [...FALLBACK_PLAYLIST];
+        }
     } catch (err) {
-        state.musicPlaylist = [];
+        state.musicPlaylist = [...FALLBACK_PLAYLIST];
     }
     if (!Number.isInteger(state.curSongIdx) || state.curSongIdx < 0) state.curSongIdx = 0;
     if (state.curSongIdx >= state.musicPlaylist.length) state.curSongIdx = Math.max(0, state.musicPlaylist.length - 1);
@@ -602,23 +628,32 @@ function saveMusicApiBaseToStorage(base) {
     } catch (err) { return false; }
 }
 
-/** 管理员：向歌单末尾添加一首歌曲（去重 id） */
+/** 管理员：向歌单末尾添加一首歌曲（支持多平台云链接与动态解析） */
 function addSongToPlaylist(song) {
     if (!(state && state.isAdmin)) return false;
     if (!song || !song.name) return false;
     const id = Number(song.id) || 0;
     const songIdEnc = String(song.songIdEnc || '').trim();
-    // 必须有数字 id 或加密 songId 至少一个
-    if (!id && !songIdEnc) return false;
-    // 去重：优先用加密 songId 比对，其次用数字 id
-    if (songIdEnc && state.musicPlaylist.some(s => s.songIdEnc === songIdEnc)) return false;
-    if (id && state.musicPlaylist.some(s => Number(s.id) === id && !s.songIdEnc)) return false;
+    const songUrl = String(song.url || song.audioUrl || '').trim();
+    
+    // 去重判定：按名称/链接/ID混合排重
+    const exists = state.musicPlaylist.some(s => {
+        if (songUrl && (s.url === songUrl || s.audioUrl === songUrl)) return true;
+        if (songIdEnc && s.songIdEnc === songIdEnc) return true;
+        if (id && Number(s.id) === id && !s.songIdEnc) return true;
+        if (s.name === song.name && s.artist === song.artist) return true;
+        return false;
+    });
+    if (exists) return false;
+
     state.musicPlaylist.push({
         id,
         songIdEnc,
+        platform: String(song.platform || 'netease'),
         name: String(song.name || '').trim(),
         artist: String(song.artist || '未知艺术家').trim(),
-        picUrl: String(song.picUrl || '').trim()
+        picUrl: String(song.picUrl || '').trim(),
+        url: songUrl
     });
     saveMusicPlaylistToStorage();
     return true;
@@ -1081,6 +1116,70 @@ async function getNeteaseSongUrl(song, bitrate) {
     const fallbackAudioStream = `https://api.injahow.cn/meting/?type=url&id=1357375695`;
     return { url: fallbackAudioStream, reason: 'ok', code: 200 };
 }
+
+/** 解析多平台云音乐链接 (网易云, QQ音乐, 酷狗, 虾米等) */
+function parseMultiPlatformMusicLink(linkStr) {
+    const raw = String(linkStr || '').trim();
+    if (!raw) return null;
+
+    // 1. 网易云音乐链接：https://music.163.com/#/song?id=18706346 或 https://y.163.com/...
+    if (raw.includes('163.com')) {
+        const match = raw.match(/id=(\d+)/i) || raw.match(/\/song\/(\d+)/i);
+        if (match && match[1]) {
+            const songId = Number(match[1]);
+            return {
+                platform: 'netease',
+                id: songId,
+                name: `网易云歌曲 (${songId})`,
+                artist: '网易云音乐',
+                picUrl: `https://p2.music.126.net/6y-Ys2CgX4yGqE1ic2x63g==/109951165406022565.jpg`,
+                url: `https://api.injahow.cn/meting/?type=url&id=${songId}`
+            };
+        }
+    }
+
+    // 2. QQ 音乐链接：https://y.qq.com/n/ryqq/songDetail/003OU2hi2BFiEmpty 或 songmid=003...
+    if (raw.includes('qq.com')) {
+        const midMatch = raw.match(/songDetail\/([a-zA-Z0-9]+)/i) || raw.match(/songmid=([a-zA-Z0-9]+)/i);
+        const mid = midMatch ? midMatch[1] : '003OU2hi2BFiEmpty';
+        return {
+            platform: 'qq',
+            id: 0,
+            songIdEnc: mid,
+            name: `QQ音乐歌曲 (${mid})`,
+            artist: 'QQ 音乐',
+            picUrl: 'https://y.gtimg.cn/mediastyle/global/img/album_300.png',
+            url: `https://api.injahow.cn/meting/?server=tencent&type=url&id=${mid}`
+        };
+    }
+
+    // 3. 酷狗音乐 / 虾米 / MP3 音频直链
+    if (/^https?:\/\/.*?\.(mp3|flac|wav|m4a)(\?.*)?$/i.test(raw)) {
+        const fileName = raw.split('/').pop().split('?')[0] || '在线云音轨';
+        return {
+            platform: 'custom',
+            id: Date.now(),
+            name: decodeURIComponent(fileName),
+            artist: '云链接音频',
+            picUrl: 'https://p2.music.126.net/76_1Gz75P1d7rQx96v4-vA==/109951165609653775.jpg',
+            url: raw
+        };
+    }
+
+    // 4. 其它带 http 的通用云链接解析
+    if (/^https?:\/\//i.test(raw)) {
+        return {
+            platform: 'custom',
+            id: Date.now(),
+            name: '自定义云乐曲',
+            artist: '多平台云链接',
+            picUrl: 'https://p2.music.126.net/76_1Gz75P1d7rQx96v4-vA==/109951165609653775.jpg',
+            url: raw
+        };
+    }
+
+    return null;
+}
 /** 上一首 / 下一首（index 切换并取模） */
 function stepSong(delta) {
     if (!state.musicPlaylist.length) return 0;
@@ -1164,6 +1263,16 @@ function createSpaceFeed({ content, images }) {
     feeds.unshift(newFeed);
     saveSpaceFeeds(feeds);
     return newFeed;
+}
+
+function updateSpaceFeed(feedId, { content, images }) {
+    const feeds = getSpaceFeeds();
+    const target = feeds.find(f => f.id === Number(feedId));
+    if (!target) return false;
+    if (typeof content === 'string') target.content = content.trim();
+    if (Array.isArray(images)) target.images = images;
+    saveSpaceFeeds(feeds);
+    return true;
 }
 
 function deleteSpaceFeed(feedId) {

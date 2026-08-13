@@ -26,12 +26,8 @@
                     <img src="img/firstlogo.gif" alt="博客logo">
                 </div>
 
-                <!-- 管理员快速下拉登录弹窗 (Dropdown Popover) -->
+                <!-- 管理员快速下拉登录抽屉 (Drawer) -->
                 <div class="admin-login-dropdown" id="adminLoginDropdown" aria-hidden="true">
-                    <div class="dropdown-header">
-                        <span class="dropdown-title">🔑 管理员登录</span>
-                        <button type="button" class="dropdown-close-btn" id="closeAdminLoginDropdownBtn" title="关闭">×</button>
-                    </div>
                     <form id="quickAdminLoginForm" onsubmit="return false;">
                         <div class="dropdown-input-group">
                             <input id="quickAdminUser" type="text" autocomplete="username" placeholder="管理员账号" required>
@@ -63,6 +59,10 @@
                     <span>退出管理</span>
                 </button>
                 <div class="mp-inline" id="mpInline" style="position: relative;">
+                    <!-- 设置/歌单管理按钮（放置于播放器右上角，仅管理员可见） -->
+                    <button type="button" class="mp-gear" id="mpGearBtn" title="歌单管理（仅管理员）" aria-label="歌单管理">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
                     <button type="button" class="mp-inline-cover" id="mpInlineCoverBtn" aria-label="封面（点击切换播放/暂停）" title="点击播放/暂停">
                         <img id="mpCover" src="img/img6.jpg" alt="专辑封面" loading="lazy">
                     </button>
@@ -70,7 +70,6 @@
                         <!-- 行1：歌名 -->
                         <div class="mp-inline-meta">
                             <div class="mp-inline-title" id="mpTitle">未播放</div>
-                            <div class="mp-inline-time" style="display:none;"><span id="musicTimeCur">00:00</span> / <span id="musicTimeTot">00:00</span></div>
                         </div>
                         <!-- 行2：延长进度条 + 中心对齐控制按钮 -->
                         <div style="display:flex; align-items:center; gap:8px; width:100%;">
@@ -93,21 +92,8 @@
                     <!-- 核心播放器 audio 元素 -->
                     <audio id="bgAudio" preload="auto"></audio>
 
-                    <!-- 下拉出现的歌单列表 -->
-                    <div class="mp-list-popover" id="mpListPopover" aria-hidden="true" style="display:none;">
-                        <div class="mp-list-popover-head">
-                            <span class="mp-list-popover-title">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon" style="margin-right:4px;"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-                                播放列表
-                            </span>
-                            <span class="mp-list-popover-meta">
-                                <span id="musicTimeCur2">00:00</span> / <span id="musicTimeTot2">00:00</span>
-                                <button type="button" class="mp-gear" id="mpGearBtn" title="歌单管理（仅管理员）" aria-label="歌单管理">
-                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                                </button>
-                                <button type="button" class="mp-list-popover-close" id="mpListCloseBtn" title="收起歌单">×</button>
-                            </span>
-                        </div>
+                    <!-- 下拉出现的歌单抽屉列表 -->
+                    <div class="mp-list-popover" id="mpListPopover" aria-hidden="true">
                         <ol class="mp-list" id="mpPlayList"></ol>
                     </div>
                 </div>
@@ -457,16 +443,12 @@
 
             <!-- 视图 7：个人空间动态页面 -->
             <div id="spaceView" class="main-view" style="display:none;">
-                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
                     <div class="breadcrumb-nav" style="margin:0;">
                         <span class="breadcrumb-item" style="cursor:pointer;" onclick="switchView('list'); activeFilters = []; renderArticles();">首页</span>
                         <span class="breadcrumb-separator">/</span>
                         <span class="breadcrumb-item active">个人空间动态</span>
                     </div>
-                    <button type="button" class="back-btn" onclick="switchView('list');">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                        <span>返回文章列表</span>
-                    </button>
                 </div>
 
                 <div class="space-page-grid" style="display:grid; grid-template-columns:1fr 310px; gap:20px;">
@@ -476,7 +458,7 @@
                         <div class="box3-card space-publish-card" id="spacePublishCard" style="display:none; margin-bottom:20px; padding:20px;">
                             <h4 style="margin:0 0 12px; font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; color:var(--text-main);">
                                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                <span>发布新动态</span>
+                                <span id="feedPublishTitleText">发布新动态</span>
                             </h4>
                             <textarea id="feedPublishText" placeholder="分享此刻的想法、碎碎念或技术进展..." style="width:100%; min-height:86px; padding:12px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); resize:vertical; outline:none; font-size:14px; margin-bottom:12px; font-family:inherit;"></textarea>
                             
@@ -489,9 +471,14 @@
                                     </label>
                                     <span id="feedImageTip" style="font-size:12px; color:var(--text-muted);"></span>
                                 </div>
-                                <button type="button" class="primary-btn" onclick="submitNewFeed()" style="padding:8px 24px; font-size:13.5px; border-radius:999px;">
-                                    发布动态
-                                </button>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <button type="button" class="secondary-btn" id="cancelFeedEditBtn" onclick="cancelFeedEdit()" style="display:none; padding:8px 16px; font-size:13px; border-radius:999px;">
+                                        取消
+                                    </button>
+                                    <button type="button" class="primary-btn" id="feedSubmitBtn" onclick="submitNewFeed()" style="padding:8px 24px; font-size:13.5px; border-radius:999px;">
+                                        发布动态
+                                    </button>
+                                </div>
                             </div>
                             <div id="feedImagePreviewWrap" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
                         </div>
@@ -528,7 +515,7 @@
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <h4 style="margin:0; font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; color:var(--text-main);">
                                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                        <span id="activityCalendarMonthTitle">2026年8月</span>
+                                        <span id="activityCalendarMonthTitle">26年8月</span>
                                     </h4>
                                     <div style="display:flex; gap:4px; align-items:center;">
                                         <button type="button" class="mini-admin-btn" onclick="changeCalendarMonth(-1)" style="padding:2px 7px; font-size:12px; cursor:pointer;" title="上一月">‹</button>
@@ -693,34 +680,62 @@
                 <button class="modal-close" id="mpCloseManageBtn">×</button>
             </div>
             <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
-                <!-- API Base 设置 -->
-                <div style="padding:10px 14px; border:1px solid rgba(226, 232, 240, 0.8); border-radius:12px; background:rgba(248,250,252,0.5);">
-                    <label style="font-weight:700; display:block; margin-bottom:6px; font-size:13px;">网易云 API Base URL（默认支持全网在线搜索）</label>
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <input type="url" id="mpApiInput" placeholder="https://your-netease-api.example.com" style="flex:1; padding:8px 12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-size:13px;">
-                        <button type="button" class="primary-btn" id="mpSaveApiBtn" style="padding:8px 16px; border-radius:999px; font-size:13px;">保存配置</button>
-                    </div>
+                <!-- 选项卡：云链接解析 / 登录搜索 / 自由搜歌 -->
+                <div class="image-option-tabs" style="display:flex; gap:8px;">
+                    <button type="button" class="tab-btn active" id="mpTabParseLinkBtn" style="flex:1; padding:8px; border-radius:8px; font-size:13px; font-weight:600;">🔗 音乐云链接解析</button>
+                    <button type="button" class="tab-btn" id="mpTabAccountSearchBtn" style="flex:1; padding:8px; border-radius:8px; font-size:13px; font-weight:600;">🔑 账号登录搜索</button>
+                    <button type="button" class="tab-btn" id="mpTabNormalSearchBtn" style="flex:1; padding:8px; border-radius:8px; font-size:13px; font-weight:600;">🔍 快捷全网搜索</button>
                 </div>
-                <!-- 搜索 -->
-                <div>
-                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
-                        <input type="search" id="mpSearchInput" placeholder="🔍 输入歌名 / 歌手 / 专辑（例如：周杰伦、海阔天空、晴天...）" style="flex:1; padding:10px 14px; border-radius:12px; border:1px solid #cbd5e1; outline:none; font-size:14px;">
-                        <button type="button" class="primary-btn" id="mpSearchBtn" style="padding:10px 20px; border-radius:999px; font-size:14px; font-weight:600;">搜索歌曲</button>
-                    </div>
-                    <!-- 搜索结果展示框（优化增大高度为 360px） -->
-                    <div id="mpSearchResult" style="min-height:160px; max-height:360px; overflow-y:auto; border-radius:12px; padding:8px;">
-                        <div style="color:#94a3b8; text-align:center; padding:32px 16px; font-size:13.5px;">
-                            💡 请在上方输入框输入关键词，点击「搜索歌曲」从全网查找最新音轨。<br>搜索到歌曲后点击「＋添加」即可加入到右侧播放列表中。
+
+                <!-- 面板 1：多平台音乐云链接解析 -->
+                <div id="mpPaneLinkParse" style="display:block;">
+                    <div style="padding:14px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
+                        <label style="font-weight:700; display:block; margin-bottom:6px; font-size:13px; color:var(--text-main);">解析网易云 / QQ音乐 / 酷狗 / 虾米 / 音频直链</label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="url" id="mpCloudLinkInput" placeholder="粘贴网易云/QQ音乐歌曲链接或 MP3 直链..." style="flex:1; padding:9px 12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-size:13px;">
+                            <button type="button" class="primary-btn" id="mpParseLinkBtn" style="padding:9px 18px; border-radius:999px; font-size:13px; font-weight:600;">一键解析添加</button>
                         </div>
+                        <span style="font-size:12px; color:var(--text-muted); display:block; margin-top:6px;">💡 支持示例：https://music.163.com/#/song?id=18706346 或 https://y.qq.com/n/ryqq/songDetail/...</span>
                     </div>
                 </div>
-                <!-- 当前歌单 -->
+
+                <!-- 面板 2：账号登录搜歌 (网易云/QQ) -->
+                <div id="mpPaneAccountSearch" style="display:none;">
+                    <div style="padding:14px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
+                        <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+                            <select id="mpAccountPlatformSelect" style="padding:7px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; outline:none;">
+                                <option value="netease">网易云音乐账号</option>
+                                <option value="qq">QQ音乐账号</option>
+                            </select>
+                            <input type="text" id="mpAccountPhoneInput" placeholder="请输入手机号 / 账号 Cookie" style="flex:1; min-width:180px; padding:7px 12px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; outline:none;">
+                            <button type="button" class="secondary-btn" id="mpAccountLoginBtn" style="padding:7px 16px; border-radius:999px; font-size:12.5px;">绑定登录</button>
+                        </div>
+                        <span id="mpAccountLoginStatusTip" style="font-size:12px; color:var(--primary); font-weight:600; display:block; margin-bottom:8px;">✅ 已模拟接入云音乐 API 账号授权通道</span>
+                    </div>
+                </div>
+
+                <!-- 面板 3：全网快捷关键词搜索 -->
+                <div id="mpPaneNormalSearch" style="display:none;">
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="search" id="mpSearchInput" placeholder="🔍 输入歌名 / 歌手 / 专辑（例如：周杰伦、天空之城、カノン...）" style="flex:1; padding:9px 14px; border-radius:12px; border:1px solid #cbd5e1; outline:none; font-size:13.5px;">
+                        <button type="button" class="primary-btn" id="mpSearchBtn" style="padding:9px 18px; border-radius:999px; font-size:13.5px; font-weight:600;">搜索歌曲</button>
+                    </div>
+                </div>
+
+                <!-- 搜索与解析结果展示区域 -->
+                <div id="mpSearchResult" style="min-height:140px; max-height:300px; overflow-y:auto; border-radius:12px; padding:8px; border:1px solid var(--border-color);">
+                    <div style="color:var(--text-muted); text-align:center; padding:28px 16px; font-size:13px;">
+                        💡 请在上方粘贴音乐云链接，或输入关键词进行多平台搜歌。<br>解析成功后点击「＋添加」即可同步保存至播放列表中。
+                    </div>
+                </div>
+
+                <!-- 当前自定义歌单 -->
                 <div>
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding:0 2px;">
-                        <div style="font-weight:700; font-size:14px;">📋 当前自定义歌单</div>
-                        <span style="color:#64748b; font-size:12px;">本地持久化保存（仅管理员可增删）</span>
+                        <div style="font-weight:700; font-size:14px; color:var(--text-main);">📋 当前自定义歌单</div>
+                        <span style="color:var(--text-muted); font-size:12px;">本地持久化保存（仅管理员可增删）</span>
                     </div>
-                    <div id="mpCurrentPlaylist" style="min-height:100px; max-height:280px; overflow-y:auto; border-radius:12px; padding:6px 8px;"></div>
+                    <div id="mpCurrentPlaylist" style="min-height:90px; max-height:240px; overflow-y:auto; border-radius:12px; padding:6px 8px; border:1px solid var(--border-color);"></div>
                 </div>
             </div>
         </div>
