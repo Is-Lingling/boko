@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>是令令啊</title>
+    <meta name="description" content="是令令啊的个人博客首页，包含技术随笔、生活记录、前端文章与互动体验。">
+    <meta name="keywords" content="个人博客,前端,随笔,技术文章,标签云,RSS,站点地图">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@3.10.8/dist/index.css">
+</head>
+<body class="bg">
+    <div id="skeletonOverlay" class="skeleton-overlay" aria-hidden="false">
+        <div class="skeleton-box">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+        </div>
+    </div>
+    <div class="yinying" id="pageLayout">
+        <div class="top" role="banner">
+            <div style="display:flex; align-items:center; gap:16px; margin-right:auto;">
+                <div class="mingzi">
+                    <a href="admin/login.html" title="管理员登录"><img src="img/firstlogo.gif" alt="博客logo"></a>
+                </div>
+                <!-- 顶栏跳动提示标语 (靠左展示) -->
+                <div id="topNoticeBanner" class="top-notice-banner"></div>
+            </div>
+            <div class="top-actions">
+                <form id="searchForm" action="#" method="get" role="search">
+                    <input autocomplete="off" id="search_input" type="search" name="s"
+                           placeholder="输入关键词搜索…" title="搜索文章" aria-label="搜索文章">
+                </form>
+                <button type="button" class="theme-toggle" id="themeToggle" title="切换暗黑/浅色模式">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    <span>暗黑</span>
+                </button>
+                <button type="button" class="button" id="adminLogoutBtn" style="display:none;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>退出管理</span>
+                </button>
+                <div class="mp-inline" id="mpInline" style="position: relative;">
+                    <button type="button" class="mp-inline-cover" id="mpInlineCoverBtn" aria-label="封面（点击切换播放/暂停）" title="点击播放/暂停">
+                        <img id="mpCover" src="img/img6.jpg" alt="专辑封面" loading="lazy">
+                    </button>
+                    <div class="mp-inline-info">
+                        <!-- 行1：歌名 -->
+                        <div class="mp-inline-meta">
+                            <div class="mp-inline-title" id="mpTitle">未播放</div>
+                            <div class="mp-inline-time" style="display:none;"><span id="musicTimeCur">00:00</span> / <span id="musicTimeTot">00:00</span></div>
+                        </div>
+                        <!-- 行2：延长进度条 + 中心对齐控制按钮 -->
+                        <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                            <div class="mp-inline-progress" id="musicProgress" role="slider" aria-label="播放进度" title="点击调整播放进度" style="flex:1;">
+                                <div class="mp-inline-progress-bar" id="musicProgressBar"></div>
+                            </div>
+                            <div class="mp-inline-ctrls">
+                                <button type="button" class="mp-inline-btn mp-inline-play" id="mpPlayBtn" aria-label="播放/暂停" title="播放/暂停">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" class="svg-icon"><polygon points="6 4 18 12 6 20 6 4"></polygon></svg>
+                                </button>
+                                <button type="button" class="mp-inline-btn" id="mpNextBtn" aria-label="下一首" title="下一首">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+                                </button>
+                                <button type="button" class="mp-inline-btn mp-inline-list" id="mpListBtn" aria-label="展开歌单" title="展开歌单列表">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 核心播放器 audio 元素 -->
+                    <audio id="bgAudio" preload="auto"></audio>
+
+                    <!-- 下拉出现的歌单列表 -->
+                    <div class="mp-list-popover" id="mpListPopover" aria-hidden="true" style="display:none;">
+                        <div class="mp-list-popover-head">
+                            <span class="mp-list-popover-title">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon" style="margin-right:4px;"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                                播放列表
+                            </span>
+                            <span class="mp-list-popover-meta">
+                                <span id="musicTimeCur2">00:00</span> / <span id="musicTimeTot2">00:00</span>
+                                <button type="button" class="mp-gear" id="mpGearBtn" title="歌单管理（仅管理员）" aria-label="歌单管理">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                </button>
+                                <button type="button" class="mp-list-popover-close" id="mpListCloseBtn" title="收起歌单">×</button>
+                            </span>
+                        </div>
+                        <ol class="mp-list" id="mpPlayList"></ol>
+                    </div>
+                </div>
+                <button type="button" class="hamburger mobile-only" id="hamburger" title="打开侧边栏菜单">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>
+
+        <aside class="box1" aria-label="侧边栏">
+            <div class="touxiang" style="cursor:pointer;" onclick="switchView('space')" title="点击进入个人空间动态">
+                <img src="img/img6.jpg" alt="博客博主头像" loading="lazy" id="profileAvatar">
+                <div class="nicheng" id="profileName">是令令啊</div>
+                <div class="nicheng2" id="profileBio">it's me~</div>
+                <div class="profile-social-list" id="leftProfileSocialList" style="margin-top:10px; display:flex; flex-direction:column; gap:4px; font-size:13px; text-align:center;"></div>
+                <div class="profile-actions">
+                    <button type="button" id="editProfileBtn" style="display:none;">编辑资料</button>
+                </div>
+            </div>
+            <div class="daohang">
+                <ul>
+                    <li class="daohanglan">导航</li>
+                    <li><a href="#" title="首页" onclick="switchView('list'); activeFilters = []; renderArticles(); return false;">首页</a></li>
+                    <li><a href="#" title="个人空间动态" onclick="switchView('space'); return false;">动态</a></li>
+                    <li><a href="#" title="网址">网址</a></li>
+                    <li><a href="#" title="友人">友人</a></li>
+                    <li><a href="#" title="仓库">仓库</a></li>
+                </ul>
+            </div>
+            <div class="zucheng">
+                <ul>
+                    <li class="daohanglan">组成</li>
+                    <li><a href="#" title="查看分类">分类</a></li>
+                    <li><a href="#" title="查看页面">页面</a></li>
+                    <li><a href="#" title="查看友链">友链</a></li>
+                </ul>
+            </div>
+            <div class="guanli" id="leftGuanliSection" aria-label="管理员板块">
+                <ul>
+                    <!-- 管理员专属条目：由 renderAdminUI() 动态注入 -->
+                </ul>
+            </div>
+        </aside>
+
+        <main class="box2" id="mainContent">
+            <!-- 视图 1：文章列表视图 -->
+            <div id="listView" class="main-view active">
+                <section class="hero-carousel" aria-label="置顶推荐文章" style="position:relative; margin-bottom:24px;">
+                    <article class="hero-glass-card" id="heroCard">
+                        <div class="glass-overlay">
+                            <h3 id="heroTitle" class="glass-title"></h3>
+                            <div id="heroMeta" class="glass-meta"></div>
+                            <p id="heroSummary" class="glass-summary"></p>
+                        </div>
+                    </article>
+                    <div class="hero-control">
+                        <button type="button" id="heroPrev" title="上一条推荐">‹</button>
+                        <button type="button" id="heroNext" title="下一条推荐">›</button>
+                    </div>
+                </section>
+
+                <section class="article-tools" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:nowrap; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <div class="sort-group" style="transform:none; margin:0;" aria-label="排序方式">
+                            <button type="button" data-sort="date" class="active">最新发布</button>
+                            <button type="button" data-sort="read">最多阅读</button>
+                            <button type="button" data-sort="comment">最多评论</button>
+                        </div>
+                        <div class="filter-chips" id="activeFilters" aria-live="polite"></div>
+                    </div>
+                    <button type="button" class="primary-btn" id="homeAddArticleBtn" onclick="openArticleEditor()" style="display:none; padding:8px 18px; font-size:13px; border-radius:999px; align-items:center; gap:6px; flex-shrink:0; margin:0;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        <span>新增文章</span>
+                    </button>
+                </section>
+
+                <!-- 筛选结果标题：仅在有筛选/搜索条件时显示 -->
+                <div id="filterResultHeader" class="filter-result-header" style="display:none;"></div>
+
+                <section class="article-list" id="articleList" aria-label="文章列表"></section>
+
+                <div class="page-box" id="pagination" aria-label="分页导航"></div>
+
+                <section class="comments box3-card" id="commentSection">
+                    <h4>留言</h4>
+                    <div id="commentList"></div>
+                    <form id="commentForm" class="comment-form" action="#" style="margin-top:16px;">
+                        <div class="comment-form-row">
+                            <div class="comment-form-col">
+                                <input id="commentName" type="text" placeholder="昵称（必填）" required>
+                            </div>
+                            <div class="comment-form-col">
+                                <input id="commentContact" type="text" placeholder="联系方式（QQ/微信/邮箱）" required>
+                            </div>
+                        </div>
+                        <textarea id="commentContent" rows="3" placeholder="写下您的评论..." required></textarea>
+                        <button type="submit">提交评论</button>
+                    </form>
+                </section>
+            </div>
+
+            <!-- 视图 2：文章阅读/详情视图（整体布局不变，主区域直接切换） -->
+            <div id="detailView" class="main-view" style="display:none;">
+                <div class="inline-detail-card">
+                    <div class="inline-header">
+                        <button type="button" class="back-btn" id="detailBackBtn">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <span>返回文章列表</span>
+                        </button>
+                        <div class="inline-detail-actions" id="detailAdminActions" style="display:none;">
+                            <button type="button" class="action-btn admin-edit" id="detailEditBtn">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                <span>编辑文章</span>
+                            </button>
+                            <button type="button" class="action-btn delete-btn" id="detailDeleteBtn">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                <span>删除文章</span>
+                            </button>
+                        </div>
+                    </div>
+                    <h1 id="inlineDetailTitle" class="inline-title">文章标题</h1>
+                    <div class="inline-meta" id="inlineDetailMeta"></div>
+                    <img id="inlineDetailCover" class="inline-cover" src="" alt="文章封面">
+                    <div class="inline-tags" id="inlineDetailTags"></div>
+                    <div class="inline-content markdown-content" id="inlineDetailContent"></div>
+
+                    <!-- 详情页：文章内容下方居中 → 点赞 / 收藏 -->
+                    <div class="detail-like-favorite-bar" id="detailLikeFavoriteBar" aria-label="点赞与收藏">
+                        <button type="button" class="detail-like-btn" data-viewer-action="like">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                            <span class="btn-text">点赞</span>
+                        </button>
+                        <button type="button" class="detail-fav-btn" data-viewer-action="favorite">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            <span class="btn-text">收藏</span>
+                        </button>
+                    </div>
+
+                    <!-- 文章详情页专属评论区域 -->
+                    <section class="detail-comments-box" style="margin-top:40px; padding-top:24px; border-top:1px solid var(--border-color);">
+                        <h3 style="font-size:18px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            <span>本文评论</span>
+                        </h3>
+                        <div id="inlineArticleCommentList" style="margin-bottom:20px;"></div>
+                        <form id="inlineArticleCommentForm" onsubmit="return false;" class="comment-form">
+                            <div class="comment-form-row" style="margin-bottom:10px;">
+                                <div class="comment-form-col">
+                                    <input id="inlineArticleCommentName" type="text" placeholder="昵称（必填）" required>
+                                </div>
+                                <div class="comment-form-col">
+                                    <input id="inlineArticleCommentContact" type="text" placeholder="联系方式（QQ/微信/邮箱）" required>
+                                </div>
+                            </div>
+                            <div style="margin-bottom:10px;">
+                                <textarea id="inlineArticleCommentContent" rows="3" placeholder="写下您对本文的评论与想法..." required style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid var(--border-color); font-size:14px; font-family:inherit; background:var(--bg-card); color:var(--text-main);"></textarea>
+                            </div>
+                            <button type="button" id="inlineArticleCommentSubmit" class="primary-btn" style="padding:10px 24px; border-radius:999px; font-size:14px; font-weight:600;">发表评论</button>
+                        </form>
+                    </section>
+                </div>
+            </div>
+
+            <!-- 视图 3：文章编辑器视图 -->
+            <div id="editorView" class="main-view" style="display:none;">
+                <div class="inline-editor-card">
+                    <div class="inline-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <h3 id="editorFormTitle" style="margin:0;">文章编辑器</h3>
+                            <span id="editorAutoSaveStatus" style="font-size:12px; color:var(--primary); font-weight:600; background:var(--primary-light); padding:4px 10px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                实时防丢自动保存开启
+                            </span>
+                        </div>
+                        <button type="button" class="back-btn" id="editorCancelBtn">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <span>返回</span>
+                        </button>
+                    </div>
+                    <form id="inlineEditorForm" onsubmit="return false;" class="editor-form-grid">
+                        <div class="form-group">
+                            <label for="inlineArticleTitle">文章标题</label>
+                            <input id="inlineArticleTitle" type="text" placeholder="输入文章标题">
+                        </div>
+                        <!-- 分类与标签并行 -->
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                                    <label for="inlineArticleCategoryInput" style="font-weight:700; color:var(--text-main); margin:0; display:inline-flex; align-items:center; gap:4px;">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                        文章分类
+                                    </label>
+                                    <span style="font-size:12px; color:var(--text-muted);">支持手动输入或轻点已有分类选择</span>
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:6px;">
+                                    <input id="inlineArticleCategoryInput" type="text" placeholder="输入分类或点下方分类" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border-color); font-size:14px; width:100%; background:var(--bg-card); color:var(--text-main);">
+                                    <input id="inlineArticleCategory" type="hidden" value="">
+                                    <div id="inlineArticleCategoryPicker" style="display:flex; flex-wrap:wrap; gap:4px; max-height:64px; overflow-y:auto;"></div>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                                    <label for="inlineArticleTags" style="font-weight:700; color:var(--text-main); margin:0; display:inline-flex; align-items:center; gap:4px;">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                                        文章标签
+                                    </label>
+                                    <span style="font-size:12px; color:var(--text-muted);">支持手动输入或轻点热标签快捷勾选</span>
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:6px;">
+                                    <input id="inlineArticleTags" type="text" placeholder="输入标签，以逗号分隔 (如：前端, 随笔, 笔记)" style="padding:10px 14px; border-radius:10px; border:1px solid var(--border-color); font-size:14px; width:100%; background:var(--bg-card); color:var(--text-main);">
+                                    <div id="inlineArticleTagPicker" style="display:flex; flex-wrap:wrap; gap:4px; max-height:64px; overflow-y:auto;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:6px; color:var(--text-main);">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                封面图片设置（支持网络 URL 链接、上传本地图片或无封面）
+                            </label>
+                            <div class="image-option-tabs">
+                                <button type="button" class="tab-btn active" id="coverTabUrl">网络 URL 链接</button>
+                                <button type="button" class="tab-btn" id="coverTabFile">上传本地图片</button>
+                                <button type="button" class="tab-btn" id="coverTabNone">无封面图片</button>
+                            </div>
+                            <div id="coverUrlPane" class="image-pane">
+                                <input id="inlineArticleCover" type="text" placeholder="输入封面图片 URL 或相对路径 (如 img/img6.jpg)">
+                            </div>
+                            <div id="coverFilePane" class="image-pane" style="display:none;">
+                                <label class="file-pick-btn">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                    选择本地图片文件
+                                    <input type="file" id="inlineArticleCoverFile" accept="image/*" style="display:none;">
+                                </label>
+                                <span id="coverFileNameTip" class="file-tip">未选择文件</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="font-weight:700; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; color:var(--text-main);">
+                                <span style="display:inline-flex; align-items:center; gap:6px;">
+                                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                    文章正文内容（Vditor 沉浸式 Typora 风格 Markdown 编辑器）：
+                                </span>
+                                <span style="font-size:12px; font-weight:normal; color:var(--text-muted);">支持 Typora 实时即时渲染 (IR)、代码高亮、表格与全撤回</span>
+                            </label>
+                            <div id="vditor" style="min-height: 580px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);"></div>
+                        </div>
+                        <div class="editor-actions">
+                            <button type="button" class="primary-btn" id="inlineSaveArticleBtn">保存文章</button>
+                            <button type="button" class="secondary-btn" id="inlineResetArticleBtn">重置</button>
+                            <button type="button" class="secondary-btn" id="inlineCancelEditorBtn">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 视图 4：管理员控制台视图 -->
+            <div id="adminControlView" class="main-view" style="display:none;">
+                <div class="inline-detail-card" style="padding:24px;">
+                    <div class="inline-header" style="margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
+                        <h3 style="font-size:20px; font-weight:700; margin:0; display:flex; align-items:center; gap:8px;">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            管理员控制面板
+                        </h3>
+                        <button type="button" class="back-btn" id="closeAdminControlBtn">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <span>返回首页</span>
+                        </button>
+                    </div>
+                    <div class="admin-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:20px;">
+                        <!-- 第一个卡片：图册管理 -->
+                        <div class="admin-square-card" id="openGalleryBtn" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; aspect-ratio:1/1; border:1px solid var(--border-color); border-radius:16px; transition:all 0.3s ease; background:var(--primary-light); padding:16px; text-align:center;">
+                            <span style="font-size:32px; margin-bottom:10px; color:var(--primary);">
+                                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            </span>
+                            <span style="font-weight:700; font-size:15px; display:block; color:var(--text-main);">图册管理</span>
+                        </div>
+                        <!-- 第二个卡片：主题高级定制入口卡片 -->
+                        <div class="admin-square-card" id="openThemeSettingsCard" onclick="openThemeModal()" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; aspect-ratio:1/1; border:1px solid var(--primary-border); border-radius:16px; transition:all 0.3s ease; background:var(--primary-light); padding:16px; text-align:center;">
+                            <span style="font-size:32px; margin-bottom:10px; color:var(--primary);">
+                                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            </span>
+                            <span style="font-weight:700; font-size:15px; display:block; color:var(--text-main);">主题高级定制</span>
+                        </div>
+                        <!-- 自定义跳转链接卡片列表 -->
+                        <div id="customAdminLinksList" style="display:contents;"></div>
+                        <!-- 添加自定义链接卡片 -->
+                        <div class="admin-square-card add-card" id="addNewAdminLinkBtn" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; aspect-ratio:1/1; border:1px dashed var(--text-muted); border-radius:16px; color:var(--text-muted); padding:16px; text-align:center;">
+                            <span style="font-size:28px; margin-bottom:10px; color:var(--primary);">
+                                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </span>
+                            <span style="font-weight:700; font-size:15px; display:block;">添加快捷链接</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图 5：图册管理模块视图 -->
+            <div id="galleryView" class="main-view" style="display:none;">
+                <div class="inline-detail-card" style="padding:24px;">
+                    <div class="inline-header" style="margin-bottom:24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
+                        <h3 style="font-size:20px; font-weight:700; margin:0; display:flex; align-items:center; gap:8px;">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            图册管理系统
+                        </h3>
+                        <button type="button" class="back-btn" id="backToAdminControlBtn">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <span>返回控制面板</span>
+                        </button>
+                    </div>
+                    <div class="gallery-toolbar" style="display:flex; gap:12px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
+                        <input type="search" id="gallerySearchInput" placeholder="检索图册内所有图片..." style="flex:1; padding:10px 14px; border-radius:10px; border:1px solid var(--border-color); outline:none; background:var(--bg-card); color:var(--text-main);">
+                        <button type="button" class="primary-btn" id="galleryAddBtn" style="padding:10px 20px; font-size:14px; border-radius:999px; display:inline-flex; align-items:center; gap:6px;">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>新增图片</span>
+                        </button>
+                    </div>
+                    <div class="gallery-grid" id="galleryGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:16px; max-height:480px; overflow-y:auto; padding-right:6px;"></div>
+                </div>
+            </div>
+
+            <!-- 视图 6：回收站（管理员专属） -->
+            <div id="trashView" class="main-view" style="display:none;">
+                <div class="inline-detail-card" style="padding:24px;">
+                    <div class="inline-header" style="margin-bottom:20px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
+                        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                            <h3 style="font-size:20px; font-weight:700; margin:0; display:flex; align-items:center; gap:8px;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                回收站
+                            </h3>
+                            <span id="trashSummaryBadge" style="display:inline-flex; align-items:center; padding:3px 10px; font-size:12px; font-weight:700; border-radius:999px; background:var(--danger-light); color:var(--danger);">当前 0 篇</span>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <button type="button" class="back-btn" id="trashBackToListBtn">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                                <span>返回首页</span>
+                            </button>
+                            <button type="button" class="danger-btn" id="trashEmptyAllBtn" style="padding:8px 16px; border-radius:999px; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                <span>清空回收站</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p style="margin:0 0 16px; color:var(--text-muted); font-size:13px; line-height:1.6;">这里存放的是<strong>管理员删除的文章</strong>。可再次「编辑再发布」、「直接恢复」或「彻底删除」。彻底删除后无法恢复，请谨慎操作。</p>
+                    <div id="trashCardList" class="trash-card-list"></div>
+                </div>
+            </div>
+
+            <!-- 视图 7：个人空间动态页面 -->
+            <div id="spaceView" class="main-view" style="display:none;">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
+                    <div class="breadcrumb-nav" style="margin:0;">
+                        <span class="breadcrumb-item" style="cursor:pointer;" onclick="switchView('list'); activeFilters = []; renderArticles();">首页</span>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-item active">个人空间动态</span>
+                    </div>
+                    <button type="button" class="back-btn" onclick="switchView('list');">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        <span>返回文章列表</span>
+                    </button>
+                </div>
+
+                <div class="space-page-grid" style="display:grid; grid-template-columns:1fr 310px; gap:20px;">
+                    <!-- 左侧列：发布框 + 动态列表 -->
+                    <div class="space-left-col">
+                        <!-- 管理员发布动态框 (仅管理员可见) -->
+                        <div class="box3-card space-publish-card" id="spacePublishCard" style="display:none; margin-bottom:20px; padding:20px;">
+                            <h4 style="margin:0 0 12px; font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; color:var(--text-main);">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                <span>发布新动态</span>
+                            </h4>
+                            <textarea id="feedPublishText" placeholder="分享此刻的想法、碎碎念或技术进展..." style="width:100%; min-height:86px; padding:12px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); resize:vertical; outline:none; font-size:14px; margin-bottom:12px; font-family:inherit;"></textarea>
+                            
+                            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <label class="secondary-btn" style="padding:6px 14px; font-size:12px; border-radius:999px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                        <span>附加图片</span>
+                                        <input type="file" id="feedImageInput" accept="image/*" multiple style="display:none;" onchange="handleFeedImageSelect(this)">
+                                    </label>
+                                    <span id="feedImageTip" style="font-size:12px; color:var(--text-muted);"></span>
+                                </div>
+                                <button type="button" class="primary-btn" onclick="submitNewFeed()" style="padding:8px 24px; font-size:13.5px; border-radius:999px;">
+                                    发布动态
+                                </button>
+                            </div>
+                            <div id="feedImagePreviewWrap" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+                        </div>
+
+                        <!-- 动态时间线列表容器 -->
+                        <div id="feedTimelineList" style="display:flex; flex-direction:column; gap:20px;"></div>
+                    </div>
+
+                    <!-- 右侧列：博主个人信息名片 + 日历活跃周期 -->
+                    <div class="space-right-col" style="display:flex; flex-direction:column; gap:20px;">
+                        <!-- 博主个人空间名片 -->
+                        <div class="box3-card space-profile-card" style="padding:22px; text-align:center;">
+                            <div style="position:relative; width:88px; height:88px; margin:0 auto 12px;">
+                                <img id="spaceAvatarImg" src="img/img6.jpg" alt="博主头像" style="width:88px; height:88px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-border); box-shadow:0 8px 20px rgba(0,0,0,0.12);">
+                                <span style="position:absolute; bottom:2px; right:4px; width:16px; height:16px; border-radius:50%; background:#10b981; border:2px solid #fff;" title="在线中"></span>
+                            </div>
+                            <h3 id="spaceNameTxt" style="font-size:18px; font-weight:800; color:var(--text-main); margin-bottom:4px;">是令令啊</h3>
+                            <p id="spaceBioTxt" style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">it's me~</p>
+                            
+                            <div style="padding:12px; border-radius:12px; background:var(--primary-light); color:var(--text-secondary); font-size:12.5px; line-height:1.6; text-align:left; margin-bottom:14px; border:1px solid var(--primary-border);">
+                                <strong style="color:var(--primary); display:block; margin-bottom:4px;">💡 自我介绍：</strong>
+                                <span id="spaceAboutTxt">热衷于前端开发与 UI/UX 极致交互体验，喜爱全栈探索、设计系统与博客雕琢。欢迎来到我的个人空间动态！✨</span>
+                            </div>
+
+                            <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;" id="spaceSocialBadges">
+                                <span class="frh-chip" style="font-size:12px; padding:4px 10px;">💬 微信: lingling_blog</span>
+                                <span class="frh-chip" style="font-size:12px; padding:4px 10px;">⚡ GitHub: github.com</span>
+                            </div>
+                        </div>
+
+                        <!-- 日历活跃周期板块 (Activity Heatmap & Calendar Navigation & Memo Support) -->
+                        <div class="box3-card space-activity-card" style="padding:20px;">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <h4 style="margin:0; font-size:15px; font-weight:700; display:flex; align-items:center; gap:6px; color:var(--text-main);">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                        <span id="activityCalendarMonthTitle">2026年8月</span>
+                                    </h4>
+                                    <div style="display:flex; gap:4px; align-items:center;">
+                                        <button type="button" class="mini-admin-btn" onclick="changeCalendarMonth(-1)" style="padding:2px 7px; font-size:12px; cursor:pointer;" title="上一月">‹</button>
+                                        <button type="button" class="mini-admin-btn" onclick="changeCalendarMonth(1)" style="padding:2px 7px; font-size:12px; cursor:pointer;" title="下一月">›</button>
+                                        <button type="button" class="mini-admin-btn" onclick="resetCalendarToToday()" style="padding:2px 7px; font-size:11px; cursor:pointer;" title="回到今天">今</button>
+                                    </div>
+                                </div>
+                                <span style="font-size:11.5px; color:var(--text-muted);" id="activityTotalDays">本月活跃 0 天</span>
+                            </div>
+                            
+                            <!-- 星期表头 -->
+                            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:6px; text-align:center; font-size:11px; font-weight:700; color:var(--text-muted);">
+                                <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                            </div>
+
+                            <!-- 当月实时日历网格（带数字与今日高亮） -->
+                            <div id="activityCalendarGrid" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; margin-bottom:12px; text-align:center;"></div>
+                            
+                            <div style="display:flex; align-items:center; justify-content:space-between; font-size:11px; color:var(--text-muted); padding-top:6px;">
+                                <span>少</span>
+                                <div style="display:flex; gap:4px; align-items:center;">
+                                    <span style="width:10px; height:10px; border-radius:2px; background:var(--bg-body); border:1px solid var(--border-color);"></span>
+                                    <span style="width:10px; height:10px; border-radius:2px; background:rgba(99,102,241,0.25);"></span>
+                                    <span style="width:10px; height:10px; border-radius:2px; background:rgba(99,102,241,0.55);"></span>
+                                    <span style="width:10px; height:10px; border-radius:2px; background:var(--primary);"></span>
+                                </div>
+                                <span>多</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="box3" aria-label="侧边栏信息">
+            <div class="box3-card" id="sidebarCommentsCard">
+                <h4>留言</h4>
+                <div id="sidebarCommentsList"></div>
+            </div>
+            <div class="box3-card">
+                <h4>站点统计</h4>
+                <div class="stat-grid">
+                    <div class="stat-line"><span>文章总数</span><strong id="statArticles">0</strong></div>
+                    <div class="stat-line"><span>总访问量</span><strong id="statPV">0</strong></div>
+                    <div class="stat-line" id="statUVRow" style="display:none;"><span>独立访客</span><strong id="statUV">0</strong></div>
+                    <div class="stat-line"><span>运行天数</span><strong id="statDays">0</strong></div>
+                </div>
+            </div>
+            <div class="box3-card">
+                <h4>热门文章排行</h4>
+                <ul id="hotList"></ul>
+            </div>
+            <div class="box3-card">
+                <div class="card-header-with-action">
+                    <h4>标签云</h4>
+                    <button type="button" class="mini-admin-btn" id="sidebarManageTagsBtn" style="display:none;">管理标签</button>
+                </div>
+                <div class="tag-cloud" id="tagCloud"></div>
+            </div>
+            <div class="box3-card">
+                <h4>友情链接</h4>
+                <div class="friend-links" id="friendLinks"></div>
+            </div>
+        </aside>
+    </div>
+
+    <div id="backTop" title="回到顶部">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+    </div>
+
+    <!-- 萌宠滑绳回到顶部控件 -->
+    <div id="hangingPetWrapper" class="hanging-pet-wrapper" title="点击萌宠回到顶部">
+        <div class="hanging-pet-line"></div>
+        <div class="hanging-pet-body">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M12 5c-3.5 0-6 2.5-6 6v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-7c0-3.5-2.5-6-6-6z"></path><path d="M6 7L3 3v5"></path><path d="M18 7l3-4v5"></path><circle cx="9" cy="12" r="1" fill="currentColor"></circle><circle cx="15" cy="12" r="1" fill="currentColor"></circle><path d="M12 15v1.5"></path></svg>
+        </div>
+    </div>
+
+    <!-- 全局 Toast 消息容器 -->
+    <div id="toastContainer"></div>
+
+    <div class="mask" id="overlay"></div>
+
+    <!-- 个人资料编辑器 -->
+    <div class="modal" id="profileEditorModal" aria-hidden="true">
+        <div class="modal-panel" style="grid-template-columns:1fr; max-width:520px;">
+            <div class="modal-header">
+                <h4>编辑个人资料</h4>
+                <button class="modal-close" id="closeProfileEditor" aria-label="关闭资料编辑">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="profileNameInput">昵称</label>
+                    <input id="profileNameInput" type="text" placeholder="输入昵称">
+                </div>
+                <div class="form-group">
+                    <label for="profileBioInput">签名</label>
+                    <input id="profileBioInput" type="text" placeholder="输入个性签名">
+                </div>
+                <div class="form-group">
+                    <label for="profileAboutInput">自我介绍</label>
+                    <textarea id="profileAboutInput" placeholder="输入详细的自我介绍..." style="width:100%; min-height:64px; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-size:13.5px; outline:none; resize:vertical; font-family:inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>头像图片设置</label>
+                    <div class="image-option-tabs">
+                        <button type="button" class="tab-btn active" id="profileTabUrl">网络 URL 链接</button>
+                        <button type="button" class="tab-btn" id="profileTabFile">上传本地图片</button>
+                    </div>
+                    <div id="profileUrlPane" class="image-pane">
+                        <input id="profileAvatarInput" type="text" placeholder="输入头像 URL 链接或相对路径 (如 img/img6.jpg)">
+                    </div>
+                    <div id="profileFilePane" class="image-pane" style="display:none;">
+                        <label class="file-pick-btn">
+                            📁 选择本地头像图片
+                            <input id="profileAvatarFileInput" type="file" accept="image/*" style="display:none;">
+                        </label>
+                        <span id="profileFileNameTip" class="file-tip">未选择文件</span>
+                    </div>
+                    <div id="profileAvatarPreviewWrap" class="image-preview-box" style="margin-top:10px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <img id="profileAvatarPreviewImg" src="img/img6.jpg" alt="头像预览" style="width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid #3b82f6;">
+                            <span style="font-size:13px; color:#64748b;">实时头像预览</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>社交与联系方式（自由添加/修改/删除，每一项将在侧边栏单独显示一行）</label>
+                    <div id="profileSocialEditorList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
+                    <button type="button" class="secondary-btn" id="addSocialRowBtn" style="padding:6px 14px; font-size:13px; border-radius:999px;">+ 添加社交/联系项</button>
+                </div>
+                <div class="submit-row" style="margin-top:20px; display:flex; gap:12px; justify-content:flex-end;">
+                    <button type="button" class="secondary-btn" id="closeProfileEditorBtn2" style="padding:10px 20px; border-radius:999px; font-size:14px;">取消</button>
+                    <button type="button" class="primary-btn" id="saveProfileBtn" style="padding:10px 24px; border-radius:999px; font-size:14px; font-weight:600;">保存个人资料</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 标签云管理弹窗 -->
+    <div class="modal" id="tagManagerModal" aria-hidden="true">
+        <div class="modal-panel" style="grid-template-columns:1fr; max-width:540px;">
+            <div class="modal-header">
+                <h4>标签云管理</h4>
+                <button class="modal-close" id="closeTagManager" aria-label="关闭标签管理">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex; gap:8px; margin-bottom:16px;">
+                    <input id="newTagNameInput" type="text" placeholder="输入新标签名称..." style="flex:1; margin:0;">
+                    <button type="button" class="primary-btn" id="addNewTagBtn" style="padding:10px 18px; font-size:13px;">+ 添加标签</button>
+                </div>
+                <label style="font-weight:600; margin-bottom:8px; display:block; font-size:14px;">所有现有标签列表（修改后将全局应用于所有文章）：</label>
+                <div class="tag-manage-list" id="tagManageList"></div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- ========== 歌单管理 Modal（管理员点击齿轮打开） ========== -->
+    <div class="modal" id="mpManageModal" aria-hidden="true">
+        <div class="modal-panel" style="grid-template-columns:1fr; max-width:720px; width:92%;">
+            <div class="modal-header">
+                <h4>🎵 歌单管理（管理员专属）</h4>
+                <button class="modal-close" id="mpCloseManageBtn">×</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+                <!-- API Base 设置 -->
+                <div style="padding:10px 14px; border:1px solid rgba(226, 232, 240, 0.8); border-radius:12px; background:rgba(248,250,252,0.5);">
+                    <label style="font-weight:700; display:block; margin-bottom:6px; font-size:13px;">网易云 API Base URL（默认支持全网在线搜索）</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="url" id="mpApiInput" placeholder="https://your-netease-api.example.com" style="flex:1; padding:8px 12px; border-radius:10px; border:1px solid #cbd5e1; outline:none; font-size:13px;">
+                        <button type="button" class="primary-btn" id="mpSaveApiBtn" style="padding:8px 16px; border-radius:999px; font-size:13px;">保存配置</button>
+                    </div>
+                </div>
+                <!-- 搜索 -->
+                <div>
+                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+                        <input type="search" id="mpSearchInput" placeholder="🔍 输入歌名 / 歌手 / 专辑（例如：周杰伦、海阔天空、晴天...）" style="flex:1; padding:10px 14px; border-radius:12px; border:1px solid #cbd5e1; outline:none; font-size:14px;">
+                        <button type="button" class="primary-btn" id="mpSearchBtn" style="padding:10px 20px; border-radius:999px; font-size:14px; font-weight:600;">搜索歌曲</button>
+                    </div>
+                    <!-- 搜索结果展示框（优化增大高度为 360px） -->
+                    <div id="mpSearchResult" style="min-height:160px; max-height:360px; overflow-y:auto; border-radius:12px; padding:8px;">
+                        <div style="color:#94a3b8; text-align:center; padding:32px 16px; font-size:13.5px;">
+                            💡 请在上方输入框输入关键词，点击「搜索歌曲」从全网查找最新音轨。<br>搜索到歌曲后点击「＋添加」即可加入到右侧播放列表中。
+                        </div>
+                    </div>
+                </div>
+                <!-- 当前歌单 -->
+                <div>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding:0 2px;">
+                        <div style="font-weight:700; font-size:14px;">📋 当前自定义歌单</div>
+                        <span style="color:#64748b; font-size:12px;">本地持久化保存（仅管理员可增删）</span>
+                    </div>
+                    <div id="mpCurrentPlaylist" style="min-height:100px; max-height:280px; overflow-y:auto; border-radius:12px; padding:6px 8px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增图册图片 Modal -->
+    <div class="modal" id="addGalleryImageModal" aria-hidden="true">
+        <div class="modal-panel" style="grid-template-columns:1fr; max-width:440px;">
+            <div class="modal-header">
+                <h4>新增图册图片</h4>
+                <button class="modal-close" id="closeAddGalleryImageModalBtn">×</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+                <div class="image-option-tabs" style="display:flex; gap:8px;">
+                    <button type="button" class="tab-btn active" id="galleryTabUrl" style="flex:1; padding:8px; border-radius:8px;">网络 URL 链接</button>
+                    <button type="button" class="tab-btn" id="galleryTabFile" style="flex:1; padding:8px; border-radius:8px;">上传本地图片</button>
+                </div>
+                <div id="galleryUrlInputPane" class="form-group">
+                    <label style="font-weight:600; font-size:13px; margin-bottom:4px; display:block;">图片 URL 地址</label>
+                    <input type="text" id="newGalleryUrlInput" placeholder="输入 http:// 或相对路径图片地址" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-size:14px;">
+                </div>
+                <div id="galleryFileInputPane" class="form-group" style="display:none;">
+                    <label style="font-weight:600; font-size:13px; margin-bottom:4px; display:block;">选择本地图片</label>
+                    <label class="file-pick-btn" style="text-align:center; display:block; padding:12px; border:1px dashed #cbd5e1; border-radius:10px; cursor:pointer;">
+                        📁 选择本地图片文件
+                        <input id="newGalleryFileInput" type="file" accept="image/*" style="display:none;">
+                    </label>
+                    <span id="newGalleryFileTip" class="file-tip" style="display:block; text-align:center; margin-top:8px; font-size:12px; color:#64748b;">未选择文件</span>
+                </div>
+                <div class="submit-row" style="display:flex; gap:12px; justify-content:flex-end; margin-top:10px;">
+                    <button type="button" class="secondary-btn" id="cancelAddGalleryImageBtn" style="padding:8px 18px; border-radius:999px; font-size:13px;">取消</button>
+                    <button type="button" class="primary-btn" id="saveGalleryImageBtn" style="padding:8px 22px; border-radius:999px; font-size:13px;">添加并保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增快捷跳转链接 Modal -->
+    <div class="modal" id="addCustomLinkModal" aria-hidden="true">
+        <div class="modal-panel" style="grid-template-columns:1fr; max-width:440px;">
+            <div class="modal-header">
+                <h4>添加自定义快捷链接</h4>
+                <button class="modal-close" id="closeCustomLinkModalBtn">×</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+                <div class="form-group">
+                    <label style="font-weight:600; font-size:13px; margin-bottom:4px; display:block;">链接标题</label>
+                    <input type="text" id="newLinkTitleInput" placeholder="例如：我的 GitHub" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-size:14px;">
+                </div>
+                <div class="form-group">
+                    <label style="font-weight:600; font-size:13px; margin-bottom:4px; display:block;">链接 URL 地址</label>
+                    <input type="text" id="newLinkUrlInput" placeholder="例如：https://github.com" style="width:100%; padding:10px; border-radius:10px; border:1px solid #cbd5e1; font-size:14px;">
+                </div>
+                <div class="submit-row" style="display:flex; gap:12px; justify-content:flex-end; margin-top:10px;">
+                    <button type="button" class="secondary-btn" id="cancelCustomLinkBtn" style="padding:8px 18px; border-radius:999px; font-size:13px;">取消</button>
+                    <button type="button" class="primary-btn" id="saveCustomLinkBtn" style="padding:8px 22px; border-radius:999px; font-size:13px;">添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 访客信息弹窗（首次回复评论时弹出，保存到 Cookie） ========== -->
+    <div class="visitor-info-modal" id="visitorInfoModal" aria-hidden="true">
+        <div class="visitor-info-popup-panel">
+            <div class="visitor-info-header">
+                <h4>📝 请先填写访客信息</h4>
+                <button type="button" class="visitor-info-close" id="visitorInfoCloseBtn" title="关闭">×</button>
+            </div>
+            <div class="visitor-info-body">
+                <p class="visitor-info-tip">首次回复评论需要填写昵称和联系方式，填写后将自动保存到 Cookie，下次无需再填。</p>
+                <div class="form-group">
+                    <label for="visitorNameInput">昵称</label>
+                    <input type="text" id="visitorNameInput" placeholder="请输入您的昵称" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="visitorContactInput">联系方式</label>
+                    <input type="text" id="visitorContactInput" placeholder="例如：邮箱 / QQ / 微信" autocomplete="email">
+                </div>
+                <div class="visitor-info-actions">
+                    <button type="button" class="visitor-info-cancel" id="visitorInfoCancelBtn">取消</button>
+                    <button type="button" class="visitor-info-submit" id="visitorInfoSubmitBtn">保存并继续回复</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 大图查看器（图册点击放大，左右切换，缩放） ========== -->
+    <div class="image-viewer-modal" id="imageViewerModal" aria-hidden="true">
+        <div class="image-viewer-box" id="imageViewerBox">
+            <button type="button" class="image-viewer-close" id="imageViewerCloseBtn" title="关闭 (Esc)">×</button>
+            <div class="image-viewer-stage" id="imageViewerStage">
+                <div class="image-viewer-img-wrap">
+                    <img id="imageViewerImg" src="" alt="大图预览">
+                </div>
+            </div>
+            <button type="button" class="image-viewer-nav image-viewer-prev" id="imageViewerPrevBtn" title="上一张 (←)">‹</button>
+            <button type="button" class="image-viewer-nav image-viewer-next" id="imageViewerNextBtn" title="下一张 (→)">›</button>
+            <div class="image-viewer-info">
+                <div class="image-viewer-zoom-controls">
+                    <button type="button" class="zoom-btn" id="zoomOutBtn" title="缩小 (-)">−</button>
+                    <span class="zoom-level" id="zoomLevel">100%</span>
+                    <button type="button" class="zoom-btn" id="zoomInBtn" title="放大 (+)">＋</button>
+                    <button type="button" class="zoom-btn" id="zoomResetBtn" title="重置 (0)">⟳</button>
+                </div>
+                <span class="image-viewer-divider"></span>
+                <span id="imageViewerName" class="image-viewer-name"></span>
+                <span id="imageViewerCounter" class="image-viewer-counter"></span>
+            </div>
+        </div>
+    <!-- ========== 全站主题与外观高级定制 Modal ========== -->
+    <div class="modal" id="themeSettingsModal" aria-hidden="true">
+        <div class="modal-panel" style="grid-template-columns:1fr; max-width:560px;">
+            <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-bottom:1px solid var(--border-color);">
+                <h4 style="display:flex; align-items:center; gap:8px; margin:0; font-size:18px; color:var(--text-main);">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span>全站主题与外观高级定制</span>
+                </h4>
+                <button type="button" class="modal-close" id="closeThemeSettingsModalBtn" aria-label="关闭">×</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:18px; padding:22px 24px;">
+                <div class="form-group">
+                    <label style="font-weight:700; font-size:13.5px; color:var(--text-main); margin-bottom:6px; display:block;">页面背景纹理质质感</label>
+                    <select id="paramBgTexture" style="width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); font-size:13.5px; outline:none;">
+                        <option value="gradient">默认柔和渐变 (Soft Gradient)</option>
+                        <option value="mesh">现代高斯色彩网格 (Mesh Grid)</option>
+                        <option value="dots">极简点状微观纹理 (Dot Pattern)</option>
+                        <option value="galaxy">深空星云极夜 Glow (Galaxy Glow)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight:700; font-size:13.5px; color:var(--text-main); margin-bottom:6px; display:block;">系统全局字体库</label>
+                    <select id="paramFontFamily" style="width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); font-size:13.5px; outline:none;">
+                        <option value="default">默认系统无衬线 (Sans-Serif)</option>
+                        <option value="serif">优雅经典衬线体 (Georgia Serif)</option>
+                        <option value="mono">极客写码等宽体 (Fira Monospace)</option>
+                        <option value="rounded">现代柔和圆体 (Quicksand Rounded)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <label style="font-weight:700; font-size:13.5px; color:var(--text-main);">卡片圆角风格</label>
+                        <span id="radiusVal" style="font-weight:700; color:var(--primary); font-size:13px;">20px</span>
+                    </div>
+                    <input type="range" id="paramRadius" min="8" max="28" value="20" style="width:100%; cursor:pointer; height:6px; border-radius:999px;">
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label style="font-weight:700; font-size:13.5px; color:var(--text-main);">透明度</label>
+                            <span id="opacityVal" style="font-weight:700; color:var(--primary); font-size:13px;">75%</span>
+                        </div>
+                        <input type="range" id="paramOpacity" min="10" max="95" value="75" style="width:100%; cursor:pointer; height:6px; border-radius:999px;">
+                    </div>
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label style="font-weight:700; font-size:13.5px; color:var(--text-main);">高斯模糊</label>
+                            <span id="blurVal" style="font-weight:700; color:var(--primary); font-size:13px;">16px</span>
+                        </div>
+                        <input type="range" id="paramBlur" min="0" max="30" value="16" style="width:100%; cursor:pointer; height:6px; border-radius:999px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight:700; font-size:13.5px; color:var(--text-main); margin-bottom:10px; display:block;">主题主色调 (Accent Color)</label>
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <button type="button" class="preset-color-btn" data-color="#6366f1" title="靛蓝" style="width:28px; height:28px; border-radius:50%; background:#6366f1; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
+                        <button type="button" class="preset-color-btn" data-color="#10b981" title="翡翠绿" style="width:28px; height:28px; border-radius:50%; background:#10b981; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
+                        <button type="button" class="preset-color-btn" data-color="#f43f5e" title="樱花粉" style="width:28px; height:28px; border-radius:50%; background:#f43f5e; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
+                        <button type="button" class="preset-color-btn" data-color="#f59e0b" title="琥珀金" style="width:28px; height:28px; border-radius:50%; background:#f59e0b; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
+                        <button type="button" class="preset-color-btn" data-color="#8b5cf6" title="紫罗兰" style="width:28px; height:28px; border-radius:50%; background:#8b5cf6; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
+                        <button type="button" class="preset-color-btn" data-color="#06b6d4" title="珊瑚蓝" style="width:28px; height:28px; border-radius:50%; background:#06b6d4; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
+                        <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
+                            <span style="font-size:12px; color:var(--text-muted);">自定义:</span>
+                            <input type="color" id="paramColorPicker" value="#6366f1" title="自定义色盘" style="border:none; width:32px; height:28px; padding:0; background:none; cursor:pointer; border-radius:6px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:14px; border-top:1px solid var(--border-color); margin-top:4px;">
+                    <button type="button" class="secondary-btn" id="resetParamsBtn" style="padding:8px 18px; font-size:13px; border-radius:999px;">恢复默认设置</button>
+                    <button type="button" class="primary-btn" id="saveThemeModalBtn" style="padding:8px 24px; font-size:13px; border-radius:999px;">完成保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移动端抽屉（结构与桌面左侧侧边栏完全一致，由同一套 JS 渲染） -->
+    <div class="drawer" id="mobileDrawer" aria-hidden="true">
+        <div class="drawer-panel">
+            <button class="drawer-close" id="drawerClose" title="关闭侧边栏">×</button>
+            <div class="touxiang" style="background:transparent;padding:0;box-shadow:none;cursor:pointer;" onclick="switchView('space'); if(typeof closeMobileDrawer === 'function') closeMobileDrawer();" title="点击进入个人空间动态">
+                <img src="img/img6.jpg" alt="博客博主头像" loading="lazy">
+                <div class="nicheng">是令令啊</div>
+                <div class="nicheng2">it's me~</div>
+            </div>
+            <!-- 导航：首页 / 动态 / 网址 / 友人 / 仓库 -->
+            <div class="daohang">
+                <ul>
+                    <li class="daohanglan">导航</li>
+                    <li><a href="#" title="首页" onclick="switchView('list'); activeFilters = []; renderArticles(); if(typeof closeMobileDrawer === 'function') closeMobileDrawer(); return false;">首页</a></li>
+                    <li><a href="#" title="个人空间动态" onclick="switchView('space'); if(typeof closeMobileDrawer === 'function') closeMobileDrawer(); return false;">动态</a></li>
+                    <li><a href="#" title="网址">网址</a></li>
+                    <li><a href="#" title="友人">友人</a></li>
+                    <li><a href="#" title="仓库">仓库</a></li>
+                </ul>
+            </div>
+            <!-- 分类风箱：与桌面端左侧分类结构完全一致，通过 renderLeftNav 同步渲染 -->
+            <div class="zucheng">
+                <ul>
+                    <li class="daohanglan">组成</li>
+                    <li><a href="#" title="分类">分类</a></li>
+                    <li><a href="#" title="页面">页面</a></li>
+                    <li><a href="#" title="友链">友链</a></li>
+                </ul>
+            </div>
+            <!-- 管理员专属板块（与桌面端左侧「管理」结构完全一致，由 renderAdminUI 同步渲染） -->
+            <div class="guanli" id="drawerGuanliSection" aria-label="管理员板块（移动端）">
+                <ul>
+                    <!-- 管理员专属条目：由 renderAdminUI() 动态注入 -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 纪念日 / 备忘录设置 Modal ========== -->
+    <div class="modal" id="calendarMemoModal" aria-hidden="true">
+        <div class="modal-panel" style="grid-template-columns:1fr; max-width:440px;">
+            <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-bottom:1px solid var(--border-color);">
+                <h4 style="display:flex; align-items:center; gap:8px; margin:0; font-size:16px; color:var(--text-main);">
+                    <span>📌 设定纪念日 / 备忘录</span>
+                </h4>
+                <button type="button" class="modal-close" onclick="closeCalendarMemoModal()" aria-label="关闭">×</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:16px; padding:20px 24px;">
+                <div style="font-size:13px; font-weight:700; color:var(--primary);" id="memoModalDateTitle">2026-08-13</div>
+                <div class="form-group">
+                    <label style="font-weight:700; font-size:13px; color:var(--text-main); margin-bottom:6px; display:block;">备忘录 / 纪念日内容（支持多行输入与轮播）：</label>
+                    <textarea id="calendarMemoInput" rows="4" placeholder="例如：
+结婚纪念日 🎉
+下午 3点 团队例会 📌
+交前置作业 📝" style="width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); font-size:13px; outline:none; resize:vertical;"></textarea>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                    <button type="button" class="action-btn delete-btn" onclick="deleteCalendarMemo()" style="padding:8px 16px; border-radius:999px; font-size:13px;">删除备忘</button>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="button" onclick="closeCalendarMemoModal()" style="padding:8px 16px; border-radius:999px; font-size:13px;">取消</button>
+                        <button type="button" class="primary-btn" onclick="saveCalendarMemo()" style="padding:8px 20px; border-radius:999px; font-size:13px;">保存设置</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vditor 编辑器库 -->
+    <script src="https://cdn.jsdelivr.net/npm/vditor@3.10.8/dist/index.min.js"></script>
+
+    <!-- 模块化 JS，按依赖顺序加载 -->
+    <script src="js/config.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
