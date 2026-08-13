@@ -11,8 +11,8 @@ function setTheme(theme) {
     const themeBtn = document.getElementById('themeToggle');
     if (themeBtn) {
         themeBtn.innerHTML = theme === 'dark' 
-            ? `${getIcon('sun', '', 15)} 浅色` 
-            : `${getIcon('moon', '', 15)} 暗黑`;
+            ? `${getIcon('sun', '', 15)} <span>浅色</span>` 
+            : `${getIcon('moon', '', 15)} <span>暗黑</span>`;
     }
     if (typeof vditorInstance !== 'undefined' && vditorInstance) {
         vditorInstance.setTheme(theme === 'dark' ? 'dark' : 'classic', theme === 'dark' ? 'dark' : 'light');
@@ -311,6 +311,13 @@ function initMusicPlayer() {
 let currentViewerArticleId = null;
 
 function switchView(viewName) {
+    // 切换任何视图时，必定关闭抽屉并解除页面滚动锁
+    if (typeof closeMobileDrawer === 'function') {
+        closeMobileDrawer();
+    }
+    document.body.style.overflow = '';
+    document.body.style.removeProperty('overflow');
+
     // 兼容别名：'admin' / 'adminControl' 都可打开控制台
     let view = String(viewName || 'list');
     if (view === 'admin') view = 'adminControl';
@@ -763,6 +770,13 @@ function initVditor(initialValue = '') {
         preview: {
             theme: {
                 current: isDark ? 'dark' : 'light'
+            },
+            hljs: {
+                enable: true,
+                style: isDark ? 'dracula' : 'github',
+                lineNumber: true,
+                defaultLang: 'python', // 点击代码块工具默认使用 python 语言
+                langs: ['python', 'c', 'cpp', 'javascript', 'typescript', 'html', 'css', 'bash', 'json', 'sql', 'java', 'go', 'rust']
             }
         },
         toolbarConfig: {
@@ -1503,16 +1517,25 @@ function addNewGlobalTag(newTag) {
 function openMobileDrawer() {
     const drawer = document.getElementById('mobileDrawer');
     if (!drawer) return;
+    if (drawer.parentNode !== document.body) {
+        document.body.appendChild(drawer);
+    }
     drawer.classList.add('active');
     drawer.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeMobileDrawer() {
     const drawer = document.getElementById('mobileDrawer');
-    if (!drawer) return;
-    drawer.classList.remove('active');
-    drawer.setAttribute('aria-hidden', 'true');
+    if (drawer) {
+        drawer.classList.remove('active');
+        drawer.setAttribute('aria-hidden', 'true');
+    }
+    document.body.style.overflow = '';
+    document.body.style.removeProperty('overflow');
 }
+window.openMobileDrawer = openMobileDrawer;
+window.closeMobileDrawer = closeMobileDrawer;
 
 // ========== 搜索防抖 ==========
 
@@ -1616,6 +1639,38 @@ function applyThemeCustomizations() {
     // 5. 颜色 Preset 或 Color Picker
     if (state.themePresetColor) {
         document.documentElement.style.setProperty('--primary', state.themePresetColor);
+    }
+    // 6. 绳索悬挂粗细
+    const ropeWidth = state.themeRopeWidth || localStorage.getItem('themeRopeWidth') || '3.5';
+    document.documentElement.style.setProperty('--rope-width', `${ropeWidth}px`);
+
+    // 7. 布局间隙与侧边栏圆角
+    const gridGapX = state.themeGridGapX || localStorage.getItem('themeGridGapX') || '6';
+    const topGap = state.themeTopGap || localStorage.getItem('themeTopGap') || '8';
+    const cardGapY = state.themeCardGapY || localStorage.getItem('themeCardGapY') || '10';
+    const sidebarRadius = state.themeSidebarRadius || localStorage.getItem('themeSidebarRadius') || '18';
+
+    document.documentElement.style.setProperty('--grid-gap-x', `${gridGapX}px`);
+    document.documentElement.style.setProperty('--top-gap', `${topGap}px`);
+    document.documentElement.style.setProperty('--card-gap-y', `${cardGapY}px`);
+    document.documentElement.style.setProperty('--sidebar-radius', `${sidebarRadius}px`);
+
+    // 8. 实时联动更新控制面板 Live Preview 调试区示例组件
+    const previewStage = document.getElementById('previewStageContainer');
+    if (previewStage) {
+        previewStage.setAttribute('data-bg', state.themeBg || 'gradient');
+    }
+    const previewRopeLine = document.getElementById('previewRopeLine');
+    if (previewRopeLine) {
+        previewRopeLine.style.width = `${ropeWidth}px`;
+    }
+    const previewBlob1 = document.getElementById('previewBlob1');
+    if (previewBlob1 && state.themePresetColor) {
+        previewBlob1.style.background = state.themePresetColor;
+    }
+    const previewCard = document.getElementById('previewSampleCard');
+    if (previewCard) {
+        previewCard.className = `preview-sample-card ${state.themeFont && state.themeFont !== 'default' ? 'font-' + state.themeFont : ''}`;
     }
 }
 
@@ -1784,9 +1839,13 @@ function generateTOC(contentElId, sidebarBoxClass = '.box3') {
                         parentItem.classList.remove('is-collapsed');
                         parentItem = parentItem.parentElement ? parentItem.parentElement.closest('.toc-item') : null;
                     }
-                    // 保持右侧高亮目录项在 TOC 容器可视范围内
+                    // 保持右侧高亮目录项在 TOC 容器可视范围内（仅调整 TOC 内部 scrollTop，绝不锁死 window 主页面）
                     if (tocCard) {
-                        l.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        const cardHeight = tocCard.clientHeight;
+                        const itemTop = l.offsetTop;
+                        if (itemTop < tocCard.scrollTop || itemTop > (tocCard.scrollTop + cardHeight - 40)) {
+                            tocCard.scrollTop = Math.max(0, itemTop - cardHeight / 2);
+                        }
                     }
                 }
             });

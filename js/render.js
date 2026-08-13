@@ -1410,14 +1410,20 @@ function renderTopNoticeBanner() {
 
     const linesHtml = hasUpcoming 
         ? upcoming.map(item => `
-            <div class="flip-item" onclick="openCalendarMemoModal('${item.date}')" title="${item.date} ${adminTip}" style="height:22px; line-height:22px; font-size:12px; color:var(--text-main); white-space:nowrap; text-overflow:ellipsis; overflow:hidden; cursor:pointer;">
-                ${escapeHtml(item.text)}
+            <div class="flip-item" onclick="openCalendarMemoModal('${item.date}')" title="${item.date} ${adminTip}" style="cursor:pointer;">
+                <span class="flip-text-inner" data-text="${escapeHtml(item.text)}">${escapeHtml(item.text)}</span>
             </div>
           `).join('')
         : `
-            <div class="flip-item" onclick="openCalendarMemoModal('${todayStr}')" title="${adminTip}" style="height:22px; line-height:22px; font-size:12px; color:var(--text-main); white-space:nowrap; text-overflow:ellipsis; overflow:hidden; cursor:pointer;">今天也要开心 ✨</div>
-            <div class="flip-item" onclick="openCalendarMemoModal('${todayStr}')" title="${adminTip}" style="height:22px; line-height:22px; font-size:12px; color:var(--text-main); white-space:nowrap; text-overflow:ellipsis; overflow:hidden; cursor:pointer;">保持热爱，奔赴山海 🚀</div>
-            <div class="flip-item" onclick="openCalendarMemoModal('${todayStr}')" title="${adminTip}" style="height:22px; line-height:22px; font-size:12px; color:var(--text-main); white-space:nowrap; text-overflow:ellipsis; overflow:hidden; cursor:pointer;">把期待降到最低，收获都是惊喜 🌸</div>
+            <div class="flip-item" onclick="openCalendarMemoModal('${todayStr}')" title="${adminTip}" style="cursor:pointer;">
+                <span class="flip-text-inner" data-text="今天也要开心 ✨">今天也要开心 ✨</span>
+            </div>
+            <div class="flip-item" onclick="openCalendarMemoModal('${todayStr}')" title="${adminTip}" style="cursor:pointer;">
+                <span class="flip-text-inner" data-text="保持热爱，奔赴山海 🚀">保持热爱，奔赴山海 🚀</span>
+            </div>
+            <div class="flip-item" onclick="openCalendarMemoModal('${todayStr}')" title="${adminTip}" style="cursor:pointer;">
+                <span class="flip-text-inner" data-text="把期待降到最低，收获都是惊喜 🌸">把期待降到最低，收获都是惊喜 🌸</span>
+            </div>
           `;
 
     const totalItems = hasUpcoming ? upcoming.length : 3;
@@ -1434,17 +1440,62 @@ function renderTopNoticeBanner() {
         </div>
     `;
 
-    if (topNoticeTimer) clearInterval(topNoticeTimer);
+    if (topNoticeTimer) clearTimeout(topNoticeTimer);
     topNoticeIndex = 0;
 
-    if (totalItems > 1) {
-        topNoticeTimer = setInterval(() => {
-            topNoticeIndex = (topNoticeIndex + 1) % totalItems;
-            const flipList = document.getElementById('topNoticeFlipList');
-            if (flipList) {
-                flipList.style.transform = `translateY(-${topNoticeIndex * 22}px)`;
+    function playCurrentNoticeStep() {
+        const flipList = document.getElementById('topNoticeFlipList');
+        if (!flipList) return;
+        const items = flipList.querySelectorAll('.flip-item');
+        if (!items.length) return;
+
+        const currentItem = items[topNoticeIndex];
+        const innerTextSpan = currentItem ? currentItem.querySelector('.flip-text-inner') : null;
+        if (!innerTextSpan) return;
+
+        // 清理所有跑马灯 class 与 transform
+        items.forEach(it => {
+            const span = it.querySelector('.flip-text-inner');
+            if (span) {
+                span.classList.remove('scroll-marquee');
+                span.style.animation = 'none';
+                span.style.transform = 'translateX(0)';
             }
-        }, 3000);
+        });
+
+        const textContent = innerTextSpan.getAttribute('data-text') || innerTextSpan.textContent || '';
+        const charCount = textContent.length;
+
+        // 测量实际字符物理溢出宽度
+        const containerWidth = currentItem.clientWidth || 180;
+        const textWidth = innerTextSpan.scrollWidth || 200;
+        const overflowDistance = textWidth - containerWidth + 12;
+
+        let delayMs = 3200;
+
+        if (charCount > 8 && overflowDistance > 0) {
+            // 文字 > 8 个字且实际溢出，触发左右跑马灯动画
+            const durationSec = Math.max(3.5, (charCount - 8) * 0.45 + 3.0);
+            delayMs = Math.round((durationSec + 0.8) * 1000);
+
+            innerTextSpan.style.setProperty('--marquee-distance', `-${overflowDistance}px`);
+            innerTextSpan.style.animation = `noticeMarqueeScroll ${durationSec}s ease-in-out forwards`;
+        }
+
+        // 计划本次停留/走字完毕后的上下翻转动作
+        topNoticeTimer = setTimeout(() => {
+            if (totalItems > 1) {
+                topNoticeIndex = (topNoticeIndex + 1) % totalItems;
+                if (flipList) {
+                    flipList.style.transform = `translateY(-${topNoticeIndex * 22}px)`;
+                }
+                playCurrentNoticeStep();
+            }
+        }, delayMs);
+    }
+
+    if (totalItems >= 1) {
+        setTimeout(playCurrentNoticeStep, 300);
     }
 }
 

@@ -21,17 +21,38 @@
     </div>
     <div class="yinying" id="pageLayout">
         <div class="top" role="banner">
-            <div style="display:flex; align-items:center; gap:16px; margin-right:auto;">
-                <div class="mingzi">
-                    <a href="admin/login.html" title="管理员登录"><img src="img/firstlogo.gif" alt="博客logo"></a>
+            <div class="top-left" style="position: relative; z-index: 100;">
+                <div class="mingzi" id="adminLoginBrandBtn" onclick="window.toggleAdminLoginDropdown(event)" title="点击展开管理员登录" style="cursor: pointer;">
+                    <img src="img/firstlogo.gif" alt="博客logo">
                 </div>
-                <!-- 顶栏跳动提示标语 (靠左展示) -->
-                <div id="topNoticeBanner" class="top-notice-banner"></div>
+
+                <!-- 管理员快速下拉登录弹窗 (Dropdown Popover) -->
+                <div class="admin-login-dropdown" id="adminLoginDropdown" aria-hidden="true">
+                    <div class="dropdown-header">
+                        <span class="dropdown-title">🔑 管理员登录</span>
+                        <button type="button" class="dropdown-close-btn" id="closeAdminLoginDropdownBtn" title="关闭">×</button>
+                    </div>
+                    <form id="quickAdminLoginForm" onsubmit="return false;">
+                        <div class="dropdown-input-group">
+                            <input id="quickAdminUser" type="text" autocomplete="username" placeholder="管理员账号" required>
+                        </div>
+                        <div class="dropdown-input-group">
+                            <input id="quickAdminPass" type="password" autocomplete="current-password" placeholder="管理员密码" required>
+                        </div>
+                        <div id="quickAdminMsg" class="dropdown-error-msg"></div>
+                        <button type="submit" id="quickAdminSubmitBtn" class="primary-btn dropdown-submit-btn">立即登录</button>
+                    </form>
+                </div>
             </div>
+            <!-- 顶栏提示标语 (搜索框展开时自动淡出隐藏) -->
+            <div id="topNoticeBanner" class="top-notice-banner"></div>
             <div class="top-actions">
-                <form id="searchForm" action="#" method="get" role="search">
+                <form id="searchForm" class="search-form" action="#" method="get" role="search">
+                    <button type="button" id="searchToggleBtn" class="search-icon-btn" title="搜索文章" aria-label="搜索文章">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </button>
                     <input autocomplete="off" id="search_input" type="search" name="s"
-                           placeholder="输入关键词搜索…" title="搜索文章" aria-label="搜索文章">
+                           placeholder="搜索…" title="搜索文章" aria-label="搜索文章">
                 </form>
                 <button type="button" class="theme-toggle" id="themeToggle" title="切换暗黑/浅色模式">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -90,7 +111,7 @@
                         <ol class="mp-list" id="mpPlayList"></ol>
                     </div>
                 </div>
-                <button type="button" class="hamburger mobile-only" id="hamburger" title="打开侧边栏菜单">
+                <button type="button" class="hamburger mobile-only" id="hamburger" onclick="openMobileDrawer()" title="打开侧边栏菜单">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
             </div>
@@ -574,15 +595,12 @@
         </aside>
     </div>
 
-    <div id="backTop" title="回到顶部">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-    </div>
-
-    <!-- 萌宠滑绳回到顶部控件 -->
-    <div id="hangingPetWrapper" class="hanging-pet-wrapper" title="点击萌宠回到顶部">
+    <!-- 桌面端 Web 专属：绳索悬挂回到顶部控件 (固定于视口最顶端，精确定位在右侧侧边栏右侧) -->
+    <div id="hangingPetWrapper" class="hanging-pet-wrapper" title="点击绳索回到顶部">
         <div class="hanging-pet-line"></div>
         <div class="hanging-pet-body">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M12 5c-3.5 0-6 2.5-6 6v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-7c0-3.5-2.5-6-6-6z"></path><path d="M6 7L3 3v5"></path><path d="M18 7l3-4v5"></path><circle cx="9" cy="12" r="1" fill="currentColor"></circle><circle cx="15" cy="12" r="1" fill="currentColor"></circle><path d="M12 15v1.5"></path></svg>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            <span class="rope-label" style="font-size:10.5px; font-weight:800; letter-spacing:0.5px;">TOP</span>
         </div>
     </div>
 
@@ -813,89 +831,174 @@
             </div>
         </div>
     <!-- ========== 全站主题与外观高级定制 Modal ========== -->
+    <!-- ========== 全站主题与外观高级定制 Modal (双栏实时 Live Preview) ========== -->
     <div class="modal" id="themeSettingsModal" aria-hidden="true">
-        <div class="modal-panel" style="grid-template-columns:1fr; max-width:560px;">
-            <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between; padding:18px 24px; border-bottom:1px solid var(--border-color);">
-                <h4 style="display:flex; align-items:center; gap:8px; margin:0; font-size:18px; color:var(--text-main);">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <div class="modal-panel theme-modal-panel">
+            <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1px solid var(--border-color);">
+                <h4 style="display:flex; align-items:center; gap:8px; margin:0; font-size:17px; color:var(--text-main);">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     <span>全站主题与外观高级定制</span>
                 </h4>
                 <button type="button" class="modal-close" id="closeThemeSettingsModalBtn" aria-label="关闭">×</button>
             </div>
-            <div class="modal-body" style="display:flex; flex-direction:column; gap:18px; padding:22px 24px;">
-                <div class="form-group">
-                    <label style="font-weight:700; font-size:13.5px; color:var(--text-main); margin-bottom:6px; display:block;">页面背景纹理质质感</label>
-                    <select id="paramBgTexture" style="width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); font-size:13.5px; outline:none;">
-                        <option value="gradient">默认柔和渐变 (Soft Gradient)</option>
-                        <option value="mesh">现代高斯色彩网格 (Mesh Grid)</option>
-                        <option value="dots">极简点状微观纹理 (Dot Pattern)</option>
-                        <option value="galaxy">深空星云极夜 Glow (Galaxy Glow)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label style="font-weight:700; font-size:13.5px; color:var(--text-main); margin-bottom:6px; display:block;">系统全局字体库</label>
-                    <select id="paramFontFamily" style="width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); font-size:13.5px; outline:none;">
-                        <option value="default">默认系统无衬线 (Sans-Serif)</option>
-                        <option value="serif">优雅经典衬线体 (Georgia Serif)</option>
-                        <option value="mono">极客写码等宽体 (Fira Monospace)</option>
-                        <option value="rounded">现代柔和圆体 (Quicksand Rounded)</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <label style="font-weight:700; font-size:13.5px; color:var(--text-main);">卡片圆角风格</label>
-                        <span id="radiusVal" style="font-weight:700; color:var(--primary); font-size:13px;">20px</span>
+            <div class="theme-modal-split-body">
+                <!-- 左侧：实时效果示范预览区 (Live Preview) -->
+                <div class="modal-preview-pane">
+                    <div class="preview-pane-header">
+                        <span class="preview-live-dot"></span>
+                        <span>实时效果调试预览 (Live Preview)</span>
                     </div>
-                    <input type="range" id="paramRadius" min="8" max="28" value="20" style="width:100%; cursor:pointer; height:6px; border-radius:999px;">
+                    <div class="preview-stage-container" id="previewStageContainer" data-bg="gradient">
+                        <!-- 色彩背景光晕球 (使高斯模糊与透明度透光渲染极度明显) -->
+                        <div class="preview-glow-blob blob-1" id="previewBlob1"></div>
+                        <div class="preview-glow-blob blob-2" id="previewBlob2"></div>
+
+                        <!-- 示例绳索悬挂组件 -->
+                        <div class="preview-rope-wrapper">
+                            <div class="preview-rope-line" id="previewRopeLine"></div>
+                            <div class="preview-rope-badge">TOP</div>
+                        </div>
+
+                        <!-- 示例示范卡片组件 -->
+                        <div class="preview-sample-card" id="previewSampleCard">
+                            <div class="preview-card-head">
+                                <div class="preview-card-avatar" id="previewCardAvatar">✦</div>
+                                <div class="preview-card-title" id="previewCardTitle">示例文章卡片</div>
+                            </div>
+                            <div class="preview-card-desc" id="previewCardDesc">
+                                拖动右侧参数，实时调试卡片圆角、绳索粗细、玻璃高斯模糊与主题配色。
+                            </div>
+                            <button type="button" class="preview-card-btn" id="previewCardBtn">样例控件</button>
+                        </div>
+                    </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <!-- 右侧：参数控制器 -->
+                <div class="modal-body-controls">
                     <div class="form-group">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                            <label style="font-weight:700; font-size:13.5px; color:var(--text-main);">透明度</label>
-                            <span id="opacityVal" style="font-weight:700; color:var(--primary); font-size:13px;">75%</span>
-                        </div>
-                        <input type="range" id="paramOpacity" min="10" max="95" value="75" style="width:100%; cursor:pointer; height:6px; border-radius:999px;">
+                        <label style="font-weight:700; font-size:13px; color:var(--text-main); margin-bottom:6px; display:block;">页面背景纹理质感</label>
+                        <select id="paramBgTexture" style="width:100%; padding:8px 12px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); font-size:13px; outline:none;">
+                            <option value="gradient">默认柔和渐变 (Soft Gradient)</option>
+                            <option value="mesh">现代高斯色彩网格 (Mesh Grid)</option>
+                            <option value="dots">极简点状微观纹理 (Dot Pattern)</option>
+                            <option value="galaxy">深空星云极夜 Glow (Galaxy Glow)</option>
+                        </select>
                     </div>
+
                     <div class="form-group">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                            <label style="font-weight:700; font-size:13.5px; color:var(--text-main);">高斯模糊</label>
-                            <span id="blurVal" style="font-weight:700; color:var(--primary); font-size:13px;">16px</span>
+                        <label style="font-weight:700; font-size:13px; color:var(--text-main); margin-bottom:6px; display:block;">系统全局字体库</label>
+                        <select id="paramFontFamily" style="width:100%; padding:8px 12px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-body); color:var(--text-main); font-size:13px; outline:none;">
+                            <option value="default">默认系统无衬线 (Sans-Serif)</option>
+                            <option value="serif">优雅经典衬线体 (Georgia Serif)</option>
+                            <option value="mono">极客写码等宽体 (Fira Monospace)</option>
+                            <option value="rounded">现代柔和圆体 (Quicksand Rounded)</option>
+                        </select>
+                    </div>
+
+                    <!-- 🎨 完全自定义主题主色调 -->
+                    <div class="form-group">
+                        <label style="font-weight:700; font-size:13px; color:var(--text-main); margin-bottom:8px; display:block;">主题主色调 (完全自定义颜色)</label>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                            <button type="button" class="preset-color-btn" data-color="#6366f1" title="靛蓝" style="width:24px; height:24px; border-radius:50%; background:#6366f1; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.18);"></button>
+                            <button type="button" class="preset-color-btn" data-color="#10b981" title="翡翠绿" style="width:24px; height:24px; border-radius:50%; background:#10b981; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.18);"></button>
+                            <button type="button" class="preset-color-btn" data-color="#f43f5e" title="樱花粉" style="width:24px; height:24px; border-radius:50%; background:#f43f5e; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.18);"></button>
+                            <button type="button" class="preset-color-btn" data-color="#f59e0b" title="琥珀金" style="width:24px; height:24px; border-radius:50%; background:#f59e0b; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.18);"></button>
+                            <button type="button" class="preset-color-btn" data-color="#8b5cf6" title="紫罗兰" style="width:24px; height:24px; border-radius:50%; background:#8b5cf6; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.18);"></button>
+                            <button type="button" class="preset-color-btn" data-color="#06b6d4" title="珊瑚蓝" style="width:24px; height:24px; border-radius:50%; background:#06b6d4; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.18);"></button>
                         </div>
-                        <input type="range" id="paramBlur" min="0" max="30" value="16" style="width:100%; cursor:pointer; height:6px; border-radius:999px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <input type="color" id="paramColorPicker" value="#6366f1" title="自定义色盘" style="border:none; width:34px; height:28px; padding:0; background:none; cursor:pointer; border-radius:6px;">
+                            <input type="text" id="paramColorHex" value="#6366f1" placeholder="#6366f1" style="flex:1; padding:6px 10px; border-radius:8px; border:1px solid var(--border-color); font-size:12.5px; font-family:monospace; background:var(--bg-body); color:var(--text-main); outline:none;">
+                        </div>
+                    </div>
+
+                    <!-- 📐 侧边栏板块与卡片圆角控制器 -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <label style="font-weight:700; font-size:12.5px; color:var(--text-main);">文章卡片圆角</label>
+                                <span id="radiusVal" style="font-weight:700; color:var(--primary); font-size:12px;">20px</span>
+                            </div>
+                            <input type="range" id="paramRadius" min="0" max="32" value="20" style="width:100%; cursor:pointer; height:5px; border-radius:999px;">
+                        </div>
+                        <div class="form-group">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <label style="font-weight:700; font-size:12.5px; color:var(--text-main);">侧边栏板块圆角</label>
+                                <span id="sidebarRadiusVal" style="font-weight:700; color:var(--primary); font-size:12px;">18px</span>
+                            </div>
+                            <input type="range" id="paramSidebarRadius" min="0" max="32" value="18" style="width:100%; cursor:pointer; height:5px; border-radius:999px;">
+                        </div>
+                    </div>
+
+                    <!-- 📐 布局间隙控制器 (侧边栏之间 / 顶栏与侧边栏之间 / 板块之间) -->
+                    <div class="form-group" style="padding-top:6px; border-top:1px dashed var(--border-color);">
+                        <label style="font-weight:700; font-size:13px; color:var(--text-main); margin-bottom:8px; display:block;">页面布局与间隙调节 (Spacing Control)</label>
+                        
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                    <span style="font-size:12px; color:var(--text-main);">左右侧边栏与中间间隙 (Grid Gap X)</span>
+                                    <span id="gridGapXVal" style="font-weight:700; color:var(--primary); font-size:12px;">6px</span>
+                                </div>
+                                <input type="range" id="paramGridGapX" min="2" max="24" value="6" style="width:100%; cursor:pointer; height:5px; border-radius:999px;">
+                            </div>
+
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                    <span style="font-size:12px; color:var(--text-main);">顶栏与下方侧边栏间隙 (Top Gap)</span>
+                                    <span id="topGapVal" style="font-weight:700; color:var(--primary); font-size:12px;">8px</span>
+                                </div>
+                                <input type="range" id="paramTopGap" min="0" max="24" value="8" style="width:100%; cursor:pointer; height:5px; border-radius:999px;">
+                            </div>
+
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                    <span style="font-size:12px; color:var(--text-main);">侧边栏板块之间间隙 (Card Gap Y)</span>
+                                    <span id="cardGapYVal" style="font-weight:700; color:var(--primary); font-size:12px;">10px</span>
+                                </div>
+                                <input type="range" id="paramCardGapY" min="4" max="24" value="10" style="width:100%; cursor:pointer; height:5px; border-radius:999px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 绳索粗细与玻璃参数 -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding-top:6px; border-top:1px dashed var(--border-color);">
+                        <div class="form-group">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <label style="font-weight:700; font-size:12px; color:var(--text-main);">透明度</label>
+                                <span id="opacityVal" style="font-weight:700; color:var(--primary); font-size:12px;">75%</span>
+                            </div>
+                            <input type="range" id="paramOpacity" min="10" max="95" value="75" style="width:100%; cursor:pointer; height:5px; border-radius:999px;">
+                        </div>
+                        <div class="form-group">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                <label style="font-weight:700; font-size:12px; color:var(--text-main);">高斯模糊</label>
+                                <span id="blurVal" style="font-weight:700; color:var(--primary); font-size:12px;">16px</span>
+                            </div>
+                            <input type="range" id="paramBlur" min="0" max="30" value="16" style="width:100%; cursor:pointer; height:5px; border-radius:999px;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                            <label style="font-weight:700; font-size:12.5px; color:var(--text-main);">绳索悬挂粗细</label>
+                            <span id="ropeWidthVal" style="font-weight:700; color:var(--primary); font-size:12px;">3.5px</span>
+                        </div>
+                        <input type="range" id="paramRopeWidth" min="1" max="10" step="0.5" value="3.5" style="width:100%; cursor:pointer; height:5px; border-radius:999px;">
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <label style="font-weight:700; font-size:13.5px; color:var(--text-main); margin-bottom:10px; display:block;">主题主色调 (Accent Color)</label>
-                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                        <button type="button" class="preset-color-btn" data-color="#6366f1" title="靛蓝" style="width:28px; height:28px; border-radius:50%; background:#6366f1; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
-                        <button type="button" class="preset-color-btn" data-color="#10b981" title="翡翠绿" style="width:28px; height:28px; border-radius:50%; background:#10b981; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
-                        <button type="button" class="preset-color-btn" data-color="#f43f5e" title="樱花粉" style="width:28px; height:28px; border-radius:50%; background:#f43f5e; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
-                        <button type="button" class="preset-color-btn" data-color="#f59e0b" title="琥珀金" style="width:28px; height:28px; border-radius:50%; background:#f59e0b; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
-                        <button type="button" class="preset-color-btn" data-color="#8b5cf6" title="紫罗兰" style="width:28px; height:28px; border-radius:50%; background:#8b5cf6; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
-                        <button type="button" class="preset-color-btn" data-color="#06b6d4" title="珊瑚蓝" style="width:28px; height:28px; border-radius:50%; background:#06b6d4; border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.18); transition:transform 0.2s;"></button>
-                        <div style="margin-left:auto; display:flex; align-items:center; gap:6px;">
-                            <span style="font-size:12px; color:var(--text-muted);">自定义:</span>
-                            <input type="color" id="paramColorPicker" value="#6366f1" title="自定义色盘" style="border:none; width:32px; height:28px; padding:0; background:none; cursor:pointer; border-radius:6px;">
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:14px; border-top:1px solid var(--border-color); margin-top:4px;">
-                    <button type="button" class="secondary-btn" id="resetParamsBtn" style="padding:8px 18px; font-size:13px; border-radius:999px;">恢复默认设置</button>
-                    <button type="button" class="primary-btn" id="saveThemeModalBtn" style="padding:8px 24px; font-size:13px; border-radius:999px;">完成保存</button>
-                </div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-top:1px solid var(--border-color); background:var(--bg-body);">
+                <button type="button" class="secondary-btn" id="resetParamsBtn" style="padding:8px 18px; font-size:13px; border-radius:999px;">恢复默认设置</button>
+                <button type="button" class="primary-btn" id="saveThemeModalBtn" style="padding:8px 24px; font-size:13px; border-radius:999px;">完成保存</button>
             </div>
         </div>
     </div>
 
     <!-- 移动端抽屉（结构与桌面左侧侧边栏完全一致，由同一套 JS 渲染） -->
-    <div class="drawer" id="mobileDrawer" aria-hidden="true">
+    <div class="drawer" id="mobileDrawer" aria-hidden="true" onclick="if(event.target === this) closeMobileDrawer();">
         <div class="drawer-panel">
-            <button class="drawer-close" id="drawerClose" title="关闭侧边栏">×</button>
+            <button class="drawer-close" id="drawerClose" onclick="closeMobileDrawer()" title="关闭侧边栏">×</button>
             <div class="touxiang" style="background:transparent;padding:0;box-shadow:none;cursor:pointer;" onclick="switchView('space'); if(typeof closeMobileDrawer === 'function') closeMobileDrawer();" title="点击进入个人空间动态">
                 <img src="img/img6.jpg" alt="博客博主头像" loading="lazy">
                 <div class="nicheng">是令令啊</div>

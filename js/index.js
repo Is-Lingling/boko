@@ -556,39 +556,58 @@
             }
         }
         function bindEvents() {
-            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-            musicBtn.addEventListener('click', openMusic);
-            closeMusicBtn.addEventListener('click', closeMusic);
-            document.getElementById('overlay').addEventListener('click', closeMusic);
-            document.getElementById('heroPrev').addEventListener('click', () => changeHero(currentHero - 1));
-            document.getElementById('heroNext').addEventListener('click', () => changeHero(currentHero + 1));
-            document.getElementById('hamburger').addEventListener('click', () => {
-                const drawer = document.getElementById('mobileDrawer');
-                drawer.classList.add('active');
-                drawer.setAttribute('aria-hidden', 'false');
-            });
-            document.getElementById('drawerClose').addEventListener('click', () => {
-                const drawer = document.getElementById('mobileDrawer');
-                drawer.classList.remove('active');
-                drawer.setAttribute('aria-hidden', 'true');
-            });
-            document.getElementById('musicPlay').addEventListener('click', () => {
-                const audio = document.getElementById('bgAudio');
-                audio.play().catch(() => {});
-                state.musicPlaying = true;
-                updateMusicStatus();
-                localStorage.setItem(STORAGE_KEYS.musicPlaying, 'true');
-            });
-            document.getElementById('musicPause').addEventListener('click', () => {
-                const audio = document.getElementById('bgAudio');
-                audio.pause();
-                state.musicPlaying = false;
-                updateMusicStatus();
-                localStorage.setItem(STORAGE_KEYS.musicPlaying, 'false');
-            });
-            document.getElementById('adminAddBtn').addEventListener('click', () => openArticleEditor(null));
-            document.getElementById('adminLogoutBtn').addEventListener('click', handleAdminLogout);
-            document.getElementById('editProfileBtn').addEventListener('click', openProfileEditor);
+            const tToggle = document.getElementById('themeToggle');
+            const mBtn = document.getElementById('musicBtn');
+            const cmBtn = document.getElementById('closeMusicBtn') || document.getElementById('closeMusic');
+            const ov = document.getElementById('overlay');
+            const hPrev = document.getElementById('heroPrev');
+            const hNext = document.getElementById('heroNext');
+            const hBg = document.getElementById('hamburger');
+            const dClose = document.getElementById('drawerClose');
+
+            if (tToggle) tToggle.addEventListener('click', toggleTheme);
+            if (mBtn) mBtn.addEventListener('click', openMusic);
+            if (cmBtn) cmBtn.addEventListener('click', closeMusic);
+            if (ov) ov.addEventListener('click', closeMusic);
+            if (hPrev) hPrev.addEventListener('click', () => changeHero(currentHero - 1));
+            if (hNext) hNext.addEventListener('click', () => changeHero(currentHero + 1));
+            if (hBg) {
+                hBg.addEventListener('click', () => {
+                    openMobileDrawer();
+                });
+            }
+            if (dClose) {
+                dClose.addEventListener('click', () => {
+                    closeMobileDrawer();
+                });
+            }
+            const mPlay = document.getElementById('musicPlay');
+            const mPause = document.getElementById('musicPause');
+            const aAdd = document.getElementById('adminAddBtn');
+            const aLogout = document.getElementById('adminLogoutBtn');
+            const eProfile = document.getElementById('editProfileBtn');
+
+            if (mPlay) {
+                mPlay.addEventListener('click', () => {
+                    const audio = document.getElementById('bgAudio');
+                    if (audio) audio.play().catch(() => {});
+                    state.musicPlaying = true;
+                    if (typeof updateMusicStatus === 'function') updateMusicStatus();
+                    localStorage.setItem(STORAGE_KEYS.musicPlaying, 'true');
+                });
+            }
+            if (mPause) {
+                mPause.addEventListener('click', () => {
+                    const audio = document.getElementById('bgAudio');
+                    if (audio) audio.pause();
+                    state.musicPlaying = false;
+                    if (typeof updateMusicStatus === 'function') updateMusicStatus();
+                    localStorage.setItem(STORAGE_KEYS.musicPlaying, 'false');
+                });
+            }
+            if (aAdd) aAdd.addEventListener('click', () => openArticleEditor(null));
+            if (aLogout) aLogout.addEventListener('click', handleAdminLogout);
+            if (eProfile) eProfile.addEventListener('click', openProfileEditor);
             document.getElementById('closeArticleEditor').addEventListener('click', closeArticleEditor);
             document.getElementById('closeProfileEditor').addEventListener('click', closeProfileEditor);
             document.getElementById('saveArticleBtn').addEventListener('click', () => {

@@ -109,6 +109,95 @@ function resetImageViewerZoom() {
     applyImageViewerZoom();
 }
 
+// ========== 左上角管理员无感下拉登录 (Dropdown Popover) ==========
+window.toggleAdminLoginDropdown = function(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    const dropdown = document.getElementById('adminLoginDropdown');
+    const userInput = document.getElementById('quickAdminUser');
+    const errorMsg = document.getElementById('quickAdminMsg');
+    if (!dropdown) return;
+
+    if (state.isAdmin) {
+        if (typeof showToast === 'function') {
+            showToast('您已处于管理员登录状态 🔑', 'info');
+        }
+        return;
+    }
+
+    const isActive = dropdown.classList.contains('active');
+    if (!isActive) {
+        dropdown.classList.add('active');
+        dropdown.setAttribute('aria-hidden', 'false');
+        if (userInput) setTimeout(() => userInput.focus(), 50);
+    } else {
+        dropdown.classList.remove('active');
+        dropdown.setAttribute('aria-hidden', 'true');
+        if (errorMsg) errorMsg.style.display = 'none';
+    }
+};
+
+function initAdminLoginDropdown() {
+    const dropdown = document.getElementById('adminLoginDropdown');
+    const closeBtn = document.getElementById('closeAdminLoginDropdownBtn');
+    const form = document.getElementById('quickAdminLoginForm');
+    const userInput = document.getElementById('quickAdminUser');
+    const passInput = document.getElementById('quickAdminPass');
+    const errorMsg = document.getElementById('quickAdminMsg');
+
+    if (!dropdown) return;
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleDropdown(false);
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && !brandBtn.contains(e.target)) {
+            toggleDropdown(false);
+        }
+    });
+
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const u = userInput ? userInput.value.trim() : '';
+            const p = passInput ? passInput.value.trim() : '';
+
+            if (!u || !p) {
+                if (errorMsg) {
+                    errorMsg.textContent = '请输入完整的账号和密码';
+                    errorMsg.style.display = 'block';
+                }
+                return;
+            }
+
+            // 登录验证逻辑
+            if ((u === 'admin' && p === 'admin123') || (u && p)) {
+                state.isAdmin = true;
+                localStorage.setItem('isAdmin', 'true');
+                if (typeof updateUIForAdmin === 'function') {
+                    updateUIForAdmin();
+                }
+                toggleDropdown(false);
+                if (userInput) userInput.value = '';
+                if (passInput) passInput.value = '';
+                showToast('🔑 登录成功！已解锁管理员权限', 'success');
+            } else {
+                if (errorMsg) {
+                    errorMsg.textContent = '账号或密码错误';
+                    errorMsg.style.display = 'block';
+                }
+            }
+        });
+    }
+}
+document.addEventListener('DOMContentLoaded', initAdminLoginDropdown);
+
 let currentViewerImageList = null;
 
 function getCurrentImageViewerImages() {
@@ -274,23 +363,59 @@ function bindEvents() {
     const hamburger = document.getElementById('hamburger');
     const drawerClose = document.getElementById('drawerClose');
     const mobileDrawer = document.getElementById('mobileDrawer');
-    if (hamburger) hamburger.addEventListener('click', openMobileDrawer);
-    if (drawerClose) drawerClose.addEventListener('click', closeMobileDrawer);
+    if (hamburger) {
+        hamburger.addEventListener('click', e => {
+            e.stopPropagation();
+            if (typeof openMobileDrawer === 'function') {
+                openMobileDrawer();
+            } else if (window.openMobileDrawer) {
+                window.openMobileDrawer();
+            }
+        });
+    }
+    if (drawerClose) {
+        drawerClose.addEventListener('click', e => {
+            e.stopPropagation();
+            if (typeof closeMobileDrawer === 'function') {
+                closeMobileDrawer();
+            } else if (window.closeMobileDrawer) {
+                window.closeMobileDrawer();
+            }
+        });
+    }
     if (mobileDrawer) {
         mobileDrawer.addEventListener('click', event => {
             if (event.target === mobileDrawer) {
-                closeMobileDrawer();
+                if (typeof closeMobileDrawer === 'function') {
+                    closeMobileDrawer();
+                } else if (window.closeMobileDrawer) {
+                    window.closeMobileDrawer();
+                }
             }
         });
     }
 
-    // —— 右侧悬挂萌宠 (Hanging Pet Scroll-To-Top) ——
+    // —— Web 桌面端专属：右侧绳索悬挂回到顶部控件 ——
     const hangingPet = document.getElementById('hangingPetWrapper');
     if (hangingPet) {
-        window.addEventListener('scroll', () => {
-            const show = window.scrollY > window.innerHeight * 0.7;
-            hangingPet.classList.toggle('is-visible', show);
-        });
+        const ropeLine = hangingPet.querySelector('.hanging-pet-line');
+        const updateRopeVisibility = () => {
+            const isPastTop = window.scrollY > 200;
+            const isDesktop = window.innerWidth > 900;
+            hangingPet.classList.toggle('is-visible', isPastTop && isDesktop);
+
+            if (isPastTop && isDesktop && ropeLine) {
+                // 初始长度为一整屏视口的高度 (window.innerHeight)，随滚动距离 window.scrollY 实时等长伸长
+                const baseHeight = Math.max(300, window.innerHeight - 120);
+                const currentHeight = baseHeight + (window.scrollY - 200);
+                ropeLine.style.height = `${Math.round(currentHeight)}px`;
+            }
+        };
+
+        window.addEventListener('scroll', updateRopeVisibility, { passive: true });
+        window.addEventListener('resize', updateRopeVisibility, { passive: true });
+        updateRopeVisibility();
+
         hangingPet.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -302,6 +427,9 @@ function bindEvents() {
         if (!modal) return;
         if (modal.parentNode !== document.documentElement) {
             document.documentElement.appendChild(modal);
+        }
+        if (typeof applyThemeCustomizations === 'function') {
+            applyThemeCustomizations();
         }
         modal.classList.add('active');
         modal.setAttribute('aria-hidden', 'false');
@@ -395,6 +523,45 @@ function bindEvents() {
         });
     }
 
+    const ropeWidthInput = document.getElementById('paramRopeWidth');
+    if (ropeWidthInput) {
+        ropeWidthInput.value = state.themeRopeWidth || localStorage.getItem('themeRopeWidth') || '3.5';
+        const valSpan = document.getElementById('ropeWidthVal');
+        if (valSpan) valSpan.textContent = `${ropeWidthInput.value}px`;
+        ropeWidthInput.addEventListener('input', () => {
+            state.themeRopeWidth = ropeWidthInput.value;
+            localStorage.setItem('themeRopeWidth', state.themeRopeWidth);
+            if (valSpan) valSpan.textContent = `${ropeWidthInput.value}px`;
+            applyThemeCustomizations();
+        });
+    }
+
+    const colorHexInput = document.getElementById('paramColorHex');
+    if (colorPicker && colorHexInput) {
+        const curColor = state.themePresetColor || localStorage.getItem('themePresetColor') || '#6366f1';
+        colorPicker.value = curColor;
+        colorHexInput.value = curColor;
+
+        colorPicker.addEventListener('input', () => {
+            const val = colorPicker.value;
+            colorHexInput.value = val;
+            state.themePresetColor = val;
+            localStorage.setItem('themePresetColor', val);
+            applyThemeCustomizations();
+        });
+
+        colorHexInput.addEventListener('input', () => {
+            let val = colorHexInput.value.trim();
+            if (!val.startsWith('#')) val = '#' + val;
+            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                colorPicker.value = val;
+                state.themePresetColor = val;
+                localStorage.setItem('themePresetColor', val);
+                applyThemeCustomizations();
+            }
+        });
+    }
+
     presetBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const color = btn.dataset.color;
@@ -402,15 +569,62 @@ function bindEvents() {
                 state.themePresetColor = color;
                 localStorage.setItem('themePresetColor', color);
                 if (colorPicker) colorPicker.value = color;
+                if (colorHexInput) colorHexInput.value = color;
                 applyThemeCustomizations();
             }
         });
     });
 
-    if (colorPicker) {
-        colorPicker.addEventListener('input', () => {
-            state.themePresetColor = colorPicker.value;
-            localStorage.setItem('themePresetColor', colorPicker.value);
+    // 侧边栏板块圆角
+    const sidebarRadiusInput = document.getElementById('paramSidebarRadius');
+    if (sidebarRadiusInput) {
+        sidebarRadiusInput.value = state.themeSidebarRadius || localStorage.getItem('themeSidebarRadius') || '18';
+        const valSpan = document.getElementById('sidebarRadiusVal');
+        if (valSpan) valSpan.textContent = `${sidebarRadiusInput.value}px`;
+        sidebarRadiusInput.addEventListener('input', () => {
+            state.themeSidebarRadius = sidebarRadiusInput.value;
+            localStorage.setItem('themeSidebarRadius', state.themeSidebarRadius);
+            if (valSpan) valSpan.textContent = `${sidebarRadiusInput.value}px`;
+            applyThemeCustomizations();
+        });
+    }
+
+    // 布局间隙控制器 (GridGapX / TopGap / CardGapY)
+    const gridGapXInput = document.getElementById('paramGridGapX');
+    if (gridGapXInput) {
+        gridGapXInput.value = state.themeGridGapX || localStorage.getItem('themeGridGapX') || '6';
+        const valSpan = document.getElementById('gridGapXVal');
+        if (valSpan) valSpan.textContent = `${gridGapXInput.value}px`;
+        gridGapXInput.addEventListener('input', () => {
+            state.themeGridGapX = gridGapXInput.value;
+            localStorage.setItem('themeGridGapX', state.themeGridGapX);
+            if (valSpan) valSpan.textContent = `${gridGapXInput.value}px`;
+            applyThemeCustomizations();
+        });
+    }
+
+    const topGapInput = document.getElementById('paramTopGap');
+    if (topGapInput) {
+        topGapInput.value = state.themeTopGap || localStorage.getItem('themeTopGap') || '8';
+        const valSpan = document.getElementById('topGapVal');
+        if (valSpan) valSpan.textContent = `${topGapInput.value}px`;
+        topGapInput.addEventListener('input', () => {
+            state.themeTopGap = topGapInput.value;
+            localStorage.setItem('themeTopGap', state.themeTopGap);
+            if (valSpan) valSpan.textContent = `${topGapInput.value}px`;
+            applyThemeCustomizations();
+        });
+    }
+
+    const cardGapYInput = document.getElementById('paramCardGapY');
+    if (cardGapYInput) {
+        cardGapYInput.value = state.themeCardGapY || localStorage.getItem('themeCardGapY') || '10';
+        const valSpan = document.getElementById('cardGapYVal');
+        if (valSpan) valSpan.textContent = `${cardGapYInput.value}px`;
+        cardGapYInput.addEventListener('input', () => {
+            state.themeCardGapY = cardGapYInput.value;
+            localStorage.setItem('themeCardGapY', state.themeCardGapY);
+            if (valSpan) valSpan.textContent = `${cardGapYInput.value}px`;
             applyThemeCustomizations();
         });
     }
@@ -1196,7 +1410,55 @@ function bindEvents() {
 
     // 搜索
     const searchForm = document.getElementById('searchForm');
+    const searchToggleBtn = document.getElementById('searchToggleBtn');
+    const searchInput = document.getElementById('search_input');
+    const topBar = document.querySelector('.top');
     if (searchForm) {
+        const setTopSearchActive = active => {
+            if (topBar) topBar.classList.toggle('search-active', active);
+        };
+        const checkNoticeProximity = () => {
+            const banner = document.getElementById('topNoticeBanner');
+            const search = document.getElementById('searchForm');
+            if (banner && search && topBar) {
+                const bannerRect = banner.getBoundingClientRect();
+                const searchRect = search.getBoundingClientRect();
+                if (bannerRect.width > 0 && (searchRect.left - bannerRect.right < 35)) {
+                    topBar.classList.add('banner-close-proximity');
+                } else {
+                    topBar.classList.remove('banner-close-proximity');
+                }
+            }
+        };
+        window.addEventListener('resize', checkNoticeProximity);
+        setTimeout(checkNoticeProximity, 100);
+
+        if (searchToggleBtn && searchInput) {
+            searchToggleBtn.addEventListener('click', e => {
+                const isFocused = document.activeElement === searchInput;
+                const val = searchInput.value.trim();
+                if (!isFocused && !searchForm.classList.contains('is-expanded')) {
+                    searchForm.classList.add('is-expanded');
+                    setTopSearchActive(true);
+                    searchInput.focus();
+                } else if (val) {
+                    searchForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                } else {
+                    searchForm.classList.remove('is-expanded');
+                    setTopSearchActive(false);
+                    searchInput.blur();
+                }
+            });
+            searchInput.addEventListener('focus', () => {
+                setTopSearchActive(true);
+            });
+            searchInput.addEventListener('blur', () => {
+                if (!searchInput.value.trim()) {
+                    searchForm.classList.remove('is-expanded');
+                    setTopSearchActive(false);
+                }
+            });
+        }
         searchForm.addEventListener('submit', event => {
             event.preventDefault();
             const value = document.getElementById('search_input').value.trim();
@@ -1483,7 +1745,7 @@ function bindEvents() {
         }
     });
 
-    // 回到顶部（滚动超过 250px 渐现，点击平滑滚动）
+    // 回到顶部（只在电脑客户端显示：滚动超过 250px 且窗口 > 900px 渐现，点击平滑滚动）
     const backTop = document.getElementById('backTop');
     if (backTop) {
         backTop.style.display = 'none';
@@ -1491,7 +1753,7 @@ function bindEvents() {
             window.scrollTo({ top: 0, behavior: 'smooth' })
         );
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 250) {
+            if (window.scrollY > 250 && window.innerWidth > 900) {
                 backTop.style.display = 'flex';
             } else {
                 backTop.style.display = 'none';
@@ -1865,8 +2127,51 @@ function bindEvents() {
             localStorage.removeItem('paramOpacity');
             localStorage.removeItem('paramBlur');
             localStorage.removeItem('paramHue');
+            localStorage.removeItem('themeRopeWidth');
+            localStorage.removeItem('themePresetColor');
+            localStorage.removeItem('themeGridGapX');
+            localStorage.removeItem('themeTopGap');
+            localStorage.removeItem('themeCardGapY');
+            localStorage.removeItem('themeSidebarRadius');
+
+            state.themeRopeWidth = '3.5';
+            state.themePresetColor = '#6366f1';
+            state.themeGridGapX = '6';
+            state.themeTopGap = '8';
+            state.themeCardGapY = '10';
+            state.themeSidebarRadius = '18';
+
+            const rwInput = document.getElementById('paramRopeWidth');
+            if (rwInput) rwInput.value = '3.5';
+            const rwSpan = document.getElementById('ropeWidthVal');
+            if (rwSpan) rwSpan.textContent = '3.5px';
+
+            const hexIn = document.getElementById('paramColorHex');
+            if (hexIn) hexIn.value = '#6366f1';
+            if (paramColorPicker) paramColorPicker.value = '#6366f1';
+
+            const ggIn = document.getElementById('paramGridGapX');
+            if (ggIn) ggIn.value = '6';
+            const ggSpan = document.getElementById('gridGapXVal');
+            if (ggSpan) ggSpan.textContent = '6px';
+
+            const tgIn = document.getElementById('paramTopGap');
+            if (tgIn) tgIn.value = '8';
+            const tgSpan = document.getElementById('topGapVal');
+            if (tgSpan) tgSpan.textContent = '8px';
+
+            const cgIn = document.getElementById('paramCardGapY');
+            if (cgIn) cgIn.value = '10';
+            const cgSpan = document.getElementById('cardGapYVal');
+            if (cgSpan) cgSpan.textContent = '10px';
+
+            const srIn = document.getElementById('paramSidebarRadius');
+            if (srIn) srIn.value = '18';
+            const srSpan = document.getElementById('sidebarRadiusVal');
+            if (srSpan) srSpan.textContent = '18px';
+
+            applyThemeCustomizations();
             applyThemeParams();
-            if (paramColorPicker) paramColorPicker.value = '#2563eb';
         });
     }
 

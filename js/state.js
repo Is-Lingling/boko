@@ -215,9 +215,33 @@ function parseMarkdown(markdown) {
     if (!markdown) return '';
     let html = markdown;
 
-    // 代码块 (```)
-    html = html.replace(/```([\s\S]*?)```/g, function(match, codeStr) {
-        return '<pre><code>' + codeStr.trim() + '</code></pre>';
+    // 代码块 (```lang ... ```) 识别语言、Mac 窗口风格、行号与高颜值 C/Python 语法高亮
+    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, function(match, lang, codeStr) {
+        const rawLang = lang ? lang.trim().toLowerCase() : 'python';
+        const displayLang = rawLang ? rawLang.toUpperCase() : 'PYTHON';
+        const trimmedCode = codeStr.trim();
+        const highlightedCode = highlightCodeSyntax(trimmedCode, rawLang);
+        
+        // 生成对应行号
+        const lineCount = trimmedCode.split('\n').length;
+        const lineNumsHtml = Array.from({ length: lineCount }, (_, i) => `<span>${i + 1}</span>`).join('');
+
+        return `<div class="code-block-wrapper" data-lang="${escapeHtml(rawLang)}">` +
+               `<div class="code-block-header">` +
+               `<div class="mac-dots"><span class="mac-dot red"></span><span class="mac-dot yellow"></span><span class="mac-dot green"></span></div>` +
+               `<div class="code-header-right">` +
+               `<span class="code-lang-badge">${escapeHtml(displayLang)}</span>` +
+               `<button type="button" class="code-copy-btn" onclick="copyCodeBlock(this)">` +
+               `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>` +
+               `<span>复制</span>` +
+               `</button>` +
+               `</div>` +
+               `</div>` +
+               `<div class="code-body-layout">` +
+               `<div class="line-numbers-gutter" aria-hidden="true">${lineNumsHtml}</div>` +
+               `<pre class="code-pre-area"><code class="language-${escapeHtml(rawLang)}">${highlightedCode}</code></pre>` +
+               `</div>` +
+               `</div>`;
     });
 
     // 引用块 (>)
@@ -260,3 +284,90 @@ function parseMarkdown(markdown) {
     html = html.replace(/<\/(h[1-4]|blockquote|ul|ol|pre|hr)><\/p>/g, '</$1>');
     return html;
 }
+
+/**
+ * 针对 C 语言 / Python / JS 等代码块的轻量炫彩语法高亮处理
+ */
+function highlightCodeSyntax(codeText, lang) {
+    if (!codeText) return '';
+    let text = escapeHtml(codeText);
+    const tokens = [];
+    const saveToken = (str, cls) => {
+        const id = `___TOKEN_${tokens.length}___`;
+        tokens.push(`<span class="token ${cls}">${str}</span>`);
+        return id;
+    };
+
+    // 1. 抽取字符串与注释
+    if (lang === 'c' || lang === 'cpp' || lang === 'c++') {
+        // C 预处理 #include / #define
+        text = text.replace(/(#include\s*&lt;[^&]+&gt;|#define\s+\w+|#ifdef|#ifndef|#endif|#pragma[^\n]*)/g, m => saveToken(m, 'preprocessor'));
+        // C 注释
+        text = text.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/g, m => saveToken(m, 'comment'));
+        // 字符串
+        text = text.replace(/("(\\"|[^"])*"|'(\\'|[^'])*')/g, m => saveToken(m, 'string'));
+        // 关键字
+        const cKeywords = /\b(int|char|float|double|void|struct|typedef|return|if|else|for|while|do|switch|case|break|continue|static|const|unsigned|sizeof|extern|enum|goto|auto|register|volatile|inline|NULL|bool|true|false)\b/g;
+        text = text.replace(cKeywords, m => saveToken(m, 'keyword'));
+        // 常用 C 标准库函数
+        text = text.replace(/\b(printf|scanf|malloc|free|strlen|strcpy|strcmp|fopen|fclose|exit|memcpy|memset|puts|gets|getchar|putchar)\b(?=\s*\()/g, m => saveToken(m, 'function'));
+        // 数字 (10进制, 16进制)
+        text = text.replace(/\b(0x[0-9a-fA-F]+|\d+(\.\d+)?)\b/g, m => saveToken(m, 'number'));
+        // 运算符
+        text = text.replace(/(&amp;&amp;|\|\||-&gt;|\+\+|--|==|!=|&lt;=|&gt;=|\+|-|\*|\/|=)/g, m => saveToken(m, 'operator'));
+    } else if (lang === 'python' || lang === 'py') {
+        // Python 注释
+        text = text.replace(/(#[^\n]*)/g, m => saveToken(m, 'comment'));
+        // Python 字符串 (三引号与单/双引号)
+        text = text.replace(/(""[\s\S]*?"""|'''[\s\S]*?'''|"(\\"|[^"])*"|'(\\'|[^'])*')/g, m => saveToken(m, 'string'));
+        // 关键字
+        const pyKeywords = /\b(def|class|return|if|elif|else|for|while|in|import|from|as|try|except|finally|with|lambda|pass|break|continue|and|or|not|is|yield|async|await|assert|global|nonlocal|raise|True|False|None)\b/g;
+        text = text.replace(pyKeywords, m => saveToken(m, 'keyword'));
+        // Built-in 函数
+        text = text.replace(/\b(print|len|range|enumerate|zip|map|filter|list|dict|set|tuple|str|int|float|input|open|super|type|dir|help)\b(?=\s*\()/g, m => saveToken(m, 'function'));
+        // 数字
+        text = text.replace(/\b(\d+(\.\d+)?)\b/g, m => saveToken(m, 'number'));
+        // 装饰器
+        text = text.replace(/(@\w+)/g, m => saveToken(m, 'decorator'));
+    } else {
+        // 通用语言
+        text = text.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/|#[^\n]*)/g, m => saveToken(m, 'comment'));
+        text = text.replace(/("(\\"|[^"])*"|'(\\'|[^'])*'|`(\\`|[^`])*`)/g, m => saveToken(m, 'string'));
+        const genKeywords = /\b(const|let|var|function|return|if|else|for|while|import|export|class|from|await|async)\b/g;
+        text = text.replace(genKeywords, m => saveToken(m, 'keyword'));
+        text = text.replace(/\b(\d+)\b/g, m => saveToken(m, 'number'));
+    }
+
+    // 2. 还原代换 tokens (从后向前替换或多次迭代替换)
+    for (let i = 0; i < tokens.length; i++) {
+        text = text.replace(`___TOKEN_${i}___`, tokens[i]);
+    }
+
+    return text;
+}
+
+/**
+ * 一键复制代码块 helper
+ */
+function copyCodeBlock(btn) {
+    const pre = btn.closest('.code-block-wrapper');
+    if (!pre) return;
+    const code = pre.querySelector('code');
+    if (!code) return;
+    const text = code.innerText || code.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = '已复制!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '复制';
+                btn.classList.remove('copied');
+            }, 1800);
+        }).catch(() => {
+            alert('复制失败，请手动选取复制代码');
+        });
+    } else {
+        alert('浏览器暂不支持自动复制，请手动选取复制代码');
+    }
+}
+window.copyCodeBlock = copyCodeBlock;

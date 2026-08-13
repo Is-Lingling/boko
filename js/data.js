@@ -540,6 +540,11 @@ function toggleFavorite(articleId) {
 function handleAdminLogout() {
     localStorage.removeItem('isAdmin');
     state.isAdmin = false;
+    if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+    document.body.style.overflow = '';
+    document.body.style.removeProperty('overflow');
+    if (typeof switchView === 'function') switchView('list');
+    if (typeof renderAdminUI === 'function') renderAdminUI();
 }
 
 // ========== 音乐播放器（网易云 API）==========
