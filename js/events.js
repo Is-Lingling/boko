@@ -51,8 +51,6 @@ function doSubmitReply(opts) {
         if (typeof addArticleReply === 'function') {
             addArticleReply(Number(articleId), Number(parentId), name, contact, content);
         }
-        // 同步增加一条全局留言
-        addComment(name, contact, content, Number(parentId));
         // 重新渲染回复列表
         const listEl = document.querySelector(`[data-reply-list="${parentId}"]`);
         if (listEl && typeof renderReplyList === 'function') {
@@ -414,9 +412,11 @@ function bindEvents() {
             hangingPet.classList.toggle('is-visible', isPastTop && isDesktop);
 
             if (isPastTop && isDesktop && ropeLine) {
-                // 初始长度为一整屏视口的高度 (window.innerHeight)，随滚动距离 window.scrollY 实时等长伸长
-                const baseHeight = Math.max(300, window.innerHeight - 120);
-                const currentHeight = baseHeight + (window.scrollY - 200);
+                // 绳索长度适配视口高度，确保底部 TOP 按钮始终优雅地处于屏幕可见区域内（离底部留出安全舒适间距）
+                const maxAllowedHeight = Math.max(160, Math.min(window.innerHeight - 200, 480));
+                // 根据滚动比例进行微量自然弹性微动（最多延伸 15px），绝不溢出窗口
+                const scrollProgress = Math.min(1, Math.max(0, (window.scrollY - 200) / 1000));
+                const currentHeight = (maxAllowedHeight - 15) + (scrollProgress * 15);
                 ropeLine.style.height = `${Math.round(currentHeight)}px`;
             }
         };
@@ -437,6 +437,115 @@ function bindEvents() {
         if (modal.parentNode !== document.documentElement) {
             document.documentElement.appendChild(modal);
         }
+
+        // 同步所有输入控件与显示文本
+        const bgSel = document.getElementById('paramBgTexture');
+        if (bgSel) bgSel.value = state.themeBg || localStorage.getItem('themeBg') || 'gradient';
+
+        const fontSel = document.getElementById('paramFontFamily');
+        if (fontSel) fontSel.value = state.themeFont || localStorage.getItem('themeFont') || 'default';
+
+        const colorPick = document.getElementById('paramColorPicker');
+        const colorHex = document.getElementById('paramColorHex');
+        const colorDisplay = document.getElementById('colorHexDisplay');
+        const swatchBox = document.getElementById('paramColorSwatchBox');
+        const hueSlider = document.getElementById('paramHueSlider');
+        const hueVal = document.getElementById('hueVal');
+        const curColor = state.themePresetColor || localStorage.getItem('themePresetColor') || '#6366f1';
+        if (colorPick) colorPick.value = curColor;
+        if (colorHex) colorHex.value = curColor;
+        if (colorDisplay) colorDisplay.textContent = curColor;
+        if (swatchBox) swatchBox.style.backgroundColor = curColor;
+        if (hueSlider) {
+            const h = hexToHue(curColor);
+            hueSlider.value = h;
+            if (hueVal) hueVal.textContent = `${h}°`;
+        }
+
+        const tgIn = document.getElementById('paramTopGap');
+        const tgSpan = document.getElementById('topGapVal');
+        const topGap = state.themeTopGap || localStorage.getItem('themeTopGap') || '8';
+        if (tgIn) tgIn.value = topGap;
+        if (tgSpan) tgSpan.textContent = `${topGap}px`;
+
+        const ggIn = document.getElementById('paramGridGapX');
+        const ggSpan = document.getElementById('gridGapXVal');
+        const gridGapX = state.themeGridGapX || localStorage.getItem('themeGridGapX') || '6';
+        if (ggIn) ggIn.value = gridGapX;
+        if (ggSpan) ggSpan.textContent = `${gridGapX}px`;
+
+        const cgIn = document.getElementById('paramCardGapY');
+        const cgSpan = document.getElementById('cardGapYVal');
+        const cardGapY = state.themeCardGapY || localStorage.getItem('themeCardGapY') || '10';
+        if (cgIn) cgIn.value = cardGapY;
+        if (cgSpan) cgSpan.textContent = `${cardGapY}px`;
+
+        const agtIn = document.getElementById('paramArticleGapTop');
+        const agtSpan = document.getElementById('articleGapTopVal');
+        const articleGapTop = state.themeArticleGapTop || localStorage.getItem('themeArticleGapTop') || '0';
+        if (agtIn) agtIn.value = articleGapTop;
+        if (agtSpan) agtSpan.textContent = `${articleGapTop}px`;
+
+        const agbIn = document.getElementById('paramArticleGapBottom');
+        const agbSpan = document.getElementById('articleGapBottomVal');
+        const articleGapBottom = state.themeArticleGapBottom || localStorage.getItem('themeArticleGapBottom') || '14';
+        if (agbIn) agbIn.value = articleGapBottom;
+        if (agbSpan) agbSpan.textContent = `${articleGapBottom}px`;
+
+        // 文章卡片尺寸（高度百分比 & 宽度百分比）
+        const chIn = document.getElementById('paramCardHeight');
+        const chSpan = document.getElementById('cardHeightVal');
+        const cardHeight = state.themeCardHeight || localStorage.getItem('themeCardHeight') || '100';
+        if (chIn) chIn.value = cardHeight;
+        if (chSpan) chSpan.textContent = `${cardHeight}%`;
+
+        const cwIn = document.getElementById('paramCardWidth');
+        const cwSpan = document.getElementById('cardWidthVal');
+        const cardWidth = state.themeCardWidth || localStorage.getItem('themeCardWidth') || '100';
+        if (cwIn) cwIn.value = cardWidth;
+        if (cwSpan) cwSpan.textContent = `${cardWidth}%`;
+
+        const rIn = document.getElementById('paramRadius');
+        const rSpan = document.getElementById('radiusVal');
+        const cardRadius = state.themeRadius || localStorage.getItem('themeRadius') || '20';
+        if (rIn) rIn.value = cardRadius;
+        if (rSpan) rSpan.textContent = `${cardRadius}px`;
+
+        const srIn = document.getElementById('paramSidebarRadius');
+        const srSpan = document.getElementById('sidebarRadiusVal');
+        const sidebarRadius = state.themeSidebarRadius || localStorage.getItem('themeSidebarRadius') || '18';
+        if (srIn) srIn.value = sidebarRadius;
+        if (srSpan) srSpan.textContent = `${sidebarRadius}px`;
+
+        // 透明度（卡片与板块，支持最低 0%）
+        const coIn = document.getElementById('paramCardOpacity');
+        const coSpan = document.getElementById('cardOpacityVal');
+        const cardOpacity = (state.themeCardOpacity !== undefined && state.themeCardOpacity !== null && state.themeCardOpacity !== '')
+            ? state.themeCardOpacity
+            : (localStorage.getItem('themeCardOpacity') ?? '85');
+        if (coIn) coIn.value = cardOpacity;
+        if (coSpan) coSpan.textContent = `${cardOpacity}%`;
+
+        const soIn = document.getElementById('paramSidebarOpacity');
+        const soSpan = document.getElementById('sidebarOpacityVal');
+        const sidebarOpacity = (state.themeSidebarOpacity !== undefined && state.themeSidebarOpacity !== null && state.themeSidebarOpacity !== '')
+            ? state.themeSidebarOpacity
+            : (localStorage.getItem('themeSidebarOpacity') ?? '85');
+        if (soIn) soIn.value = sidebarOpacity;
+        if (soSpan) soSpan.textContent = `${sidebarOpacity}%`;
+
+        const blIn = document.getElementById('paramBlur');
+        const blSpan = document.getElementById('blurVal');
+        const blur = state.themeBlur || localStorage.getItem('themeBlur') || '16';
+        if (blIn) blIn.value = blur;
+        if (blSpan) blSpan.textContent = `${blur}px`;
+
+        const rwIn = document.getElementById('paramRopeWidth');
+        const rwSpan = document.getElementById('ropeWidthVal');
+        const ropeWidth = state.themeRopeWidth || localStorage.getItem('themeRopeWidth') || '3.5';
+        if (rwIn) rwIn.value = ropeWidth;
+        if (rwSpan) rwSpan.textContent = `${ropeWidth}px`;
+
         if (typeof applyThemeCustomizations === 'function') {
             applyThemeCustomizations();
         }
@@ -473,9 +582,12 @@ function bindEvents() {
     const bgTextureSelect = document.getElementById('paramBgTexture');
     const fontFamilySelect = document.getElementById('paramFontFamily');
     const radiusInput = document.getElementById('paramRadius');
-    const opacityInput = document.getElementById('paramOpacity');
     const blurInput = document.getElementById('paramBlur');
     const colorPicker = document.getElementById('paramColorPicker');
+    const colorHexInput = document.getElementById('paramColorHex');
+    const colorHexDisplay = document.getElementById('colorHexDisplay');
+    const hueSlider = document.getElementById('paramHueSlider');
+    const hueValSpan = document.getElementById('hueVal');
     const presetBtns = document.querySelectorAll('.preset-color-btn');
 
     if (bgTextureSelect) {
@@ -496,6 +608,112 @@ function bindEvents() {
         });
     }
 
+    // 调色盘：彩虹色相连续光谱条
+    const swatchBoxEl = document.getElementById('paramColorSwatchBox');
+    if (hueSlider) {
+        hueSlider.addEventListener('input', () => {
+            const h = Number(hueSlider.value);
+            if (hueValSpan) hueValSpan.textContent = `${h}°`;
+            const hex = hueToHex(h);
+            state.themePresetColor = hex;
+            localStorage.setItem('themePresetColor', hex);
+            if (colorPicker) colorPicker.value = hex;
+            if (colorHexInput) colorHexInput.value = hex;
+            if (colorHexDisplay) colorHexDisplay.textContent = hex;
+            if (swatchBoxEl) swatchBoxEl.style.backgroundColor = hex;
+            applyThemeCustomizations();
+        });
+    }
+
+    if (colorPicker && colorHexInput) {
+        const curColor = state.themePresetColor || localStorage.getItem('themePresetColor') || '#6366f1';
+        colorPicker.value = curColor;
+        colorHexInput.value = curColor;
+        if (colorHexDisplay) colorHexDisplay.textContent = curColor;
+        if (swatchBoxEl) swatchBoxEl.style.backgroundColor = curColor;
+
+        colorPicker.addEventListener('input', () => {
+            const val = colorPicker.value;
+            colorHexInput.value = val;
+            if (colorHexDisplay) colorHexDisplay.textContent = val;
+            if (swatchBoxEl) swatchBoxEl.style.backgroundColor = val;
+            state.themePresetColor = val;
+            localStorage.setItem('themePresetColor', val);
+            if (hueSlider) {
+                const h = hexToHue(val);
+                hueSlider.value = h;
+                if (hueValSpan) hueValSpan.textContent = `${h}°`;
+            }
+            applyThemeCustomizations();
+        });
+
+        colorHexInput.addEventListener('input', () => {
+            let val = colorHexInput.value.trim();
+            if (!val.startsWith('#')) val = '#' + val;
+            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                colorPicker.value = val;
+                if (colorHexDisplay) colorHexDisplay.textContent = val;
+                if (swatchBoxEl) swatchBoxEl.style.backgroundColor = val;
+                state.themePresetColor = val;
+                localStorage.setItem('themePresetColor', val);
+                if (hueSlider) {
+                    const h = hexToHue(val);
+                    hueSlider.value = h;
+                    if (hueValSpan) hueValSpan.textContent = `${h}°`;
+                }
+                applyThemeCustomizations();
+            }
+        });
+    }
+
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const color = btn.dataset.color;
+            if (color) {
+                state.themePresetColor = color;
+                localStorage.setItem('themePresetColor', color);
+                if (colorPicker) colorPicker.value = color;
+                if (colorHexInput) colorHexInput.value = color;
+                if (colorHexDisplay) colorHexDisplay.textContent = color;
+                if (swatchBoxEl) swatchBoxEl.style.backgroundColor = color;
+                if (hueSlider) {
+                    const h = hexToHue(color);
+                    hueSlider.value = h;
+                    if (hueValSpan) hueValSpan.textContent = `${h}°`;
+                }
+                applyThemeCustomizations();
+            }
+        });
+    });
+
+    // 文章卡片尺寸控制 (Card Height % & Card Width %)
+    const cardHeightInput = document.getElementById('paramCardHeight');
+    if (cardHeightInput) {
+        cardHeightInput.value = state.themeCardHeight || localStorage.getItem('themeCardHeight') || '100';
+        const valSpan = document.getElementById('cardHeightVal');
+        if (valSpan) valSpan.textContent = `${cardHeightInput.value}%`;
+        cardHeightInput.addEventListener('input', () => {
+            state.themeCardHeight = cardHeightInput.value;
+            localStorage.setItem('themeCardHeight', state.themeCardHeight);
+            if (valSpan) valSpan.textContent = `${cardHeightInput.value}%`;
+            applyThemeCustomizations();
+        });
+    }
+
+    const cardWidthInput = document.getElementById('paramCardWidth');
+    if (cardWidthInput) {
+        cardWidthInput.value = state.themeCardWidth || localStorage.getItem('themeCardWidth') || '100';
+        const valSpan = document.getElementById('cardWidthVal');
+        if (valSpan) valSpan.textContent = `${cardWidthInput.value}%`;
+        cardWidthInput.addEventListener('input', () => {
+            state.themeCardWidth = cardWidthInput.value;
+            localStorage.setItem('themeCardWidth', state.themeCardWidth);
+            if (valSpan) valSpan.textContent = `${cardWidthInput.value}%`;
+            applyThemeCustomizations();
+        });
+    }
+
+    // 圆角控制
     if (radiusInput) {
         radiusInput.value = state.themeRadius || '20';
         const valSpan = document.getElementById('radiusVal');
@@ -508,14 +726,46 @@ function bindEvents() {
         });
     }
 
-    if (opacityInput) {
-        opacityInput.value = state.themeOpacity || '75';
-        const valSpan = document.getElementById('opacityVal');
-        if (valSpan) valSpan.textContent = `${opacityInput.value}%`;
-        opacityInput.addEventListener('input', () => {
-            state.themeOpacity = opacityInput.value;
-            localStorage.setItem('themeOpacity', state.themeOpacity);
-            if (valSpan) valSpan.textContent = `${opacityInput.value}%`;
+    const sidebarRadiusInput = document.getElementById('paramSidebarRadius');
+    if (sidebarRadiusInput) {
+        sidebarRadiusInput.value = state.themeSidebarRadius || localStorage.getItem('themeSidebarRadius') || '18';
+        const valSpan = document.getElementById('sidebarRadiusVal');
+        if (valSpan) valSpan.textContent = `${sidebarRadiusInput.value}px`;
+        sidebarRadiusInput.addEventListener('input', () => {
+            state.themeSidebarRadius = sidebarRadiusInput.value;
+            localStorage.setItem('themeSidebarRadius', state.themeSidebarRadius);
+            if (valSpan) valSpan.textContent = `${sidebarRadiusInput.value}px`;
+            applyThemeCustomizations();
+        });
+    }
+
+    // 透明度控制（文章卡片透明度 与 板块透明度，支持最低 0%）
+    const cardOpacityInput = document.getElementById('paramCardOpacity');
+    if (cardOpacityInput) {
+        cardOpacityInput.value = (state.themeCardOpacity !== undefined && state.themeCardOpacity !== null && state.themeCardOpacity !== '')
+            ? state.themeCardOpacity
+            : (localStorage.getItem('themeCardOpacity') ?? '85');
+        const valSpan = document.getElementById('cardOpacityVal');
+        if (valSpan) valSpan.textContent = `${cardOpacityInput.value}%`;
+        cardOpacityInput.addEventListener('input', () => {
+            state.themeCardOpacity = cardOpacityInput.value;
+            localStorage.setItem('themeCardOpacity', state.themeCardOpacity);
+            if (valSpan) valSpan.textContent = `${cardOpacityInput.value}%`;
+            applyThemeCustomizations();
+        });
+    }
+
+    const sidebarOpacityInput = document.getElementById('paramSidebarOpacity');
+    if (sidebarOpacityInput) {
+        sidebarOpacityInput.value = (state.themeSidebarOpacity !== undefined && state.themeSidebarOpacity !== null && state.themeSidebarOpacity !== '')
+            ? state.themeSidebarOpacity
+            : (localStorage.getItem('themeSidebarOpacity') ?? '85');
+        const valSpan = document.getElementById('sidebarOpacityVal');
+        if (valSpan) valSpan.textContent = `${sidebarOpacityInput.value}%`;
+        sidebarOpacityInput.addEventListener('input', () => {
+            state.themeSidebarOpacity = sidebarOpacityInput.value;
+            localStorage.setItem('themeSidebarOpacity', state.themeSidebarOpacity);
+            if (valSpan) valSpan.textContent = `${sidebarOpacityInput.value}%`;
             applyThemeCustomizations();
         });
     }
@@ -541,59 +791,6 @@ function bindEvents() {
             state.themeRopeWidth = ropeWidthInput.value;
             localStorage.setItem('themeRopeWidth', state.themeRopeWidth);
             if (valSpan) valSpan.textContent = `${ropeWidthInput.value}px`;
-            applyThemeCustomizations();
-        });
-    }
-
-    const colorHexInput = document.getElementById('paramColorHex');
-    if (colorPicker && colorHexInput) {
-        const curColor = state.themePresetColor || localStorage.getItem('themePresetColor') || '#6366f1';
-        colorPicker.value = curColor;
-        colorHexInput.value = curColor;
-
-        colorPicker.addEventListener('input', () => {
-            const val = colorPicker.value;
-            colorHexInput.value = val;
-            state.themePresetColor = val;
-            localStorage.setItem('themePresetColor', val);
-            applyThemeCustomizations();
-        });
-
-        colorHexInput.addEventListener('input', () => {
-            let val = colorHexInput.value.trim();
-            if (!val.startsWith('#')) val = '#' + val;
-            if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
-                colorPicker.value = val;
-                state.themePresetColor = val;
-                localStorage.setItem('themePresetColor', val);
-                applyThemeCustomizations();
-            }
-        });
-    }
-
-    presetBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const color = btn.dataset.color;
-            if (color) {
-                state.themePresetColor = color;
-                localStorage.setItem('themePresetColor', color);
-                if (colorPicker) colorPicker.value = color;
-                if (colorHexInput) colorHexInput.value = color;
-                applyThemeCustomizations();
-            }
-        });
-    });
-
-    // 侧边栏板块圆角
-    const sidebarRadiusInput = document.getElementById('paramSidebarRadius');
-    if (sidebarRadiusInput) {
-        sidebarRadiusInput.value = state.themeSidebarRadius || localStorage.getItem('themeSidebarRadius') || '18';
-        const valSpan = document.getElementById('sidebarRadiusVal');
-        if (valSpan) valSpan.textContent = `${sidebarRadiusInput.value}px`;
-        sidebarRadiusInput.addEventListener('input', () => {
-            state.themeSidebarRadius = sidebarRadiusInput.value;
-            localStorage.setItem('themeSidebarRadius', state.themeSidebarRadius);
-            if (valSpan) valSpan.textContent = `${sidebarRadiusInput.value}px`;
             applyThemeCustomizations();
         });
     }
@@ -634,6 +831,32 @@ function bindEvents() {
             state.themeCardGapY = cardGapYInput.value;
             localStorage.setItem('themeCardGapY', state.themeCardGapY);
             if (valSpan) valSpan.textContent = `${cardGapYInput.value}px`;
+            applyThemeCustomizations();
+        });
+    }
+
+    const articleGapTopInput = document.getElementById('paramArticleGapTop');
+    if (articleGapTopInput) {
+        articleGapTopInput.value = state.themeArticleGapTop || localStorage.getItem('themeArticleGapTop') || '0';
+        const valSpan = document.getElementById('articleGapTopVal');
+        if (valSpan) valSpan.textContent = `${articleGapTopInput.value}px`;
+        articleGapTopInput.addEventListener('input', () => {
+            state.themeArticleGapTop = articleGapTopInput.value;
+            localStorage.setItem('themeArticleGapTop', state.themeArticleGapTop);
+            if (valSpan) valSpan.textContent = `${articleGapTopInput.value}px`;
+            applyThemeCustomizations();
+        });
+    }
+
+    const articleGapBottomInput = document.getElementById('paramArticleGapBottom');
+    if (articleGapBottomInput) {
+        articleGapBottomInput.value = state.themeArticleGapBottom || localStorage.getItem('themeArticleGapBottom') || '14';
+        const valSpan = document.getElementById('articleGapBottomVal');
+        if (valSpan) valSpan.textContent = `${articleGapBottomInput.value}px`;
+        articleGapBottomInput.addEventListener('input', () => {
+            state.themeArticleGapBottom = articleGapBottomInput.value;
+            localStorage.setItem('themeArticleGapBottom', state.themeArticleGapBottom);
+            if (valSpan) valSpan.textContent = `${articleGapBottomInput.value}px`;
             applyThemeCustomizations();
         });
     }
@@ -692,7 +915,7 @@ function bindEvents() {
     if (mpGear) {
         mpGear.addEventListener('click', () => {
             if (!(state && state.isAdmin)) {
-                alert('仅管理员可管理歌单。请先登录管理员账号。');
+                if (typeof showToast === 'function') showToast('仅管理员可管理歌单，请先登录管理员账号', 'warning');
                 return;
             }
             if (mpApiInput) mpApiInput.value = state.musicApiBase || '';
@@ -867,10 +1090,24 @@ function bindEvents() {
             const idx = Number(btn.getAttribute('data-remove-idx'));
             if (!Number.isInteger(idx)) return;
             const name = (state.musicPlaylist[idx] && state.musicPlaylist[idx].name) || '';
-            if (!confirm(`确定从自定义歌单中移除「${name}」吗？`)) return;
-            if (removeSongAt(idx)) {
-                renderMusicPlayerUI();
-                renderMusicManageCurrent();
+            const doRemove = () => {
+                if (removeSongAt(idx)) {
+                    renderMusicPlayerUI();
+                    renderMusicManageCurrent();
+                    if (typeof showToast === 'function') showToast('已从歌单移除', 'info');
+                }
+            };
+            if (typeof showConfirmModal === 'function') {
+                showConfirmModal({
+                    title: '移除歌曲',
+                    message: `确定从自定义歌单中移除「${name}」吗？`,
+                    confirmText: '确认移除',
+                    cancelText: '取消',
+                    danger: true,
+                    onConfirm: doRemove
+                });
+            } else {
+                doRemove();
             }
         });
     }
@@ -932,10 +1169,24 @@ function bindEvents() {
     if (detailDeleteBtn) {
         detailDeleteBtn.addEventListener('click', () => {
             if (!currentViewerArticleId) return;
-            if (!confirm('确定删除这篇文章吗？')) return;
-            deleteArticle(currentViewerArticleId);
-            renderAll();
-            switchView('list');
+            const doDel = () => {
+                deleteArticle(currentViewerArticleId);
+                renderAll();
+                switchView('list');
+                if (typeof showToast === 'function') showToast('文章已删除', 'info');
+            };
+            if (typeof showConfirmModal === 'function') {
+                showConfirmModal({
+                    title: '删除文章',
+                    message: '确定删除这篇文章吗？删除后可在回收站找回。',
+                    confirmText: '确认删除',
+                    cancelText: '取消',
+                    danger: true,
+                    onConfirm: doDel
+                });
+            } else {
+                doDel();
+            }
         });
     }
 
@@ -968,19 +1219,23 @@ function bindEvents() {
     // + 新分类按钮：管理员可快速新增一个自定义分类
     if (inlineAddCategoryBtn) {
         inlineAddCategoryBtn.addEventListener('click', () => {
-            if (!(state && state.isAdmin)) return; // 双重保险：非管理员禁止
-            const name = prompt('输入新分类名称（将同步添加到侧边栏分类风箱）：', '');
-            if (!name) return;
-            const catName = name.toString().trim();
-            if (!catName) return;
-            // addCategory 返回 false 表示已存在，也接受，继续选中
-            if (typeof addCategory === 'function') addCategory(catName);
-            const hidden = document.getElementById('inlineArticleCategory');
-            if (hidden) hidden.value = catName;
-            if (typeof refreshCategorySelectUI === 'function') refreshCategorySelectUI(catName);
-            if (typeof renderTagPickerUI === 'function') renderTagPickerUI(catName, []);
-            // 侧边栏同步重渲染
-            if (typeof renderAll === 'function') renderAll();
+            if (!(state && state.isAdmin)) return;
+            if (typeof showPromptModal === 'function') {
+                showPromptModal({
+                    title: '新建文章分类',
+                    message: '输入新分类名称（将同步添加到侧边栏分类风箱）：',
+                    placeholder: '例如：前端技术',
+                    onConfirm: (name) => {
+                        if (!name) return;
+                        const catName = name.toString().trim();
+                        if (!catName) return;
+                        if (typeof addCategory === 'function') addCategory(catName);
+                        const hidden = document.getElementById('inlineArticleCategory');
+                        if (hidden) hidden.value = catName;
+                        if (typeof renderAll === 'function') renderAll();
+                    }
+                });
+            }
         });
     }
 
@@ -1344,13 +1599,39 @@ function bindEvents() {
                 case 'ol': insertText = `1. ${selectedText || '有序列表项'}`; break;
                 case 'hr': insertText = `---`; break;
                 case 'link': {
-                    const url = prompt('输入链接地址 URL：', 'https://');
-                    if (url) insertText = `[${selectedText || '链接文本'}](${url})`;
+                    if (typeof showPromptModal === 'function') {
+                        showPromptModal({
+                            title: '插入超链接',
+                            message: '输入要跳转的目标网页地址：',
+                            placeholder: 'https://',
+                            defaultValue: 'https://',
+                            onConfirm: (url) => {
+                                if (!url) return;
+                                const ins = `[${selectedText || '链接文本'}](${url})`;
+                                document.execCommand('insertText', false, ins);
+                                if (typeof handleSelectionChange === 'function') setTimeout(handleSelectionChange, 10);
+                            }
+                        });
+                        return;
+                    }
                     break;
                 }
                 case 'img': {
-                    const url = prompt('输入图片 URL 或相对路径 (如 img/img6.jpg)：', 'img/img6.jpg');
-                    if (url) insertText = `![${selectedText || '图片'}](${url})`;
+                    if (typeof showPromptModal === 'function') {
+                        showPromptModal({
+                            title: '插入图片链接',
+                            message: '输入图片 URL 或相对路径：',
+                            placeholder: '如 img/img6.jpg 或 https://...',
+                            defaultValue: 'img/img6.jpg',
+                            onConfirm: (url) => {
+                                if (!url) return;
+                                const ins = `![${selectedText || '图片'}](${url})`;
+                                document.execCommand('insertText', false, ins);
+                                if (typeof handleSelectionChange === 'function') setTimeout(handleSelectionChange, 10);
+                            }
+                        });
+                        return;
+                    }
                     break;
                 }
                 case 'table': {
@@ -1468,6 +1749,34 @@ function bindEvents() {
     if (saveProfileBtn) saveProfileBtn.addEventListener('click', saveProfileEditor);
     if (addSocialRowBtn) addSocialRowBtn.addEventListener('click', () => addSocialEditorRow());
 
+    // 首页个人简历与介绍编辑弹窗事件
+    const closeHomeResumeEditorBtn = document.getElementById('closeHomeResumeEditorBtn');
+    const hreCancelBtn = document.getElementById('hreCancelBtn');
+    const hreSaveBtn = document.getElementById('hreSaveBtn');
+    const hreResetDefaultBtn = document.getElementById('hreResetDefaultBtn');
+    const hreAddAboutBtn = document.getElementById('hreAddAboutBtn');
+    const hreAddSkillCategoryBtn = document.getElementById('hreAddSkillCategoryBtn');
+    const hreAddProjectBtn = document.getElementById('hreAddProjectBtn');
+    const hreAddTimelineBtn = document.getElementById('hreAddTimelineBtn');
+
+    if (closeHomeResumeEditorBtn) closeHomeResumeEditorBtn.addEventListener('click', closeHomeResumeEditor);
+    if (hreCancelBtn) hreCancelBtn.addEventListener('click', closeHomeResumeEditor);
+    if (hreSaveBtn) hreSaveBtn.addEventListener('click', saveHomeResumeEditor);
+    if (hreResetDefaultBtn) hreResetDefaultBtn.addEventListener('click', resetHomeResumeEditor);
+    if (hreAddAboutBtn) hreAddAboutBtn.addEventListener('click', addHreAboutRow);
+    if (hreAddSkillCategoryBtn) hreAddSkillCategoryBtn.addEventListener('click', addHreSkillCategoryRow);
+    if (hreAddProjectBtn) hreAddProjectBtn.addEventListener('click', addHreProjectRow);
+    if (hreAddTimelineBtn) hreAddTimelineBtn.addEventListener('click', addHreTimelineRow);
+
+    document.querySelectorAll('.hre-tabs .tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.getAttribute('data-hre-tab');
+            if (tab && typeof switchHomeResumeTab === 'function') {
+                switchHomeResumeTab(tab);
+            }
+        });
+    });
+
     // 标签管理器按钮与事件
     const sidebarManageTagsBtn = document.getElementById('sidebarManageTagsBtn');
     const closeTagManagerBtn = document.getElementById('closeTagManager');
@@ -1540,7 +1849,7 @@ function bindEvents() {
             event.preventDefault();
             const value = document.getElementById('search_input').value.trim();
             if (!value) {
-                alert('请输入搜索关键词');
+                if (typeof showToast === 'function') showToast('请输入搜索关键词', 'warning');
                 return;
             }
             activeSearch = value;
@@ -1587,7 +1896,7 @@ function bindEvents() {
             const contact = document.getElementById('commentContact').value.trim();
             const content = document.getElementById('commentContent').value.trim();
             if (!name || !contact || !content) {
-                alert('请填写昵称、联系方式和留言内容');
+                if (typeof showToast === 'function') showToast('请填写昵称、联系方式和留言内容');
                 return;
             }
             addComment(name, contact, content);
@@ -1619,7 +1928,7 @@ function bindEvents() {
             const content = contentInput ? contentInput.value.trim() : '';
 
             if (!name || !contact || !content) {
-                alert('请填写昵称、联系方式和评论内容');
+                if (typeof showToast === 'function') showToast('请填写昵称、联系方式和评论内容');
                 return;
             }
 
@@ -1632,14 +1941,11 @@ function bindEvents() {
                     name: name,
                     contact: contact,
                     content: content,
-                    date: new Date().toISOString().slice(0, 10),
+                    date: new Date().toISOString(),
                     parentId: null
                 };
                 article.commentList.push(newComment);
                 article.comment = (article.comment || 0) + 1;
-
-                // 增加一条全局留言
-                addComment(name, contact, `${article.title}：${content}`);
 
                 // 保存访客信息到 cookie
                 if (typeof saveVisitorInfo === 'function') saveVisitorInfo(name, contact);
@@ -1650,7 +1956,7 @@ function bindEvents() {
                 // 保留昵称和联系方式便于下次
                 renderInlineArticleComments(currentViewerArticleId);
                 renderAll();
-                alert('评论发表成功！');
+                if (typeof showToast === 'function') showToast('评论发表成功！');
             }
         });
     }
@@ -1661,6 +1967,7 @@ function bindEvents() {
         const toggleBtn = e.target.closest('[data-action="toggle-reply"]');
         if (toggleBtn) {
             const id = toggleBtn.dataset.id;
+            const replyTo = toggleBtn.dataset.replyTo;
             const box = document.querySelector(`[data-reply-box="${id}"]`);
             if (box) {
                 const isHidden = box.style.display === 'none';
@@ -1668,10 +1975,14 @@ function bindEvents() {
                 if (isHidden) {
                     const ta = box.querySelector('.reply-textarea');
                     if (ta) {
-                        // 从 cookie 预填访客信息（如果输入框中尚无内容）
-                        const visitor = (typeof loadVisitorInfo === 'function') ? loadVisitorInfo() : null;
+                        if (replyTo && !ta.value.startsWith(`@${replyTo}`)) {
+                            ta.value = `@${replyTo} `;
+                        }
                         // 让 textarea 获取焦点
-                        setTimeout(() => ta.focus(), 50);
+                        setTimeout(() => {
+                            ta.focus();
+                            ta.selectionStart = ta.selectionEnd = ta.value.length;
+                        }, 50);
                     }
                 }
             }
@@ -1700,7 +2011,7 @@ function bindEvents() {
             const content = ta ? ta.value.trim() : '';
 
             if (!content) {
-                alert('请填写回复内容');
+                if (typeof showToast === 'function') showToast('请填写回复内容');
                 return;
             }
 
@@ -1747,7 +2058,7 @@ function bindEvents() {
             const name = visitorNameInput ? visitorNameInput.value.trim() : '';
             const contact = visitorContactInput ? visitorContactInput.value.trim() : '';
             if (!name || !contact) {
-                alert('请填写昵称和联系方式');
+                if (typeof showToast === 'function') showToast('请填写昵称和联系方式');
                 return;
             }
             // 保存到 cookie
@@ -1792,34 +2103,118 @@ function bindEvents() {
         });
     });
 
-    // ========== 管理员删除评论（事件委托：主区/右侧栏/详情页共用） ==========
+    // ========== 管理员删除评论（事件委托：主区/右侧栏/详情页共用高颜值弹窗确认） ==========
     document.addEventListener('click', e => {
         const btn = e.target.closest('[data-action="delete-comment"]');
         if (!btn) return;
         const scope = btn.dataset.scope;       // main | sidebar | article
         const commentId = btn.dataset.id;
-        if (!confirm('确定要删除这条评论吗？此操作不可撤销。')) return;
+        const articleId = btn.dataset.articleId;
 
-        if (scope === 'main' || scope === 'sidebar') {
-            // 全站评论（主区和右侧栏共用同一份 state.comments 数据）
-            if (deleteCommentById(commentId)) {
-                renderComments();
-                renderAll();
+        const doDelete = () => {
+            if (scope === 'main' || scope === 'sidebar') {
+                if (deleteCommentById(commentId)) {
+                    renderComments();
+                    renderAll();
+                    if (typeof showToast === 'function') showToast('评论已删除');
+                }
+                return;
             }
+
+            if (scope === 'article') {
+                if (!articleId) return;
+                if (deleteArticleComment(articleId, commentId)) {
+                    if (currentViewerArticleId === Number(articleId)) {
+                        renderInlineArticleComments(articleId);
+                    }
+                    renderAll();
+                    if (typeof showToast === 'function') showToast('评论已删除');
+                }
+            }
+        };
+
+        if (typeof showConfirmModal === 'function') {
+            showConfirmModal({
+                title: '删除评论',
+                message: '确定要删除这条评论吗？删除后将无法恢复。',
+                confirmText: '确认删除',
+                cancelText: '取消',
+                danger: true,
+                onConfirm: doDelete
+            });
+        } else {
+            doDelete();
+        }
+    });
+
+    // ========== 评论者联系方式 Tooltip（点击名字在旁边精准弹出） ==========
+    let activeContactTooltip = null;
+
+    const closeActiveTooltip = () => {
+        if (activeContactTooltip) {
+            activeContactTooltip.remove();
+            activeContactTooltip = null;
+        }
+    };
+
+    window.addEventListener('scroll', closeActiveTooltip, { passive: true });
+
+    document.addEventListener('click', e => {
+        const nameEl = e.target.closest('.comment-name-clickable[data-contact]');
+        if (!nameEl) {
+            closeActiveTooltip();
             return;
         }
+        e.preventDefault();
+        e.stopPropagation();
 
-        if (scope === 'article') {
-            // 某篇文章下专属的评论
-            const articleId = btn.dataset.articleId;
-            if (!articleId) return;
-            if (deleteArticleComment(articleId, commentId)) {
-                if (currentViewerArticleId === Number(articleId)) {
-                    renderInlineArticleComments(articleId);
-                }
-                renderAll();
-            }
+        closeActiveTooltip();
+
+        const contact = nameEl.getAttribute('data-contact');
+        if (!contact) return;
+        const rect = nameEl.getBoundingClientRect();
+        const tooltip = document.createElement('div');
+        tooltip.className = 'contact-tooltip';
+        tooltip.innerHTML = `
+            <div class="contact-label" style="display:flex; align-items:center; gap:5px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M16 2v2M8 2v2M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path></svg>
+                <span>联系方式</span>
+            </div>
+            <div class="contact-value">${typeof escHtml === 'function' ? escHtml(contact) : contact}</div>
+        `;
+        // 必须挂载到 documentElement，避免 body filter 破坏 fixed 视口定位
+        document.documentElement.appendChild(tooltip);
+
+        const tooltipRect = tooltip.getBoundingClientRect();
+        
+        // 优先显示在名字右侧 (紧挨名字右边)
+        let left = rect.right + 8;
+        let top = rect.top + (rect.height - tooltipRect.height) / 2;
+        let placement = 'right';
+
+        // 如果右侧超出屏幕，放到左侧
+        if (left + tooltipRect.width > window.innerWidth - 12) {
+            left = rect.left - tooltipRect.width - 8;
+            placement = 'left';
         }
+
+        // 如果左侧也放不下或在小屏幕手机上，放到正下方
+        if (left < 12 || window.innerWidth < 500) {
+            left = Math.max(12, Math.min(rect.left, window.innerWidth - tooltipRect.width - 12));
+            top = rect.bottom + 8;
+            placement = 'bottom';
+        }
+
+        // 视口垂直边界保护
+        if (top < 12) top = 12;
+        if (top + tooltipRect.height > window.innerHeight - 12) {
+            top = window.innerHeight - tooltipRect.height - 12;
+        }
+
+        tooltip.classList.add(`tooltip-${placement}`);
+        tooltip.style.left = Math.round(left) + 'px';
+        tooltip.style.top = Math.round(top) + 'px';
+        activeContactTooltip = tooltip;
     });
 
     // 回到顶部（只在电脑客户端显示：滚动超过 250px 且窗口 > 900px 渐现，点击平滑滚动）
@@ -1842,6 +2237,7 @@ function bindEvents() {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             closeProfileEditor();
+            if (typeof closeHomeResumeEditor === 'function') closeHomeResumeEditor();
             closeMusic();
         }
     });
@@ -1903,6 +2299,25 @@ function bindEvents() {
     const openGalleryBtn = document.getElementById('openGalleryBtn');
     if (openGalleryBtn) {
         openGalleryBtn.addEventListener('click', () => {
+            if (typeof currentGalleryCategory !== 'undefined') currentGalleryCategory = 'cover';
+            switchView('gallery');
+            renderGallery();
+        });
+    }
+
+    const openArticleImagesBtn = document.getElementById('openArticleImagesBtn');
+    if (openArticleImagesBtn) {
+        openArticleImagesBtn.addEventListener('click', () => {
+            if (typeof currentGalleryCategory !== 'undefined') currentGalleryCategory = 'article';
+            switchView('gallery');
+            renderGallery();
+        });
+    }
+
+    const openOtherImagesBtn = document.getElementById('openOtherImagesBtn');
+    if (openOtherImagesBtn) {
+        openOtherImagesBtn.addEventListener('click', () => {
+            if (typeof currentGalleryCategory !== 'undefined') currentGalleryCategory = 'other';
             switchView('gallery');
             renderGallery();
         });
@@ -1942,7 +2357,7 @@ function bindEvents() {
             const title = titleInput ? titleInput.value.trim() : '';
             const url = urlInput ? urlInput.value.trim() : '';
             if (!title || !url) {
-                alert('请完整填写链接标题与地址');
+                if (typeof showToast === 'function') showToast('请完整填写链接标题与地址', 'warning');
                 return;
             }
             let links = getCustomAdminLinks();
@@ -2048,16 +2463,214 @@ function bindEvents() {
             }
 
             if (!img) {
-                alert('请填写图片 URL 地址或选择本地图片文件');
+                if (typeof showToast === 'function') showToast('请填写图片 URL 地址或选择本地图片文件');
                 return;
             }
 
-            let images = getGalleryImages();
-            images.unshift(img);
-            saveGalleryImages(images);
+            const cat = (typeof currentGalleryCategory !== 'undefined') ? currentGalleryCategory : 'cover';
+            if (cat === 'article') {
+                let images = (typeof getArticleContentImages === 'function') ? getArticleContentImages() : [];
+                images.unshift(img);
+                if (typeof saveArticleContentImages === 'function') saveArticleContentImages(images);
+            } else if (cat === 'other') {
+                let images = (typeof getOtherImages === 'function') ? getOtherImages() : [];
+                images.unshift(img);
+                if (typeof saveOtherImages === 'function') saveOtherImages(images);
+            } else {
+                let images = getGalleryImages();
+                images.unshift(img);
+                saveGalleryImages(images);
+            }
+
             closeGalleryModal();
             const searchVal = document.getElementById('gallerySearchInput')?.value || '';
             renderGallery(searchVal);
+            if (typeof showToast === 'function') showToast('图片添加成功！');
+        });
+    }
+
+    // ========== 文件管理事件 ==========
+    const openFileManagerBtn = document.getElementById('openFileManagerBtn');
+    if (openFileManagerBtn) {
+        openFileManagerBtn.addEventListener('click', () => {
+            if (typeof currentFileFolder !== 'undefined') currentFileFolder = 'root';
+            if (typeof fileFolderPath !== 'undefined') fileFolderPath = [{ id: 'root', name: '根目录' }];
+            switchView('fileManager');
+            if (typeof renderFileManager === 'function') renderFileManager();
+        });
+    }
+
+    const fileManagerBackBtn = document.getElementById('fileManagerBackBtn');
+    if (fileManagerBackBtn) {
+        fileManagerBackBtn.addEventListener('click', () => switchView('adminControl'));
+    }
+
+    const fileNewFolderBtn = document.getElementById('fileNewFolderBtn');
+    if (fileNewFolderBtn) {
+        fileNewFolderBtn.addEventListener('click', () => {
+            if (typeof showPromptModal === 'function') {
+                showPromptModal({
+                    title: '新建文件夹',
+                    placeholder: '请输入文件夹名称',
+                    defaultValue: '新建文件夹',
+                    onConfirm: (name) => {
+                        if (!name || !name.trim()) return;
+                        if (typeof createFolder === 'function') {
+                            createFolder(currentFileFolder, name.trim());
+                            if (typeof renderFileManager === 'function') renderFileManager();
+                            if (typeof showToast === 'function') showToast('文件夹创建成功！', 'success');
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    const fileUploadInput = document.getElementById('fileUploadInput');
+    if (fileUploadInput) {
+        fileUploadInput.addEventListener('change', e => {
+            const files = e.target.files;
+            if (!files || !files.length) return;
+            let uploaded = 0;
+            const maxSize = 2 * 1024 * 1024; // 2MB limit
+            const validFiles = Array.from(files).filter(f => {
+                if (f.size > maxSize) {
+                    if (typeof showToast === 'function') showToast(`「${f.name}」超过 2MB 限制，已跳过`);
+                    return false;
+                }
+                return true;
+            });
+            if (!validFiles.length) {
+                e.target.value = '';
+                return;
+            }
+            validFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    if (typeof uploadFile === 'function') {
+                        uploadFile(currentFileFolder, file.name, file.size, ev.target.result);
+                        uploaded++;
+                        if (uploaded >= validFiles.length) {
+                            if (typeof renderFileManager === 'function') renderFileManager();
+                            if (typeof showToast === 'function') showToast(`成功上传 ${uploaded} 个文件！`);
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        });
+    }
+
+    // File list event delegation
+    const fileListContainer = document.getElementById('fileListContainer');
+    if (fileListContainer && !fileListContainer.dataset.__fileBound) {
+        fileListContainer.dataset.__fileBound = '1';
+        fileListContainer.addEventListener('click', e => {
+            const target = e.target.closest('[data-action]');
+            if (!target) {
+                const folderRow = e.target.closest('[data-file-type="folder"]');
+                if (folderRow) {
+                    const folderId = folderRow.dataset.fileId;
+                    const nameEl = folderRow.querySelector('div[style*="font-weight:600"]');
+                    const folderName = nameEl ? nameEl.textContent : '文件夹';
+                    currentFileFolder = folderId;
+                    fileFolderPath.push({ id: folderId, name: folderName });
+                    renderFileManager();
+                }
+                return;
+            }
+
+            const action = target.dataset.action;
+            const fileId = target.dataset.fileId;
+
+            if (action === 'open-folder') {
+                const itemEl = target.closest('.file-list-item');
+                const nameEl = itemEl ? itemEl.querySelector('div[style*="font-weight:600"]') : null;
+                const folderName = nameEl ? nameEl.textContent : '文件夹';
+                currentFileFolder = fileId;
+                fileFolderPath.push({ id: fileId, name: folderName });
+                renderFileManager();
+                return;
+            }
+
+            if (action === 'download-file') {
+                e.stopPropagation();
+                const items = (typeof getFilesInFolder === 'function') ? getFilesInFolder(currentFileFolder) : [];
+                const file = items.find(i => i.id === fileId);
+                if (file && file.data) {
+                    const a = document.createElement('a');
+                    a.href = file.data;
+                    a.download = file.name || 'download';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    if (typeof showToast === 'function') showToast('已开始下载文件！');
+                }
+                return;
+            }
+
+            if (action === 'rename-file') {
+                e.stopPropagation();
+                const items = (typeof getFilesInFolder === 'function') ? getFilesInFolder(currentFileFolder) : [];
+                const file = items.find(i => i.id === fileId);
+                if (!file) return;
+                if (typeof showPromptModal === 'function') {
+                    showPromptModal({
+                        title: '重命名项目',
+                        placeholder: '请输入新名称',
+                        defaultValue: file.name,
+                        onConfirm: (newName) => {
+                            if (!newName || !newName.trim()) return;
+                            if (typeof renameFileOrFolder === 'function') {
+                                renameFileOrFolder(currentFileFolder, fileId, newName.trim());
+                                renderFileManager();
+                                if (typeof showToast === 'function') showToast('重命名成功！', 'success');
+                            }
+                        }
+                    });
+                }
+                return;
+            }
+
+            if (action === 'delete-file') {
+                e.stopPropagation();
+                const doDelete = () => {
+                    if (typeof deleteFileOrFolder === 'function') {
+                        deleteFileOrFolder(currentFileFolder, fileId);
+                        renderFileManager();
+                        if (typeof showToast === 'function') showToast('已删除');
+                    }
+                };
+                if (typeof showConfirmModal === 'function') {
+                    showConfirmModal({
+                        title: '删除确认',
+                        message: '确定删除该项目吗？如果是文件夹，里面的所有内容也将被彻底删除。',
+                        confirmText: '确认删除',
+                        cancelText: '取消',
+                        danger: true,
+                        onConfirm: doDelete
+                    });
+                } else {
+                    doDelete();
+                }
+                return;
+            }
+        });
+    }
+
+    // Breadcrumb navigation
+    const fileBreadcrumb = document.getElementById('fileBreadcrumb');
+    if (fileBreadcrumb && !fileBreadcrumb.dataset.__bound) {
+        fileBreadcrumb.dataset.__bound = '1';
+        fileBreadcrumb.addEventListener('click', e => {
+            const link = e.target.closest('.file-breadcrumb-link');
+            if (!link) return;
+            const folderId = link.dataset.folderId;
+            const pathIdx = parseInt(link.dataset.pathIdx, 10);
+            currentFileFolder = folderId;
+            fileFolderPath = fileFolderPath.slice(0, pathIdx + 1);
+            renderFileManager();
         });
     }
 
@@ -2202,21 +2815,37 @@ function bindEvents() {
     if (resetParamsBtn) {
         resetParamsBtn.addEventListener('click', () => {
             localStorage.removeItem('paramOpacity');
+            localStorage.removeItem('themeCardOpacity');
+            localStorage.removeItem('themeSidebarOpacity');
+            localStorage.removeItem('themeCardHeight');
+            localStorage.removeItem('themeCardWidth');
             localStorage.removeItem('paramBlur');
+            localStorage.removeItem('themeBlur');
             localStorage.removeItem('paramHue');
             localStorage.removeItem('themeRopeWidth');
             localStorage.removeItem('themePresetColor');
             localStorage.removeItem('themeGridGapX');
             localStorage.removeItem('themeTopGap');
             localStorage.removeItem('themeCardGapY');
+            localStorage.removeItem('themeArticleGapTop');
+            localStorage.removeItem('themeArticleGapBottom');
             localStorage.removeItem('themeSidebarRadius');
+            localStorage.removeItem('themeRadius');
 
             state.themeRopeWidth = '3.5';
             state.themePresetColor = '#6366f1';
             state.themeGridGapX = '6';
             state.themeTopGap = '8';
             state.themeCardGapY = '10';
+            state.themeArticleGapTop = '0';
+            state.themeArticleGapBottom = '14';
+            state.themeRadius = '20';
             state.themeSidebarRadius = '18';
+            state.themeCardOpacity = '85';
+            state.themeSidebarOpacity = '85';
+            state.themeCardHeight = '100';
+            state.themeCardWidth = '100';
+            state.themeBlur = '16';
 
             const rwInput = document.getElementById('paramRopeWidth');
             if (rwInput) rwInput.value = '3.5';
@@ -2226,6 +2855,14 @@ function bindEvents() {
             const hexIn = document.getElementById('paramColorHex');
             if (hexIn) hexIn.value = '#6366f1';
             if (paramColorPicker) paramColorPicker.value = '#6366f1';
+            const swatchBoxReset = document.getElementById('paramColorSwatchBox');
+            if (swatchBoxReset) swatchBoxReset.style.backgroundColor = '#6366f1';
+            const hexDisp = document.getElementById('colorHexDisplay');
+            if (hexDisp) hexDisp.textContent = '#6366f1';
+            const hueIn = document.getElementById('paramHueSlider');
+            if (hueIn) hueIn.value = 240;
+            const hueSpan = document.getElementById('hueVal');
+            if (hueSpan) hueSpan.textContent = '240°';
 
             const ggIn = document.getElementById('paramGridGapX');
             if (ggIn) ggIn.value = '6';
@@ -2242,10 +2879,50 @@ function bindEvents() {
             const cgSpan = document.getElementById('cardGapYVal');
             if (cgSpan) cgSpan.textContent = '10px';
 
+            const agtIn = document.getElementById('paramArticleGapTop');
+            if (agtIn) agtIn.value = '0';
+            const agtSpan = document.getElementById('articleGapTopVal');
+            if (agtSpan) agtSpan.textContent = '0px';
+
+            const agbIn = document.getElementById('paramArticleGapBottom');
+            if (agbIn) agbIn.value = '14';
+            const agbSpan = document.getElementById('articleGapBottomVal');
+            if (agbSpan) agbSpan.textContent = '14px';
+
+            const rIn = document.getElementById('paramRadius');
+            if (rIn) rIn.value = '20';
+            const rSpan = document.getElementById('radiusVal');
+            if (rSpan) rSpan.textContent = '20px';
+
             const srIn = document.getElementById('paramSidebarRadius');
             if (srIn) srIn.value = '18';
             const srSpan = document.getElementById('sidebarRadiusVal');
             if (srSpan) srSpan.textContent = '18px';
+
+            const coIn = document.getElementById('paramCardOpacity');
+            if (coIn) coIn.value = '85';
+            const coSpan = document.getElementById('cardOpacityVal');
+            if (coSpan) coSpan.textContent = '85%';
+
+            const soIn = document.getElementById('paramSidebarOpacity');
+            if (soIn) soIn.value = '85';
+            const soSpan = document.getElementById('sidebarOpacityVal');
+            if (soSpan) soSpan.textContent = '85%';
+
+            const chIn = document.getElementById('paramCardHeight');
+            if (chIn) chIn.value = '100';
+            const chSpan = document.getElementById('cardHeightVal');
+            if (chSpan) chSpan.textContent = '100%';
+
+            const cwIn = document.getElementById('paramCardWidth');
+            if (cwIn) cwIn.value = '100';
+            const cwSpan = document.getElementById('cardWidthVal');
+            if (cwSpan) cwSpan.textContent = '100%';
+
+            const blIn = document.getElementById('paramBlur');
+            if (blIn) blIn.value = '16';
+            const blSpan = document.getElementById('blurVal');
+            if (blSpan) blSpan.textContent = '16px';
 
             applyThemeCustomizations();
             applyThemeParams();

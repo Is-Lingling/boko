@@ -264,13 +264,27 @@
             }
         }
         function handleAdminDelete(id) {
-            if (!confirm('确定删除这篇文章吗？')) return;
-            articles = articles.filter(item => item.id !== id);
-            saveArticlesToStorage();
-            renderArticles();
-            renderHotList();
-            renderTagCloud();
-            renderArchive();
+            const doDelete = () => {
+                articles = articles.filter(item => item.id !== id);
+                saveArticlesToStorage();
+                renderArticles();
+                renderHotList();
+                renderTagCloud();
+                renderArchive();
+                if (typeof showToast === 'function') showToast('文章已删除', 'info');
+            };
+            if (typeof showConfirmModal === 'function') {
+                showConfirmModal({
+                    title: '删除文章',
+                    message: '确定要删除这篇文章吗？删除后将无法恢复。',
+                    confirmText: '确认删除',
+                    cancelText: '取消',
+                    danger: true,
+                    onConfirm: doDelete
+                });
+            } else {
+                doDelete();
+            }
         }
         function setHeroReadLink(id) {
             document.getElementById('heroRead').href = `article.html?id=${id}`;
@@ -437,12 +451,20 @@
                     const articleId = Number(button.dataset.articleId);
                     const action = button.dataset.action;
                     if (action === 'like') {
-                        state.likes = state.likes.includes(articleId) ? state.likes.filter(id => id !== articleId) : [...state.likes, articleId];
+                        const wasLiked = state.likes.includes(articleId);
+                        state.likes = wasLiked ? state.likes.filter(id => id !== articleId) : [...state.likes, articleId];
                         localStorage.setItem(STORAGE_KEYS.likes, JSON.stringify(state.likes));
+                        if (!wasLiked && typeof triggerBurstEffect === 'function') {
+                            triggerBurstEffect(button, 'heart');
+                        }
                     }
                     if (action === 'favorite') {
-                        state.favorites = state.favorites.includes(articleId) ? state.favorites.filter(id => id !== articleId) : [...state.favorites, articleId];
+                        const wasFav = state.favorites.includes(articleId);
+                        state.favorites = wasFav ? state.favorites.filter(id => id !== articleId) : [...state.favorites, articleId];
                         localStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify(state.favorites));
+                        if (!wasFav && typeof triggerBurstEffect === 'function') {
+                            triggerBurstEffect(button, 'star');
+                        }
                     }
                     renderArticles();
                 });
@@ -619,7 +641,7 @@
                 const cover = document.getElementById('articleCover').value.trim() || 'img/img6.jpg';
                 const markdown = document.getElementById('articleMarkdown').value.trim();
                 if (!title || !markdown) {
-                    alert('请填写标题和文章内容');
+                    if (typeof showToast === 'function') showToast('请填写标题和文章内容', 'warning');
                     return;
                 }
                 const summary = markdown.replace(/\n/g, ' ').slice(0, 120);
@@ -664,7 +686,7 @@
                 event.preventDefault();
                 const value = document.getElementById('search_input').value.trim();
                 if (!value) {
-                    alert('请输入搜索关键词');
+                    if (typeof showToast === 'function') showToast('请输入搜索关键词', 'warning');
                     return;
                 }
                 activeSearch = value;
@@ -690,7 +712,7 @@
                 const name = document.getElementById('commentName').value.trim();
                 const content = document.getElementById('commentContent').value.trim();
                 if (!name || !content) {
-                    alert('请填写昵称和留言内容');
+                    if (typeof showToast === 'function') showToast('请填写昵称和留言内容', 'warning');
                     return;
                 }
                 addComment(name, content);

@@ -97,7 +97,6 @@ function renderAdminUI() {
     const liHtml = `
         <li class="daohanglan">管理</li>
         <li><a href="javascript:void(0)" id="leftNavAdminManageBtn" data-guanli-action="control" title="管理控制台"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('gear', '', 15)} 控制台</span></a></li>
-        <li><a href="javascript:void(0)" data-guanli-action="articles" title="文章列表（首页）"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('edit', '', 15)} 文章</span></a></li>
         <li><a href="javascript:void(0)" data-guanli-action="comments" title="跳转到评论区"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('comment', '', 15)} 评论</span></a></li>
         <li>
             <a href="javascript:void(0)" data-guanli-action="trash" title="回收站：查看并恢复已删除的文章">
@@ -153,6 +152,11 @@ function renderAdminUI() {
                 return;
             }
         });
+    }
+
+    // 联动刷新首页个人简历介绍区域的管理员操作条与编辑按钮
+    if (typeof renderHomeResumeView === 'function') {
+        renderHomeResumeView();
     }
 }
 
@@ -337,9 +341,23 @@ function renderArticles() {
     articleList.querySelectorAll('.action-btn').forEach(button => {
         button.addEventListener('click', () => {
             if (button.dataset.deleteId) {
-                if (!confirm('确定删除这篇文章吗？')) return;
-                deleteArticle(Number(button.dataset.deleteId));
-                renderAll();
+                const doDel = () => {
+                    deleteArticle(Number(button.dataset.deleteId));
+                    renderAll();
+                    if (typeof showToast === 'function') showToast('文章已删除', 'info');
+                };
+                if (typeof showConfirmModal === 'function') {
+                    showConfirmModal({
+                        title: '删除文章',
+                        message: '确定删除这篇文章吗？删除后可在回收站找回。',
+                        confirmText: '确认删除',
+                        cancelText: '取消',
+                        danger: true,
+                        onConfirm: doDel
+                    });
+                } else {
+                    doDel();
+                }
                 return;
             }
             if (button.dataset.editId) {
@@ -466,6 +484,9 @@ function renderPagination(total) {
         button.addEventListener('click', () => {
             currentPage = Number(button.dataset.page);
             renderArticles();
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
         });
     });
 }
@@ -634,25 +655,54 @@ function renderTrashView() {
             const id = Number(btn.getAttribute('data-id'));
             const action = btn.getAttribute('data-action');
             if (action === 'restore') {
-                if (!confirm('确定把这篇文章恢复到首页吗？')) return;
-                if (typeof restoreFromTrash === 'function' && restoreFromTrash(id)) {
-                    if (typeof renderAll === 'function') renderAll();
-                    switchView('list');
+                const doRestore = () => {
+                    if (typeof restoreFromTrash === 'function' && restoreFromTrash(id)) {
+                        if (typeof renderAll === 'function') renderAll();
+                        switchView('list');
+                        if (typeof showToast === 'function') showToast('文章已恢复到首页', 'success');
+                    }
+                };
+                if (typeof showConfirmModal === 'function') {
+                    showConfirmModal({
+                        title: '恢复文章',
+                        message: '确定把这篇文章恢复到首页吗？',
+                        confirmText: '确认恢复',
+                        onConfirm: doRestore
+                    });
+                } else {
+                    doRestore();
                 }
                 return;
             }
             if (action === 'permanent') {
-                if (!confirm('将从回收站彻底删除此文章，不可恢复！\n\n建议先考虑「恢复」或「编辑再发布」。\n\n确定继续吗？')) return;
-                if (typeof permanentDeleteFromTrash === 'function' && permanentDeleteFromTrash(id)) {
-                    renderTrashView();
-                    if (typeof renderAdminUI === 'function') renderAdminUI(); // 刷新左侧 N
+                const doPermanent = () => {
+                    if (typeof permanentDeleteFromTrash === 'function' && permanentDeleteFromTrash(id)) {
+                        renderTrashView();
+                        if (typeof renderAdminUI === 'function') renderAdminUI();
+                        if (typeof showToast === 'function') showToast('文章已彻底删除', 'info');
+                    }
+                };
+                if (typeof showConfirmModal === 'function') {
+                    showConfirmModal({
+                        title: '彻底删除文章',
+                        message: '将从回收站彻底删除此文章，不可恢复！建议先考虑「恢复」或「编辑再发布」。确定继续吗？',
+                        confirmText: '彻底删除',
+                        cancelText: '取消',
+                        danger: true,
+                        onConfirm: doPermanent
+                    });
+                } else {
+                    doPermanent();
                 }
                 return;
             }
             if (action === 'edit') {
                 // 「编辑再发布」：直接打开文章编辑器，对象从回收站里取
                 const draft = typeof getTrashById === 'function' ? getTrashById(id) : null;
-                if (!draft) { alert('未找到可编辑的回收站文章。'); return; }
+                if (!draft) {
+                    if (typeof showToast === 'function') showToast('未找到可编辑的回收站文章', 'warning');
+                    return;
+                }
                 if (typeof openArticleEditor === 'function') {
                     // 标记为"从回收站打开"，保存时自动恢复
                     window.__editingFromTrashId = id;
@@ -678,14 +728,30 @@ function renderTrashView() {
         emptyAllBtn.dataset.__bound = '1';
         emptyAllBtn.addEventListener('click', () => {
             const n = typeof getAllTrash === 'function' ? getAllTrash().length : 0;
-            if (!n) { alert('回收站已经是空的啦。'); return; }
-            if (!confirm(`回收站共有 ${n} 篇文章。\n\n彻底清空后<b>无法恢复</b>，真的要全部删除吗？`)) return;
-            // 逐个 permanentDelete 直至为空（避免直接把 trash = [] 绕开其它副作用）
-            if (typeof getAllTrash === 'function' && typeof permanentDeleteFromTrash === 'function') {
-                getAllTrash().forEach(x => permanentDeleteFromTrash(x.id));
+            if (!n) {
+                if (typeof showToast === 'function') showToast('回收站已经是空的啦', 'info');
+                return;
             }
-            renderTrashView();
-            if (typeof renderAdminUI === 'function') renderAdminUI(); // 同步 N 为 0
+            const doEmpty = () => {
+                if (typeof getAllTrash === 'function' && typeof permanentDeleteFromTrash === 'function') {
+                    getAllTrash().forEach(x => permanentDeleteFromTrash(x.id));
+                }
+                renderTrashView();
+                if (typeof renderAdminUI === 'function') renderAdminUI();
+                if (typeof showToast === 'function') showToast('回收站已清空', 'info');
+            };
+            if (typeof showConfirmModal === 'function') {
+                showConfirmModal({
+                    title: '清空回收站',
+                    message: `回收站共有 ${n} 篇文章。彻底清空后无法恢复，真的要全部删除吗？`,
+                    confirmText: '确认清空',
+                    cancelText: '取消',
+                    danger: true,
+                    onConfirm: doEmpty
+                });
+            } else {
+                doEmpty();
+            }
         });
     }
 }
@@ -721,23 +787,33 @@ function escHtml(s) {
 function renderReplyList(parentId, scope, articleId) {
     const replies = (typeof getReplies === 'function') ? getReplies(parentId, scope, articleId) : [];
     if (!replies.length) return '';
-    return replies.map(r => `
-        <div class="comment-reply-item">
-            <div class="comment-item-row">
-                <div class="comment-meta" style="flex:1 1 auto;">
-                    <div class="comment-byline">
-                        <span class="comment-name">${escHtml(r.name)}</span>
-                        ${r.contact ? `<span class="comment-contact" title="联系方式：${escHtml(r.contact)}">${escHtml(r.contact)}</span>` : ''}
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s)));
+
+    const visitor = (typeof loadVisitorInfo === 'function') ? loadVisitorInfo() : null;
+    const visitorName = visitor ? (visitor.name || '') : '';
+    const visitorContact = visitor ? (visitor.contact || '') : '';
+    const isAdmin = !!(state && state.isAdmin);
+
+    return `
+        <div class="comment-replies-wrap">
+            ${replies.map(r => {
+                const canDelete = isAdmin || (visitorName && r.name === visitorName) || (visitorContact && r.contact && r.contact === visitorContact);
+                return `
+                <div class="comment-reply-item">
+                    <div class="reply-item-content">
+                        <span class="reply-author-name${r.contact ? ' comment-name-clickable' : ''}" ${r.contact ? `data-contact="${esc(r.contact)}" title="点击查看联系方式"` : ''}>${esc(r.name)}</span>:
+                        <span class="reply-text-body">${esc(r.content)}</span>
+                        <span class="reply-time-tag">(${typeof formatDateTime === 'function' ? formatDateTime(r.date) : esc(r.date || '刚刚')})</span>
                     </div>
-                    <div style="opacity:0.75; margin-top:2px;">${escHtml(r.date || '刚刚')}</div>
+                    <div class="reply-item-actions">
+                        <button type="button" class="comment-link-btn reply-btn" data-action="toggle-reply" data-scope="${scope}" ${scope === 'article' ? `data-article-id="${articleId}"` : ''} data-id="${parentId}" data-reply-to="${esc(r.name)}">回复</button>
+                        ${canDelete ? `<button type="button" class="comment-link-btn delete-btn" data-action="delete-comment" data-scope="${scope}" ${scope === 'article' ? `data-article-id="${articleId}"` : ''} data-id="${r.id}" title="删除此条回复">删除</button>` : ''}
+                    </div>
                 </div>
-                ${state.isAdmin ? `<button type="button" class="delete-comment-btn" data-action="delete-comment"
-                    data-scope="${scope}" ${scope === 'article' ? `data-article-id="${articleId}"` : ''} data-id="${r.id}"
-                    title="删除此条回复">🗑️ 删除</button>` : ''}
-            </div>
-            <div style="font-size:14px; color:#334155; line-height:1.6;">${escHtml(r.content)}</div>
+                `;
+            }).join('')}
         </div>
-    `).join('');
+    `;
 }
 
 function renderComments() {
@@ -747,43 +823,49 @@ function renderComments() {
         ? getTopLevelComments('main')
         : allComments;
 
-    const adminDelete = (item, scope) => {
-        if (!state.isAdmin) return '';
-        return `<button type="button" class="${scope === 'sidebar' ? 'sidebar-delete-btn' : 'delete-comment-btn'}"
-            data-action="delete-comment" data-scope="${scope}" data-id="${item.id}"
-            title="删除此条评论">${scope === 'sidebar' ? '✕' : '🗑️ 删除'}</button>`;
-    };
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s)));
 
-    const contactBadge = item => item.contact
-        ? `<span class="comment-contact" title="联系方式：${escHtml(item.contact)}">${escHtml(item.contact)}</span>`
-        : '';
+    const visitor = (typeof loadVisitorInfo === 'function') ? loadVisitorInfo() : null;
+    const visitorName = visitor ? (visitor.name || '') : '';
+    const visitorContact = visitor ? (visitor.contact || '') : '';
+    const isAdmin = !!(state && state.isAdmin);
+
+    const userCanDelete = (item) => isAdmin || (visitorName && item.name === visitorName) || (visitorContact && item.contact && item.contact === visitorContact);
+
+    const renderDeleteBtn = (item, scope) => {
+        if (!userCanDelete(item)) return '';
+        return `<button type="button" class="comment-link-btn delete-btn"
+            data-action="delete-comment" data-scope="${scope}" data-id="${item.id}"
+            title="删除此条评论">删除</button>`;
+    };
 
     // 主区评论列表
     const commentListEl = document.getElementById('commentList');
     if (commentListEl) {
         if (!comments.length) {
-            commentListEl.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:32px 10px; font-size:14px;">💬 暂无评论，快来发表第一条留言吧！</div>`;
+            const commentSvg = (typeof getIcon === 'function') ? getIcon('comment', '', 16) : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+            commentListEl.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:32px 10px; font-size:13.5px; display:flex; align-items:center; justify-content:center; gap:6px;">${commentSvg}<span>暂无留言，快来发表第一条想法吧！</span></div>`;
         } else {
             commentListEl.innerHTML = comments.map(item => `
                 <div class="comment-item" data-comment-id="${item.id}">
-                    <div class="comment-item-row">
-                        <div class="comment-meta" style="flex:1 1 auto;">
-                            <div class="comment-byline">
-                                <span class="comment-name">${escHtml(item.name)}</span>${contactBadge(item)}
-                            </div>
-                            <div style="opacity:0.75; margin-top:2px;">${escHtml(item.date)}</div>
+                    <div class="comment-item-header">
+                        <div class="comment-header-left">
+                            <span class="comment-user-name${item.contact ? ' comment-name-clickable' : ''}" ${item.contact ? `data-contact="${esc(item.contact)}" title="点击查看联系方式"` : ''}>${esc(item.name)}</span>
+                            <span class="comment-date-badge">${typeof formatDateTime === 'function' ? formatDateTime(item.date) : esc(item.date)}</span>
                         </div>
-                        ${adminDelete(item, 'main')}
+                        <div class="comment-header-right">
+                            <button type="button" class="comment-link-btn reply-btn" data-action="toggle-reply" data-scope="main" data-id="${item.id}" title="回复此评论">回复</button>
+                            ${renderDeleteBtn(item, 'main')}
+                        </div>
                     </div>
-                    <div style="font-size:14px; color:#334155; line-height:1.6;">${escHtml(item.content)}</div>
-                    <div class="comment-actions">
-                        <button type="button" class="reply-toggle-btn" data-action="toggle-reply" data-scope="main" data-id="${item.id}" title="回复此评论">回复</button>
-                    </div>
+                    <div class="comment-body-content">${esc(item.content)}</div>
                     <div class="comment-reply-box" data-reply-box="${item.id}" style="display:none;">
-                        <textarea class="reply-textarea" rows="2" placeholder="写下你的回复..." data-reply-input="${item.id}"></textarea>
-                        <div class="reply-box-actions">
-                            <button type="button" class="reply-submit-btn" data-action="submit-reply" data-scope="main" data-id="${item.id}">发表回复</button>
-                            <button type="button" class="reply-cancel-btn" data-action="cancel-reply" data-id="${item.id}">取消</button>
+                        <div class="reply-input-wrap">
+                            <textarea class="reply-textarea" rows="2" placeholder="写下你的回复..." data-reply-input="${item.id}"></textarea>
+                            <div class="reply-box-actions">
+                                <button type="button" class="primary-btn reply-submit-btn" data-action="submit-reply" data-scope="main" data-id="${item.id}">发表回复</button>
+                                <button type="button" class="secondary-btn reply-cancel-btn" data-action="cancel-reply" data-id="${item.id}">取消</button>
+                            </div>
                         </div>
                     </div>
                     <div class="comment-reply-list" data-reply-list="${item.id}">
@@ -798,15 +880,16 @@ function renderComments() {
     const sidebarCommentsList = document.getElementById('sidebarCommentsList');
     if (sidebarCommentsList) {
         if (!allComments.length) {
-            sidebarCommentsList.innerHTML = `<div style="text-align:center; color:#94a3b8; padding:20px 10px; font-size:13px;">💬 暂无最新留言</div>`;
+            const commentSvg = (typeof getIcon === 'function') ? getIcon('comment', '', 15) : '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+            sidebarCommentsList.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px 10px; font-size:13px; display:flex; align-items:center; justify-content:center; gap:6px;">${commentSvg}<span>暂无最新留言</span></div>`;
         } else {
             sidebarCommentsList.innerHTML = allComments.slice(0, 20).map(item => `
                 <div class="sidebar-comment-item">
-                    <div style="color:#2563eb; font-weight:600; margin-bottom:2px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                        <span>${escHtml(item.name)}</span>
-                        ${adminDelete(item, 'sidebar')}
+                    <div style="color:var(--primary); font-weight:600; font-size:13px; margin-bottom:2px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                        <span class="${item.contact ? 'comment-name-clickable' : ''}" ${item.contact ? `data-contact="${esc(item.contact)}" title="点击查看联系方式"` : ''}>${esc(item.name)}</span>
+                        ${renderDeleteBtn(item, 'sidebar')}
                     </div>
-                    <div style="color:#475569; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis; line-height:1.4;">${escHtml(item.content)}</div>
+                    <div style="color:var(--text-secondary); font-size:12.5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis; line-height:1.4;">${esc(item.content)}</div>
                 </div>
             `).join('');
         }
@@ -817,12 +900,13 @@ function renderComments() {
 // 同时作用于桌面端 .daohang/.zucheng 以及移动端抽屉 #mobileDrawer 中相同结构，保证两端 UI 完全一致。
 
 function renderLeftNav() {
-    // -------------------- 导航（首页 / 动态 / 网址 / 仓库，带 SVG 图标）--------------------
+    // -------------------- 导航（首页 / 文章 / 动态 / 网址 / 仓库，带 SVG 图标）--------------------
     document.querySelectorAll('.daohang ul').forEach(daohangList => {
         daohangList.innerHTML = `
             <li class="daohanglan">导航</li>
-            <li><a href="javascript:void(0)" data-nav="home" class="active" title="返回首页，查看全部文章"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('home', '', 15)} 首页</span></a></li>
-            <li><a href="javascript:void(0)" data-nav="space" title="查看博主个人空间动态"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('user', '', 15)} 动态</span></a></li>
+            <li><a href="javascript:void(0)" data-nav="home" class="active" title="首页：博主个人简历与介绍"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('home', '', 15)} 首页</span></a></li>
+            <li><a href="javascript:void(0)" data-nav="articles" title="文章：查看全部文章与博文"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('edit', '', 15)} 文章</span></a></li>
+            <li><a href="javascript:void(0)" data-nav="space" title="动态：查看博主个人空间动态"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('user', '', 15)} 动态</span></a></li>
             <li><a href="javascript:void(0)" data-nav="site" title="打开当前站点网址（新窗口）"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('globe', '', 15)} 网址</span></a></li>
             <li><a href="javascript:void(0)" data-nav="repo" title="打开博客的代码仓库（新窗口）"><span style="display:inline-flex; align-items:center; gap:8px;">${getIcon('code', '', 15)} 仓库</span></a></li>
         `;
@@ -831,12 +915,16 @@ function renderLeftNav() {
                 e.preventDefault();
                 const nav = link.dataset.nav;
                 if (nav === 'home') {
+                    switchView('home');
+                    if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
+                } else if (nav === 'articles') {
                     activeFilters = [];
                     activeSearch = '';
                     currentPage = 1;
                     switchView('list');
                     renderArticles();
                     renderFilters();
+                    if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
                 } else if (nav === 'space') {
                     switchView('space');
                     if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
@@ -943,11 +1031,19 @@ function renderLeftNav() {
                 addCatBtn.addEventListener('click', e => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const name = prompt('输入新分类名称：', '');
-                    if (name && addCategory(name)) {
-                        renderAll();
-                    } else if (name) {
-                        alert('分类已存在或输入无效。');
+                    if (typeof showPromptModal === 'function') {
+                        showPromptModal({
+                            title: '新建分类',
+                            placeholder: '输入新分类名称',
+                            onConfirm: (name) => {
+                                if (name && addCategory(name.trim())) {
+                                    renderAll();
+                                    if (typeof showToast === 'function') showToast(`分类「${name.trim()}」创建成功`, 'success');
+                                } else if (name) {
+                                    if (typeof showToast === 'function') showToast('分类已存在或输入无效', 'warning');
+                                }
+                            }
+                        });
                     }
                 });
             }
@@ -956,12 +1052,21 @@ function renderLeftNav() {
                     e.preventDefault();
                     e.stopPropagation();
                     const catName = btn.getAttribute('data-for-cat');
-                    const tagName = prompt(`在「${catName}」下新增一个标签：`, '');
-                    if (!tagName) return;
-                    if (addTagToCategory(catName, tagName)) {
-                        renderAll();
-                    } else {
-                        alert('标签已存在或输入无效。');
+                    if (typeof showPromptModal === 'function') {
+                        showPromptModal({
+                            title: '新增标签',
+                            message: `在「${catName}」分类下新增一个标签：`,
+                            placeholder: '输入标签名称',
+                            onConfirm: (tagName) => {
+                                if (!tagName) return;
+                                if (addTagToCategory(catName, tagName.trim())) {
+                                    renderAll();
+                                    if (typeof showToast === 'function') showToast(`标签「${tagName.trim()}」添加成功`, 'success');
+                                } else {
+                                    if (typeof showToast === 'function') showToast('标签已存在或输入无效', 'warning');
+                                }
+                            }
+                        });
                     }
                 });
             });
@@ -970,9 +1075,23 @@ function renderLeftNav() {
                     e.preventDefault();
                     e.stopPropagation();
                     const catName = btn.getAttribute('data-del-cat');
-                    if (!confirm(`删除分类「${catName}」？\n（仅删除分类结构，文章仍保留在"未分类"下）`)) return;
-                    if (deleteCategory(catName)) {
-                        renderAll();
+                    const doDel = () => {
+                        if (deleteCategory(catName)) {
+                            renderAll();
+                            if (typeof showToast === 'function') showToast(`分类「${catName}」已删除`, 'info');
+                        }
+                    };
+                    if (typeof showConfirmModal === 'function') {
+                        showConfirmModal({
+                            title: '删除分类',
+                            message: `确定删除分类「${catName}」吗？（仅删除分类结构，文章仍保留在“未分类”下）`,
+                            confirmText: '确认删除',
+                            cancelText: '取消',
+                            danger: true,
+                            onConfirm: doDel
+                        });
+                    } else {
+                        doDel();
                     }
                 });
             });
@@ -982,9 +1101,23 @@ function renderLeftNav() {
                     e.stopPropagation();
                     const catName = btn.getAttribute('data-cat');
                     const tagName = btn.getAttribute('data-tag');
-                    if (!confirm(`从分类「${catName}」中移除标签「${tagName}」？`)) return;
-                    if (deleteTagFromCategory(catName, tagName)) {
-                        renderAll();
+                    const doDelTag = () => {
+                        if (deleteTagFromCategory(catName, tagName)) {
+                            renderAll();
+                            if (typeof showToast === 'function') showToast(`标签「${tagName}」已移除`, 'info');
+                        }
+                    };
+                    if (typeof showConfirmModal === 'function') {
+                        showConfirmModal({
+                            title: '移除标签',
+                            message: `确定从分类「${catName}」中移除标签「${tagName}」吗？`,
+                            confirmText: '确认移除',
+                            cancelText: '取消',
+                            danger: true,
+                            onConfirm: doDelTag
+                        });
+                    } else {
+                        doDelTag();
                     }
                 });
             });
@@ -1052,24 +1185,69 @@ function deleteCustomAdminLink(idx) {
     renderAdminControlLinks();
 }
 
+let currentGalleryCategory = 'cover'; // 'cover' | 'article' | 'other'
+
 function deleteGalleryImage(idx) {
-    if (!confirm('确定从图册中删除这张图片吗？已发布使用该图的文章将恢复为随机备选图。')) return;
-    let images = getGalleryImages();
-    const url = images[idx];
-    images.splice(idx, 1);
-    saveGalleryImages(images);
-    // 清理该图的使用计数
-    if (url && typeof decrementCoverUsage === 'function') decrementCoverUsage(url);
-    const searchVal = document.getElementById('gallerySearchInput')?.value || '';
-    renderGallery(searchVal);
+    const doDelete = () => {
+        const cat = currentGalleryCategory || 'cover';
+        let images;
+        if (cat === 'article') {
+            images = (typeof getArticleContentImages === 'function') ? getArticleContentImages() : [];
+            images.splice(idx, 1);
+            if (typeof saveArticleContentImages === 'function') saveArticleContentImages(images);
+        } else if (cat === 'other') {
+            images = (typeof getOtherImages === 'function') ? getOtherImages() : [];
+            images.splice(idx, 1);
+            if (typeof saveOtherImages === 'function') saveOtherImages(images);
+        } else {
+            images = getGalleryImages();
+            const url = images[idx];
+            images.splice(idx, 1);
+            saveGalleryImages(images);
+            if (url && typeof decrementCoverUsage === 'function') decrementCoverUsage(url);
+        }
+        const searchVal = document.getElementById('gallerySearchInput')?.value || '';
+        renderGallery(searchVal);
+        if (typeof showToast === 'function') showToast('图片已删除', 'info');
+    };
+
+    if (typeof showConfirmModal === 'function') {
+        showConfirmModal({
+            title: '删除图片',
+            message: '确定要删除这张图片吗？此操作不可撤销。',
+            confirmText: '确认删除',
+            cancelText: '取消',
+            danger: true,
+            onConfirm: doDelete
+        });
+    } else {
+        doDelete();
+    }
 }
 
 function renderGallery(filterText = '') {
     const gridEl = document.getElementById('galleryGrid');
     if (!gridEl) return;
-    const images = getGalleryImages();
+    
+    let images;
+    const cat = currentGalleryCategory || 'cover';
+    if (cat === 'article') {
+        images = (typeof getArticleContentImages === 'function') ? getArticleContentImages() : [];
+    } else if (cat === 'other') {
+        images = (typeof getOtherImages === 'function') ? getOtherImages() : [];
+    } else {
+        images = getGalleryImages();
+    }
+    
     const usage = (typeof loadCoverUsage === 'function') ? loadCoverUsage() : {};
     const filterLower = (filterText || '').toLowerCase();
+
+    // Update title
+    const titleEl = document.getElementById('galleryViewTitle');
+    if (titleEl) {
+        const titles = { cover: '随机图库管理', article: '文章内部图片', other: '其他图片' };
+        titleEl.textContent = titles[cat] || '图册管理系统';
+    }
 
     // 同时支持按 URL 和自定义名称搜索
     const filtered = images
@@ -1088,7 +1266,7 @@ function renderGallery(filterText = '') {
             <div class="gallery-item-card" data-gallery-idx="${item.idx}">
                 <div class="gallery-thumb-wrap" data-action="view-large" data-idx="${item.idx}" title="点击查看大图">
                     <img src="${urlAttr}" alt="${displayName}" loading="lazy" onerror="this.src='img/img6.jpg'">
-                    ${usageCount > 0 ? `<span class="gallery-usage-badge" title="作为自动封面使用次数">${usageCount}</span>` : ''}
+                    ${cat === 'cover' && usageCount > 0 ? `<span class="gallery-usage-badge" title="作为自动封面使用次数">${usageCount}</span>` : ''}
                 </div>
                 <div class="gallery-item-info">
                     <span class="gallery-item-name" data-name-display="${item.idx}" title="${isData ? '本地上传图片' : escHtml(item.url)}">${displayName}</span>
@@ -1103,8 +1281,85 @@ function renderGallery(filterText = '') {
     }).join('');
 
     if (filtered.length === 0) {
-        gridEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:32px; color:#64748b; font-size:14px;">图册内无匹配的图片。</div>';
+        gridEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:32px; color:#64748b; font-size:14px;">当前分类内无匹配的图片。</div>';
     }
+}
+
+// ========== 文件管理渲染 ==========
+
+let currentFileFolder = 'root';
+let fileFolderPath = [{ id: 'root', name: '根目录' }];
+
+function renderFileManager() {
+    const container = document.getElementById('fileListContainer');
+    const breadcrumb = document.getElementById('fileBreadcrumb');
+    if (!container) return;
+
+    // Render breadcrumb
+    if (breadcrumb) {
+        breadcrumb.innerHTML = fileFolderPath.map((item, idx) => {
+            const isLast = idx === fileFolderPath.length - 1;
+            if (isLast) {
+                return `<span style="font-weight:700; color:var(--text-main);">${escHtml(item.name)}</span>`;
+            }
+            return `<span class="file-breadcrumb-link" data-folder-id="${item.id}" data-path-idx="${idx}" style="cursor:pointer; color:var(--primary); font-weight:600;">${escHtml(item.name)}</span><span style="color:var(--text-muted);">/</span>`;
+        }).join('');
+    }
+
+    const items = (typeof getFilesInFolder === 'function') ? getFilesInFolder(currentFileFolder) : [];
+
+    if (items.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:48px 16px; color:var(--text-muted);">
+                <div style="font-size:48px; margin-bottom:12px; opacity:0.4;">📂</div>
+                <div style="font-weight:600; margin-bottom:4px;">此文件夹为空</div>
+                <div style="font-size:13px;">点击上方按钮新建文件夹或上传文件</div>
+            </div>
+        `;
+        return;
+    }
+
+    // Sort: folders first, then files, alphabetically
+    const sorted = [...items].sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+        return (a.name || '').localeCompare(b.name || '');
+    });
+
+    container.innerHTML = `
+        <div class="file-list">
+            ${sorted.map(item => {
+                const isFolder = item.type === 'folder';
+                const icon = isFolder
+                    ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>'
+                    : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
+                const sizeStr = !isFolder && item.size ? (typeof formatFileSize === 'function' ? formatFileSize(item.size) : item.size + ' B') : '';
+                const dateStr = item.createdAt ? (typeof formatDateTime === 'function' ? formatDateTime(item.createdAt) : new Date(item.createdAt).toLocaleDateString()) : '';
+                return `
+                    <div class="file-list-item" data-file-id="${item.id}" data-file-type="${item.type}" style="display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border-color); gap:12px; cursor:${isFolder ? 'pointer' : 'default'}; transition:background 0.15s;" ${isFolder ? `data-action="open-folder"` : ''}>
+                        <div style="flex-shrink:0; display:flex; align-items:center;">${icon}</div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight:600; font-size:14px; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(item.name)}</div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:2px; display:flex; gap:12px;">
+                                ${sizeStr ? `<span>${sizeStr}</span>` : ''}
+                                ${dateStr ? `<span>${dateStr}</span>` : ''}
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-shrink:0;">
+                            ${!isFolder ? `<button type="button" class="gallery-icon-btn" data-action="download-file" data-file-id="${item.id}" title="下载">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            </button>` : ''}
+                            <button type="button" class="gallery-icon-btn" data-action="rename-file" data-file-id="${item.id}" title="重命名">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button type="button" class="gallery-icon-btn gallery-delete-btn" data-action="delete-file" data-file-id="${item.id}" title="删除">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
 }
 
 // ========== 个人空间动态页面渲染 & 交互逻辑 ==========
@@ -1267,9 +1522,9 @@ function renderFeedCommentsList(feed) {
                     return `
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px;">
                         <div style="flex:1;">
-                            <span style="font-weight:700; color:var(--text-main);">${escapeHtml(r.name)}</span>: 
+                            <span class="${r.contact ? 'comment-name-clickable' : ''}" style="font-weight:700; color:var(--text-main);" ${r.contact ? `data-contact="${escapeHtml(r.contact)}" title="点击查看联系方式"` : ''}>${escapeHtml(r.name)}</span>: 
                             <span style="color:var(--text-secondary);">${escapeHtml(r.text)}</span>
-                            <span style="font-size:10.5px; color:var(--text-muted); margin-left:6px;">(${r.date})</span>
+                            <span style="font-size:10.5px; color:var(--text-muted); margin-left:6px;">(${typeof formatDateTime === 'function' ? formatDateTime(r.date) : r.date})</span>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
                             <button type="button" style="background:none; border:none; color:var(--primary); font-size:11px; cursor:pointer; font-weight:600; padding:0;" onclick="showFeedReplyInput(${feed.id}, ${c.id}, '${escapeHtml(r.name)}')">回复</button>
@@ -1286,8 +1541,8 @@ function renderFeedCommentsList(feed) {
             <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
                 <div style="flex:1;">
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                        <span style="font-weight:700; color:var(--primary);">${escapeHtml(c.name)}</span>
-                        <span style="font-size:11px; color:var(--text-muted);">${c.date}</span>
+                        <span class="${c.contact ? 'comment-name-clickable' : ''}" style="font-weight:700; color:var(--primary);" ${c.contact ? `data-contact="${escapeHtml(c.contact)}" title="点击查看联系方式"` : ''}>${escapeHtml(c.name)}</span>
+                        <span style="font-size:11px; color:var(--text-muted);">${typeof formatDateTime === 'function' ? formatDateTime(c.date) : c.date}</span>
                     </div>
                     <div style="color:var(--text-main); line-height:1.5; white-space:pre-wrap;">${escapeHtml(c.text)}</div>
                 </div>
@@ -1306,10 +1561,23 @@ function renderFeedCommentsList(feed) {
 }
 
 function handleDeleteFeedComment(feedId, commentId, replyId) {
-    if (confirm('确定删除这条评论吗？')) {
+    const doDelete = () => {
         deleteSpaceFeedComment(feedId, commentId, replyId);
         if (typeof showToast === 'function') showToast('评论已删除');
         renderSpaceView(feedId);
+    };
+
+    if (typeof showConfirmModal === 'function') {
+        showConfirmModal({
+            title: '删除动态评论',
+            message: '确定要删除这条动态评论吗？删除后将无法恢复。',
+            confirmText: '确认删除',
+            cancelText: '取消',
+            danger: true,
+            onConfirm: doDelete
+        });
+    } else {
+        doDelete();
     }
 }
 
@@ -1577,14 +1845,27 @@ function saveCalendarMemo() {
 
 function deleteCalendarMemo() {
     if (!currentEditingMemoDate) return;
-    if (confirm('确定要删除该日期的备忘录吗？')) {
+    const doDelete = () => {
         if (typeof setDateMemo === 'function') {
             setDateMemo(currentEditingMemoDate, '');
         }
         closeCalendarMemoModal();
-        if (typeof showToast === 'function') showToast('备忘录已删除');
+        if (typeof showToast === 'function') showToast('备忘录已删除', 'info');
         renderActivityCalendar();
         renderTopNoticeBanner();
+    };
+
+    if (typeof showConfirmModal === 'function') {
+        showConfirmModal({
+            title: '删除备忘录',
+            message: `确定要删除 ${currentEditingMemoDate} 的备忘录吗？`,
+            confirmText: '确认删除',
+            cancelText: '取消',
+            danger: true,
+            onConfirm: doDelete
+        });
+    } else {
+        doDelete();
     }
 }
 
@@ -1720,10 +2001,23 @@ function submitNewFeed() {
 }
 
 function deleteSpaceFeedItem(feedId) {
-    if (confirm('确定要删除这条动态吗？')) {
+    const doDelete = () => {
         deleteSpaceFeed(feedId);
         if (typeof showToast === 'function') showToast('动态已删除');
         renderSpaceView();
+    };
+
+    if (typeof showConfirmModal === 'function') {
+        showConfirmModal({
+            title: '删除动态',
+            message: '确定要删除这条动态吗？删除后将无法恢复。',
+            confirmText: '确认删除',
+            cancelText: '取消',
+            danger: true,
+            onConfirm: doDelete
+        });
+    } else {
+        doDelete();
     }
 }
 
@@ -1767,11 +2061,17 @@ function submitFeedComment(feedId) {
                     renderSpaceView(feedId);
                 }
             });
-        } else {
-            const name = prompt('请输入您的昵称：') || '热心访客';
-            addSpaceFeedComment(feedId, { name, contact: 'guest@blog.com', text });
-            if (input) input.value = '';
-            renderSpaceView(feedId);
+        } else if (typeof showPromptModal === 'function') {
+            showPromptModal({
+                title: '发表评论',
+                placeholder: '请输入您的昵称',
+                defaultValue: '热心访客',
+                onConfirm: (name) => {
+                    addSpaceFeedComment(feedId, { name: name || '热心访客', contact: 'guest@blog.com', text });
+                    if (input) input.value = '';
+                    renderSpaceView(feedId);
+                }
+            });
         }
         return;
     }
@@ -1818,10 +2118,16 @@ function submitFeedReply(feedId, commentId) {
                     renderSpaceView(feedId);
                 }
             });
-        } else {
-            const name = prompt('请输入您的昵称：') || '热心访客';
-            addSpaceFeedComment(feedId, { name, contact: 'guest@blog.com', text, replyToId: commentId });
-            renderSpaceView(feedId);
+        } else if (typeof showPromptModal === 'function') {
+            showPromptModal({
+                title: '发表回复',
+                placeholder: '请输入您的昵称',
+                defaultValue: '热心访客',
+                onConfirm: (name) => {
+                    addSpaceFeedComment(feedId, { name: name || '热心访客', contact: 'guest@blog.com', text, replyToId: commentId });
+                    renderSpaceView(feedId);
+                }
+            });
         }
         return;
     }
@@ -1838,4 +2144,273 @@ function openSpaceImageViewer(feedId, imgIdx) {
     if (typeof openImageViewer === 'function') {
         openImageViewer(imgIdx, target.images);
     }
+}
+
+// ========== 首页个人简历与介绍动态渲染 ==========
+
+function renderHomeResumeView() {
+    const container = document.getElementById('homeResumeContainer');
+    if (!container) return;
+
+    const data = typeof getHomeResumeData === 'function' ? getHomeResumeData() : defaultHomeResume;
+    const isAdm = !!(state && state.isAdmin);
+
+    const { 
+        hero, 
+        aboutSection = defaultHomeResume.aboutSection,
+        about, 
+        skillsSection = defaultHomeResume.skillsSection,
+        skillsCategories = defaultHomeResume.skillsCategories,
+        projectsSection = defaultHomeResume.projectsSection,
+        projects, 
+        timelineSection = defaultHomeResume.timelineSection,
+        timeline, 
+        contactSection = defaultHomeResume.contactSection
+    } = data;
+
+    // 辅助生成管理员编辑按钮
+    const adminEditBtn = (tab, label) => isAdm 
+        ? `<button type="button" class="mini-admin-btn resume-section-edit-btn" onclick="openHomeResumeEditor('${tab}')" title="编辑此模块">${getIcon('edit', '', 12)} 编辑${label}</button>`
+        : '';
+
+    // 1. Hero 区域
+    const tagsHtml = (hero.tags || []).map(t => {
+        const cleanT = String(t || '').replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}|\s+/gu, '').trim() || t;
+        return `<span class="resume-tag-chip">${getIcon('tag', '', 12)} ${escHtml(cleanT)}</span>`;
+    }).join('');
+    const heroAvatar = hero.avatar || 'img/img6.jpg';
+
+    // Hero 按钮动作解析
+    const getHeroBtnAction = (linkTarget) => {
+        if (!linkTarget || linkTarget === 'list') {
+            return `switchView('list'); activeFilters = []; renderArticles();`;
+        }
+        if (linkTarget === 'space') {
+            return `switchView('space');`;
+        }
+        if (linkTarget.startsWith('http://') || linkTarget.startsWith('https://')) {
+            return `window.open('${escHtml(linkTarget)}', '_blank');`;
+        }
+        return `switchView('list');`;
+    };
+
+    const primaryAction = getHeroBtnAction(hero.primaryBtnLink || 'list');
+    const secondaryAction = getHeroBtnAction(hero.secondaryBtnLink || 'space');
+
+    // 2. 关于我（矢量 SVG 图标）
+    const aboutHtml = (about || []).map(item => {
+        let iconName = item.icon || 'layers';
+        if (iconName.includes('🚀')) iconName = 'rocket';
+        else if (iconName.includes('🎨')) iconName = 'palette';
+        else if (iconName.includes('💡')) iconName = 'lightbulb';
+        else if (iconName.includes('🌱')) iconName = 'sprout';
+        else if (iconName.includes('💻')) iconName = 'code';
+        const iconSvg = getIcon(iconName, '', 22) || getIcon('layers', '', 22);
+
+        return `
+            <div class="resume-about-box">
+                <div class="about-box-icon">${iconSvg}</div>
+                <h4>${escHtml(item.title || '')}</h4>
+                <p>${escHtml(item.desc || '')}</p>
+            </div>
+        `;
+    }).join('');
+
+    // 3. 专业技能（动态分类矩阵）
+    const skillsHtml = (skillsCategories || []).map((cat, catIdx) => {
+        const indClass = cat.indicator || (catIdx === 0 ? 'front' : (catIdx === 1 ? 'back' : 'tool'));
+        const badgesHtml = (cat.items || []).map((s, idx) => `
+            <span class="skill-badge ${idx < 3 ? 'primary' : ''}">${escHtml(s)}</span>
+        `).join('');
+
+        return `
+            <div class="resume-skill-category">
+                <h3><span class="category-indicator ${indClass}"></span> ${escHtml(cat.title || '技能分类')}</h3>
+                <div class="resume-skill-badges">${badgesHtml}</div>
+            </div>
+        `;
+    }).join('');
+
+    // 4. 精选作品
+    const projectsHtml = (projects || []).map(p => {
+        const pTags = (p.tags || []).map(t => `<span>${escHtml(t)}</span>`).join('');
+        let linkAction = "switchView('list'); activeFilters = []; renderArticles();";
+        let isExternal = false;
+        if (p.link === 'space') {
+            linkAction = "switchView('space');";
+        } else if (p.link === 'custom' && p.customUrl) {
+            linkAction = `window.open('${escHtml(p.customUrl)}', '_blank');`;
+            isExternal = true;
+        }
+
+        return `
+            <div class="resume-project-card">
+                <div class="project-card-header">
+                    <div class="project-badge">${escHtml(p.badge || '代表作品')}</div>
+                    <div class="project-links">
+                        <a href="javascript:void(0)" onclick="${linkAction}" title="${isExternal ? '访问外部链接' : '查看详情'}" class="project-icon-link">
+                            ${getIcon(isExternal ? 'link' : 'arrow-right', '', 16)}
+                        </a>
+                    </div>
+                </div>
+                <h3 class="project-title">${escHtml(p.title || '')}</h3>
+                <p class="project-desc">${escHtml(p.desc || '')}</p>
+                <div class="project-tech-tags">${pTags}</div>
+            </div>
+        `;
+    }).join('');
+
+    // 5. 成长历程
+    const timelineHtml = (timeline || []).map((item, idx) => `
+        <div class="resume-timeline-item">
+            <div class="timeline-dot ${idx === 0 ? 'active' : ''}"></div>
+            <div class="timeline-year">${escHtml(item.year || '')}</div>
+            <div class="timeline-content">
+                <h4>${escHtml(item.title || '')}</h4>
+                <p>${escHtml(item.desc || '')}</p>
+            </div>
+        </div>
+    `).join('');
+
+    // 6. 底部联系
+    const pillsHtml = (contactSection.pills || []).map(pill => {
+        let pIcon = 'comment';
+        if (pill.includes('邮') || pill.includes('mail') || pill.includes('Mail')) pIcon = 'mail';
+        else if (pill.includes('Git') || pill.includes('代码') || pill.includes('开源')) pIcon = 'github';
+        return `<span class="contact-pill">${getIcon(pIcon, '', 14)} <span>${escHtml(pill)}</span></span>`;
+    }).join('');
+
+    const cleanGreeting = String(hero.greeting || '你好，我是').replace(/👋/g, '').trim();
+    const cleanCtaText = String(contactSection.ctaText || '进入文章专区').replace(/^👉\s*/, '').trim();
+    const contactCtaAction = getHeroBtnAction(contactSection.ctaLink || 'list');
+
+    container.innerHTML = `
+        ${isAdm ? `
+            <div class="resume-admin-bar">
+                <div class="resume-admin-bar-info">
+                    <span class="admin-badge">${getIcon('sparkle', '', 12)} 管理员模式</span>
+                    <span>您可以直接编辑首页全部内容或调整各个卡片信息</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button type="button" class="primary-btn" onclick="openHomeResumeEditor('hero')" style="padding:6px 16px; font-size:12.5px; border-radius:999px; display:inline-flex; align-items:center; gap:5px;">
+                        ${getIcon('edit', '', 14)} <span>编辑首页内容</span>
+                    </button>
+                    <button type="button" class="secondary-btn" onclick="resetHomeResumeEditor()" style="padding:6px 14px; font-size:12px; border-radius:999px; display:inline-flex; align-items:center; gap:5px;" title="恢复系统默认预设">
+                        ${getIcon('refresh', '', 12)} <span>重置预设</span>
+                    </button>
+                </div>
+            </div>
+        ` : ''}
+
+        <!-- 1. Hero 个人名片与主视觉 -->
+        <section class="resume-hero-card">
+            <div class="resume-hero-bg-glow"></div>
+            ${adminEditBtn('hero', '名片')}
+            <div class="resume-hero-content">
+                <div class="resume-avatar-box">
+                    <img src="${escHtml(heroAvatar)}" alt="博主头像" class="resume-avatar" onerror="this.src='img/img6.jpg'">
+                    <span class="resume-status-badge" title="当前状态">
+                        <span class="status-dot"></span> ${escHtml(hero.status || '探索创造中')}
+                    </span>
+                </div>
+                <div class="resume-intro">
+                    <div class="resume-greeting">${escHtml(cleanGreeting)} <span class="resume-name-highlight">${escHtml(hero.name || '是令令啊')}</span></div>
+                    <h1 class="resume-main-title">${escHtml(hero.title || '')}</h1>
+                    <p class="resume-motto">${escHtml(hero.motto || '')}</p>
+                    <div class="resume-hero-tags">${tagsHtml}</div>
+                    <div class="resume-cta-group">
+                        <button type="button" class="resume-btn primary" onclick="${primaryAction}" title="${escHtml(hero.primaryBtnText || '阅读我的文章')}">
+                            ${getIcon('book-open', '', 16)}
+                            <span>${escHtml(hero.primaryBtnText || '阅读我的文章')}</span>
+                        </button>
+                        <button type="button" class="resume-btn secondary" onclick="${secondaryAction}" title="${escHtml(hero.secondaryBtnText || '空间动态')}">
+                            ${getIcon('user', '', 16)}
+                            <span>${escHtml(hero.secondaryBtnText || '空间动态')}</span>
+                        </button>
+                        <a href="${escHtml(hero.github || 'https://github.com/Is-Lingling')}" target="_blank" rel="noopener" class="resume-btn outline" title="访问 GitHub 仓库">
+                            ${getIcon('github', '', 16)}
+                            <span>${escHtml(hero.githubBtnText || 'GitHub')}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 关于我 (About Me) -->
+        <section class="resume-section-card" style="position:relative;">
+            <div class="resume-section-header">
+                <div class="resume-section-icon">
+                    ${getIcon(aboutSection.icon || 'info', '', 20) || getIcon('info', '', 20)}
+                </div>
+                <div style="flex:1;">
+                    <h2 class="resume-section-title">${escHtml(aboutSection.title || '关于我 · About Me')}</h2>
+                    <div class="resume-section-desc">${escHtml(aboutSection.subtitle || '个人背景与技术哲学')}</div>
+                </div>
+                ${adminEditBtn('about', '关于我')}
+            </div>
+            <div class="resume-about-grid">${aboutHtml}</div>
+        </section>
+
+        <!-- 3. 核心专业技能 (Tech Stack & Skills) -->
+        <section class="resume-section-card" style="position:relative;">
+            <div class="resume-section-header">
+                <div class="resume-section-icon">
+                    ${getIcon(skillsSection.icon || 'code', '', 20) || getIcon('code', '', 20)}
+                </div>
+                <div style="flex:1;">
+                    <h2 class="resume-section-title">${escHtml(skillsSection.title || '专业技能 · Skills & Stack')}</h2>
+                    <div class="resume-section-desc">${escHtml(skillsSection.subtitle || '熟练运用的技术栈与工具链')}</div>
+                </div>
+                ${adminEditBtn('skills', '技能')}
+            </div>
+            <div class="resume-skills-container">
+                ${skillsHtml}
+            </div>
+        </section>
+
+        <!-- 4. 精选作品与作品集 (Featured Projects) -->
+        <section class="resume-section-card" style="position:relative;">
+            <div class="resume-section-header">
+                <div class="resume-section-icon">
+                    ${getIcon(projectsSection.icon || 'layout', '', 20) || getIcon('layout', '', 20)}
+                </div>
+                <div style="flex:1;">
+                    <h2 class="resume-section-title">${escHtml(projectsSection.title || '精选作品 · Featured Projects')}</h2>
+                    <div class="resume-section-desc">${escHtml(projectsSection.subtitle || '近期主导与独立开发的代表项目')}</div>
+                </div>
+                ${adminEditBtn('projects', '作品')}
+            </div>
+            <div class="resume-projects-grid">${projectsHtml}</div>
+        </section>
+
+        <!-- 5. 成长历程与时间线 (Milestones & Experience) -->
+        <section class="resume-section-card" style="position:relative;">
+            <div class="resume-section-header">
+                <div class="resume-section-icon">
+                    ${getIcon(timelineSection.icon || 'calendar', '', 20) || getIcon('calendar', '', 20)}
+                </div>
+                <div style="flex:1;">
+                    <h2 class="resume-section-title">${escHtml(timelineSection.title || '成长历程 · Milestones')}</h2>
+                    <div class="resume-section-desc">${escHtml(timelineSection.subtitle || '技术探索与创作轨迹')}</div>
+                </div>
+                ${adminEditBtn('timeline', '时间线')}
+            </div>
+            <div class="resume-timeline">${timelineHtml}</div>
+        </section>
+
+        <!-- 6. 底部联系与行动呼吁 (Get In Touch & CTA) -->
+        <section class="resume-contact-card" style="position:relative;">
+            ${adminEditBtn('contact', '联系')}
+            <div class="resume-contact-content">
+                <h3>${escHtml(contactSection.title || "让我们开始连接 · Let's Connect")}</h3>
+                <p>${escHtml(contactSection.desc || '无论是技术探讨、项目合作，还是单纯想打个招呼，都欢迎随时与我联系！')}</p>
+                <div class="resume-contact-badges">${pillsHtml}</div>
+                <div style="margin-top:20px;">
+                    <button type="button" class="primary-btn" onclick="${contactCtaAction}" style="padding:10px 28px; border-radius:999px; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;">
+                        ${getIcon('arrow-right', '', 15)} <span>${escHtml(cleanCtaText)}</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    `;
 }

@@ -23,6 +23,20 @@ const state = {
     themeIconStyle: localStorage.getItem('themeIconStyle') || 'line',
     themePreset: localStorage.getItem('themePreset') || 'indigo',
     themeRadius: localStorage.getItem('themeRadius') || '20',
+    themeSidebarRadius: localStorage.getItem('themeSidebarRadius') || '18',
+    themeOpacity: localStorage.getItem('themeOpacity') || '75',
+    themeCardOpacity: localStorage.getItem('themeCardOpacity') || '85',
+    themeSidebarOpacity: localStorage.getItem('themeSidebarOpacity') || '85',
+    themeCardHeight: localStorage.getItem('themeCardHeight') || '100',
+    themeCardWidth: localStorage.getItem('themeCardWidth') || '100',
+    themeBlur: localStorage.getItem('themeBlur') || '16',
+    themePresetColor: localStorage.getItem('themePresetColor') || '#6366f1',
+    themeRopeWidth: localStorage.getItem('themeRopeWidth') || '3.5',
+    themeTopGap: localStorage.getItem('themeTopGap') || '8',
+    themeGridGapX: localStorage.getItem('themeGridGapX') || '6',
+    themeCardGapY: localStorage.getItem('themeCardGapY') || '10',
+    themeArticleGapTop: localStorage.getItem('themeArticleGapTop') || '0',
+    themeArticleGapBottom: localStorage.getItem('themeArticleGapBottom') || '14',
     themeCustomBgUrl: localStorage.getItem('themeCustomBgUrl') || '',
     musicPlaying: localStorage.getItem(STORAGE_KEYS.musicPlaying) === 'true',
     isAdmin: localStorage.getItem('isAdmin') === 'true',
@@ -176,6 +190,23 @@ function formatNumber(value) {
 function formatDate(value) {
     const date = new Date(value);
     return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+}
+
+function formatDateTime(value) {
+    if (!value) return '';
+    let date;
+    if (typeof value === 'string' && value.includes(' ') && !value.includes('T')) {
+        date = new Date(value.replace(/-/g, '/'));
+    } else {
+        date = new Date(value);
+    }
+    if (isNaN(date.getTime())) return String(value || '');
+    const y = date.getFullYear();
+    const M = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const m = String(date.getMinutes()).padStart(2, '0');
+    return `${y}/${M}/${d} ${h}:${m}`;
 }
 
 function computeSiteDays() {
@@ -364,10 +395,10 @@ function copyCodeBlock(btn) {
                 btn.classList.remove('copied');
             }, 1800);
         }).catch(() => {
-            alert('复制失败，请手动选取复制代码');
+            if (typeof showToast === 'function') showToast('复制失败，请手动选取复制代码', 'error');
         });
     } else {
-        alert('浏览器暂不支持自动复制，请手动选取复制代码');
+        if (typeof showToast === 'function') showToast('浏览器暂不支持自动复制，请手动选取复制代码', 'warning');
     }
 }
 window.copyCodeBlock = copyCodeBlock;

@@ -73,7 +73,18 @@
             const article = articles.find(item => item.id === currentId) || articles[0];
             const content = article.content ? parseMarkdown(article.content) : `<p>${article.summary}</p>`;
             const admin = localStorage.getItem(STORAGE_KEYS.isAdmin) === 'true';
-            const adminButtons = admin ? `<div class="article-actions" style="margin-top:20px;"><button id="editFullArticle" class="action-btn admin-edit">✏️ 编辑文章</button><button class="action-btn delete-btn" id="deleteFullArticle">🗑️ 删除文章</button></div>` : '';
+            const adminButtons = admin ? `
+                <div class="article-actions" style="margin-top:20px; display:flex; gap:10px;">
+                    <button id="editFullArticle" class="action-btn admin-edit" style="display:inline-flex; align-items:center; gap:6px;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        <span>编辑文章</span>
+                    </button>
+                    <button class="action-btn delete-btn" id="deleteFullArticle" style="display:inline-flex; align-items:center; gap:6px;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <span>删除文章</span>
+                    </button>
+                </div>
+            ` : '';
             const coverHtml = article.cover ? `<img src="${article.cover}" alt="${article.title} 封面">` : '';
             document.getElementById('articleContent').innerHTML = `
                 <h1>${article.title}</h1>
@@ -85,10 +96,21 @@
             document.getElementById('loginButton').textContent = admin ? '管理员已登录' : '管理员登录';
             if (admin) {
                 document.getElementById('deleteFullArticle').addEventListener('click', () => {
-                    if (!confirm('确定删除这篇文章吗？')) return;
-                    articles = articles.filter(item => item.id !== article.id);
-                    localStorage.setItem(STORAGE_KEYS.articles, JSON.stringify(articles));
-                    window.location.href = 'index.html';
+                    const doDelete = () => {
+                        articles = articles.filter(item => item.id !== article.id);
+                        localStorage.setItem(STORAGE_KEYS.articles, JSON.stringify(articles));
+                        window.location.href = 'index.html';
+                    };
+                    if (typeof showConfirmModal === 'function') {
+                        showConfirmModal({
+                            title: '删除文章',
+                            message: '确定要删除这篇文章吗？此操作不可撤销。',
+                            danger: true,
+                            onConfirm: doDelete
+                        });
+                    } else {
+                        doDelete();
+                    }
                 });
                 document.getElementById('editFullArticle').addEventListener('click', () => {
                     let standaloneCoverMode = article.cover ? (article.cover.startsWith('data:image') ? 'file' : 'url') : 'none';
@@ -104,99 +126,77 @@
                                 <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">文章标题</label>
                                 <input id="editTitleInput" type="text" value="${article.title}" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1;">
                             </div>
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                                <div>
-                                    <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">分类</label>
-                                    <input id="editCategoryInput" type="text" value="${article.category || '随笔'}" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1;">
-                                </div>
-                                <div>
-                                    <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">标签（逗号分隔）</label>
-                                    <input id="editTagsInput" type="text" value="${(article.tags || []).join(', ')}" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1;">
-                                </div>
+                            <div>
+                                <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">文章分类</label>
+                                <input id="editCategoryInput" type="text" value="${article.category}" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1;">
                             </div>
                             <div>
-                                <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">封面图片设置</label>
-                                <div style="display:flex; gap:8px; margin-bottom:8px;">
-                                    <button type="button" id="sCoverTabUrl" style="padding:6px 12px; border-radius:999px; border:1px solid #cbd5e1; background:${standaloneCoverMode === 'url' ? '#2563eb' : '#f1f5f9'}; color:${standaloneCoverMode === 'url' ? '#fff' : '#334155'}; cursor:pointer;">网络 URL 链接</button>
-                                    <button type="button" id="sCoverTabFile" style="padding:6px 12px; border-radius:999px; border:1px solid #cbd5e1; background:${standaloneCoverMode === 'file' ? '#2563eb' : '#f1f5f9'}; color:${standaloneCoverMode === 'file' ? '#fff' : '#334155'}; cursor:pointer;">上传本地图片</button>
-                                    <button type="button" id="sCoverTabNone" style="padding:6px 12px; border-radius:999px; border:1px solid #cbd5e1; background:${standaloneCoverMode === 'none' ? '#2563eb' : '#f1f5f9'}; color:${standaloneCoverMode === 'none' ? '#fff' : '#334155'}; cursor:pointer;">无封面</button>
-                                </div>
-                                <div id="sCoverUrlPane" style="display:${standaloneCoverMode === 'url' ? 'block' : 'none'};">
-                                    <input id="editCoverInput" type="text" value="${article.cover || ''}" placeholder="输入封面地址 (如 img/img6.jpg)" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1;">
-                                </div>
-                                <div id="sCoverFilePane" style="display:${standaloneCoverMode === 'file' ? 'block' : 'none'};">
-                                    <label style="display:inline-block; padding:8px 16px; border-radius:10px; background:#eff6ff; color:#2563eb; cursor:pointer; border:1px dashed #93c5fd;">
-                                        📁 选择本地图片文件
-                                        <input id="editCoverFileInput" type="file" accept="image/*" style="display:none;">
+                                <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">文章标签（以逗号分隔）</label>
+                                <input id="editTagsInput" type="text" value="${article.tags.join(', ')}" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1;">
+                            </div>
+                            <div>
+                                <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">文章封面设置</label>
+                                <div style="display:flex; gap:16px; align-items:center; margin-bottom:8px; font-size:14px;">
+                                    <label style="cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                                        <input type="radio" name="standaloneCoverType" value="none" ${standaloneCoverMode === 'none' ? 'checked' : ''}> 无封面
                                     </label>
-                                    <span id="sCoverFileTip" style="margin-left:8px; font-size:13px; color:#64748b;">未选择文件</span>
+                                    <label style="cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                                        <input type="radio" name="standaloneCoverType" value="url" ${standaloneCoverMode === 'url' ? 'checked' : ''}> 封面图片 URL
+                                    </label>
+                                    <label style="cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                                        <input type="radio" name="standaloneCoverType" value="file" ${standaloneCoverMode === 'file' ? 'checked' : ''}> 本地上传图片
+                                    </label>
+                                </div>
+                                <div id="editCoverUrlWrap" style="display:${standaloneCoverMode === 'url' ? 'block' : 'none'};">
+                                    <input id="editCoverInput" type="text" value="${article.cover && !article.cover.startsWith('data:image') ? article.cover : ''}" placeholder="例如：https://picsum.photos/800/400 或 img/img6.jpg" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1;">
+                                </div>
+                                <div id="editCoverFileWrap" style="display:${standaloneCoverMode === 'file' ? 'block' : 'none'};">
+                                    <input id="editCoverFileInput" type="file" accept="image/*" style="width:100%; padding:8px 0;">
+                                    <div id="editCoverFilePreview" style="margin-top:8px;">${standaloneCoverDataUrl ? `<img src="${standaloneCoverDataUrl}" style="max-width:180px; max-height:120px; border-radius:8px; border:1px solid #cbd5e1; object-fit:cover;">` : ''}</div>
                                 </div>
                             </div>
                             <div>
-                                <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">Markdown 正文内容</label>
-                                <textarea id="editMarkdownInput" rows="12" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-family:inherit;">${article.content || article.summary}</textarea>
+                                <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">文章正文 (Markdown)</label>
+                                <textarea id="editContentInput" rows="12" style="width:100%; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1; font-family:monospace; line-height:1.5;">${article.content}</textarea>
                             </div>
-                            <div>
-                                <label style="font-weight:600; display:block; margin-bottom:6px; font-size:14px;">实时预览</label>
-                                <div id="editPreviewArea" class="markdown-content" style="padding:14px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0; max-height:260px; overflow-y:auto;">${parseMarkdown(article.content || article.summary)}</div>
-                            </div>
-                            <div style="display:flex; gap:12px; margin-top:8px;">
-                                <button type="button" id="saveArticleEdit" style="padding:10px 20px; border-radius:999px; background:#2563eb; color:#fff; cursor:pointer; border:none; font-weight:600;">保存文章</button>
-                                <button type="button" id="cancelArticleEditBtn" style="padding:10px 18px; border-radius:999px; background:#f1f5f9; color:#475569; cursor:pointer; border:none;">取消</button>
+                            <div style="display:flex; gap:12px;">
+                                <button type="button" id="saveArticleEdit" style="padding:10px 24px; border-radius:999px; background:#2563eb; color:#fff; border:none; cursor:pointer; font-weight:600;">保存文章</button>
                             </div>
                         </div>
                     `;
 
-                    const urlTab = document.getElementById('sCoverTabUrl');
-                    const fileTab = document.getElementById('sCoverTabFile');
-                    const noneTab = document.getElementById('sCoverTabNone');
-                    const urlPane = document.getElementById('sCoverUrlPane');
-                    const filePane = document.getElementById('sCoverFilePane');
+                    document.querySelectorAll('input[name="standaloneCoverType"]').forEach(radio => {
+                        radio.addEventListener('change', (e) => {
+                            standaloneCoverMode = e.target.value;
+                            document.getElementById('editCoverUrlWrap').style.display = standaloneCoverMode === 'url' ? 'block' : 'none';
+                            document.getElementById('editCoverFileWrap').style.display = standaloneCoverMode === 'file' ? 'block' : 'none';
+                        });
+                    });
+
                     const fileInput = document.getElementById('editCoverFileInput');
-
-                    function updateSTabs(mode) {
-                        standaloneCoverMode = mode;
-                        urlTab.style.background = mode === 'url' ? '#2563eb' : '#f1f5f9';
-                        urlTab.style.color = mode === 'url' ? '#fff' : '#334155';
-                        fileTab.style.background = mode === 'file' ? '#2563eb' : '#f1f5f9';
-                        fileTab.style.color = mode === 'file' ? '#fff' : '#334155';
-                        noneTab.style.background = mode === 'none' ? '#2563eb' : '#f1f5f9';
-                        noneTab.style.color = mode === 'none' ? '#fff' : '#334155';
-                        urlPane.style.display = mode === 'url' ? 'block' : 'none';
-                        filePane.style.display = mode === 'file' ? 'block' : 'none';
-                    }
-
-                    urlTab.addEventListener('click', () => updateSTabs('url'));
-                    fileTab.addEventListener('click', () => updateSTabs('file'));
-                    noneTab.addEventListener('click', () => updateSTabs('none'));
-
                     if (fileInput) {
-                        fileInput.addEventListener('change', e => {
-                            const file = e.target.files && e.target.files[0];
+                        fileInput.addEventListener('change', (e) => {
+                            const file = e.target.files[0];
                             if (file) {
-                                document.getElementById('sCoverFileTip').textContent = file.name;
                                 const reader = new FileReader();
-                                reader.onload = ev => {
-                                    standaloneCoverDataUrl = ev.target.result;
-                                    updateSTabs('file');
+                                reader.onload = (evt) => {
+                                    standaloneCoverDataUrl = evt.target.result;
+                                    document.getElementById('editCoverFilePreview').innerHTML = `<img src="${standaloneCoverDataUrl}" style="max-width:180px; max-height:120px; border-radius:8px; border:1px solid #cbd5e1; object-fit:cover;">`;
                                 };
                                 reader.readAsDataURL(file);
                             }
                         });
                     }
 
-                    document.getElementById('editMarkdownInput').addEventListener('input', e => {
-                        document.getElementById('editPreviewArea').innerHTML = parseMarkdown(e.target.value);
+                    document.getElementById('cancelArticleEdit').addEventListener('click', () => {
+                        renderArticle();
                     });
-
-                    document.getElementById('cancelArticleEdit').addEventListener('click', renderArticle);
-                    document.getElementById('cancelArticleEditBtn').addEventListener('click', renderArticle);
 
                     document.getElementById('saveArticleEdit').addEventListener('click', () => {
                         const title = document.getElementById('editTitleInput').value.trim();
-                        const category = document.getElementById('editCategoryInput').value.trim() || '随笔';
-                        const tags = document.getElementById('editTagsInput').value.split(',').map(t => t.trim()).filter(Boolean);
-                        const markdown = document.getElementById('editMarkdownInput').value.trim();
+                        const category = document.getElementById('editCategoryInput').value.trim() || '未分类';
+                        const tags = document.getElementById('editTagsInput').value.split(/[,，]/).map(item => item.trim()).filter(Boolean);
+                        const markdown = document.getElementById('editContentInput').value.trim();
 
                         let cover = '';
                         if (standaloneCoverMode === 'url') {
@@ -208,7 +208,7 @@
                         }
 
                         if (!title || !markdown) {
-                            alert('请填写标题和文章内容');
+                            if (typeof showToast === 'function') showToast('请填写标题和文章内容', 'warning');
                             return;
                         }
 
@@ -221,6 +221,7 @@
 
                         localStorage.setItem(STORAGE_KEYS.articles, JSON.stringify(articles));
                         renderArticle();
+                        if (typeof showToast === 'function') showToast('文章保存成功', 'success');
                     });
                 });
             }
@@ -237,15 +238,25 @@
         function bindEvents() {
             document.getElementById('loginButton').addEventListener('click', () => window.location.href = 'admin/login.html');
             document.getElementById('sidebarEditProfile').addEventListener('click', () => {
-                const name = prompt('编辑昵称', profile.name);
-                const bio = prompt('编辑签名', profile.bio);
-                const avatar = prompt('编辑头像路径', profile.avatar);
-                if (name != null && bio != null && avatar != null) {
-                    profile.name = name;
-                    profile.bio = bio;
-                    profile.avatar = avatar;
-                    localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
-                    renderProfile();
+                if (typeof showPromptModal === 'function') {
+                    showPromptModal({
+                        title: '编辑昵称',
+                        defaultValue: profile.name,
+                        onConfirm: (newName) => {
+                            if (!newName) return;
+                            showPromptModal({
+                                title: '编辑签名',
+                                defaultValue: profile.bio,
+                                onConfirm: (newBio) => {
+                                    profile.name = newName;
+                                    profile.bio = newBio || '';
+                                    localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
+                                    renderProfile();
+                                    if (typeof showToast === 'function') showToast('个人资料已更新', 'success');
+                                }
+                            });
+                        }
+                    });
                 }
             });
         }

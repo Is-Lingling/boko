@@ -326,13 +326,15 @@ function switchView(viewName) {
     document.body.style.overflow = '';
     document.body.style.removeProperty('overflow');
 
-    // 兼容别名：'admin' / 'adminControl' 都可打开控制台
-    let view = String(viewName || 'list');
+    // 兼容别名：'admin' / 'adminControl' 都可打开控制台，'articles' -> 'list'
+    let view = String(viewName || 'home');
     if (view === 'admin') view = 'adminControl';
-    if (!(view === 'list' || view === 'detail' || view === 'editor' || view === 'adminControl' || view === 'gallery' || view === 'trash' || view === 'space')) {
-        view = 'list';
+    if (view === 'articles') view = 'list';
+    if (!(view === 'home' || view === 'list' || view === 'detail' || view === 'editor' || view === 'adminControl' || view === 'gallery' || view === 'trash' || view === 'space' || view === 'fileManager')) {
+        view = 'home';
     }
 
+    const homeView = document.getElementById('homeView');
     const listView = document.getElementById('listView');
     const detailView = document.getElementById('detailView');
     const editorView = document.getElementById('editorView');
@@ -340,17 +342,30 @@ function switchView(viewName) {
     const galleryView = document.getElementById('galleryView');
     const trashView = document.getElementById('trashView');
     const spaceView = document.getElementById('spaceView');
+    const fileManagerView = document.getElementById('fileManagerView');
 
-    if (!listView || !detailView || !editorView) return;
+    if (homeView) {
+        homeView.style.display = view === 'home' ? 'block' : 'none';
+        homeView.classList.toggle('active', view === 'home');
+        if (view === 'home' && typeof renderHomeResumeView === 'function') {
+            renderHomeResumeView();
+        }
+    }
 
-    listView.style.display = view === 'list' ? 'block' : 'none';
-    listView.classList.toggle('active', view === 'list');
+    if (listView) {
+        listView.style.display = view === 'list' ? 'block' : 'none';
+        listView.classList.toggle('active', view === 'list');
+    }
 
-    detailView.style.display = view === 'detail' ? 'block' : 'none';
-    detailView.classList.toggle('active', view === 'detail');
+    if (detailView) {
+        detailView.style.display = view === 'detail' ? 'block' : 'none';
+        detailView.classList.toggle('active', view === 'detail');
+    }
 
-    editorView.style.display = view === 'editor' ? 'block' : 'none';
-    editorView.classList.toggle('active', view === 'editor');
+    if (editorView) {
+        editorView.style.display = view === 'editor' ? 'block' : 'none';
+        editorView.classList.toggle('active', view === 'editor');
+    }
 
     if (adminControlView) {
         adminControlView.style.display = view === 'adminControl' ? 'block' : 'none';
@@ -360,6 +375,11 @@ function switchView(viewName) {
     if (galleryView) {
         galleryView.style.display = view === 'gallery' ? 'block' : 'none';
         galleryView.classList.toggle('active', view === 'gallery');
+    }
+
+    if (fileManagerView) {
+        fileManagerView.style.display = view === 'fileManager' ? 'block' : 'none';
+        fileManagerView.classList.toggle('active', view === 'fileManager');
     }
 
     if (trashView) {
@@ -375,12 +395,26 @@ function switchView(viewName) {
         }
     }
 
+    // 同步更新所有侧边栏导航链接的激活状态高亮
+    document.querySelectorAll('.daohang a[data-nav]').forEach(a => {
+        const nav = a.getAttribute('data-nav');
+        if (view === 'home' && nav === 'home') {
+            a.classList.add('active');
+        } else if (view === 'list' && nav === 'articles') {
+            a.classList.add('active');
+        } else if (view === 'space' && nav === 'space') {
+            a.classList.add('active');
+        } else {
+            a.classList.remove('active');
+        }
+    });
+
     // 控制右侧边栏 (.box3) 隐藏与网格布局全宽展开 (.yinying)
     const rightSidebar = document.querySelector('.box3');
     const layout = document.getElementById('pageLayout') || document.querySelector('.yinying');
     
-    // 编辑文章 (editor)、控制台 (adminControl)、图床 (gallery)、回收站 (trash)、个人动态 (space) 视图隐藏全局右侧栏
-    const hideSidebarViews = ['editor', 'adminControl', 'gallery', 'trash', 'space'];
+    // 首页简历 (home)、编辑文章 (editor)、控制台 (adminControl)、图床 (gallery)、回收站 (trash)、个人动态 (space)、文件管理 (fileManager) 视图隐藏全局右侧栏
+    const hideSidebarViews = ['home', 'editor', 'adminControl', 'gallery', 'trash', 'space', 'fileManager'];
     const shouldHide = hideSidebarViews.includes(view);
 
     if (rightSidebar) {
@@ -395,11 +429,15 @@ function switchView(viewName) {
         restoreSidebar();
     }
 
-    // 页面平滑滚动至主区域顶部
-    const mainContent = document.getElementById('mainContent') || document.querySelector('main');
-    if (mainContent) {
-        mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // 页面切换时整页迅速且完全地回到最顶端（兼容 window / documentElement / body）
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+    });
 }
 
 // ========== 文章详情内联阅读器 ==========
@@ -424,27 +462,30 @@ function openArticleViewer(id) {
     if (titleEl) titleEl.textContent = item.title;
     if (metaEl) {
         metaEl.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; width:100%; margin-bottom:8px;">
-                <div class="breadcrumb-nav" style="margin:0;">
-                    <span class="breadcrumb-item" onclick="switchView('list'); activeFilters = []; renderArticles();">首页</span>
+            <div class="detail-breadcrumb-bar">
+                <div class="breadcrumb-nav">
+                    <span class="breadcrumb-item" onclick="switchView('home');">首页</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item" onclick="switchView('list'); activeFilters = []; renderArticles();">文章</span>
                     <span class="breadcrumb-separator">/</span>
                     <span class="breadcrumb-item active" onclick="switchView('list'); activeFilters = ['${item.category}']; renderArticles();">${item.category}</span>
                 </div>
-                <div class="article-tools" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                    <button type="button" class="secondary-btn" onclick="exportArticlePDF()" title="打印 / 导出 PDF" style="padding:5px 12px; font-size:12px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
-                        ${getIcon('print', '', 14)} <span>打印 PDF</span>
+                <div class="detail-action-tools">
+                    <button type="button" class="detail-tool-btn" onclick="exportArticlePDF()" title="打印文章">
+                        ${getIcon('print', '', 14)} <span>打印</span>
                     </button>
-                    <button type="button" class="secondary-btn" onclick="downloadArticleMD('${item.id}')" title="下载为 .md 文件" style="padding:5px 12px; font-size:12px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
-                        ${getIcon('download', '', 14)} <span>下载 .md</span>
+                    <button type="button" class="detail-tool-btn" onclick="downloadArticleMD('${item.id}')" title="下载为 .md 文件">
+                        ${getIcon('download', '', 14)} <span>下载</span>
                     </button>
-                    <button type="button" class="secondary-btn" onclick="copyArticleShareLink('${item.id}')" title="复制分享链接" style="padding:5px 12px; font-size:12px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
+                    <button type="button" class="detail-tool-btn" onclick="copyArticleShareLink('${item.id}')" title="复制分享链接">
                         ${getIcon('share', '', 14)} <span>分享</span>
                     </button>
                 </div>
             </div>
-            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; color:var(--text-muted); font-size:13px; margin-top:4px;">
-                <span>${getIcon('calendar', '', 14)} 发布日期：${formatDate(item.date)}</span> · 
-                <span>${getIcon('like', '', 14)} 阅读 (${item.read})</span> · 
+            <div class="detail-meta-stats" id="detailMetaStats">
+                <span>${getIcon('calendar', '', 14)} 发布日期：${typeof formatDateTime === 'function' ? formatDateTime(item.date) : formatDate(item.date)}</span> · 
+                <span>${getIcon('book-open', '', 14)} 阅读 (${item.read})</span> · 
+                <span>${getIcon('like', '', 14)} 点赞 (${typeof getArticleLikes === 'function' ? getArticleLikes(item) : (item.like || 0)})</span> · 
                 <span style="cursor:pointer; color:var(--primary);" onclick="scrollToComments()">${getIcon('comment', '', 14)} 评论 (${item.comment})</span>
             </div>
         `;
@@ -515,15 +556,15 @@ function renderDetailLikeFavoriteBar(item) {
         likeBtn.setAttribute('title', liked ? '取消对这篇文章的点赞' : '为这篇文章点赞');
         likeBtn.onclick = (e) => {
             toggleLike(item.id);
-            if (!liked) {
-                triggerBurstEffect(e, 'heart');
+            if (!liked && typeof triggerBurstEffect === 'function') {
+                triggerBurstEffect(likeBtn, 'heart');
             }
             renderDetailLikeFavoriteBar(getArticleById(item.id));
             refreshDetailMetaIfNeeded(item.id);
         };
     }
 
-    // 收藏按钮：状态 + 文案
+    // 收藏按钮：状态 + 文案 + 星星爆炸特效
     const favBtn = bar.querySelector('[data-viewer-action="favorite"]');
     if (favBtn) {
         const textEl = favBtn.querySelector('.btn-text');
@@ -531,24 +572,29 @@ function renderDetailLikeFavoriteBar(item) {
         favBtn.classList.toggle('is-active', favorited);
         favBtn.setAttribute('aria-pressed', favorited ? 'true' : 'false');
         favBtn.setAttribute('title', favorited ? '取消对这篇文章的收藏' : '把这篇文章加入收藏夹');
-        favBtn.onclick = () => {
+        favBtn.onclick = (e) => {
             toggleFavorite(item.id);
+            if (!favorited && typeof triggerBurstEffect === 'function') {
+                triggerBurstEffect(favBtn, 'star');
+            }
             renderDetailLikeFavoriteBar(getArticleById(item.id));
         };
     }
 }
 
-// 小工具：详情页"点赞数"随点赞操作变化时，把 inlineDetailMeta 中 👍 后面的数字也同步刷新
+// 小工具：详情页点赞/收藏操作变化时，仅刷新数据统计行，保留顶部的首页/分类面包屑与操作按钮
 function refreshDetailMetaIfNeeded(id) {
     const item = getArticleById(id);
-    const metaEl = document.getElementById('inlineDetailMeta');
-    if (!item || !metaEl) return;
-    metaEl.innerHTML = `
-        <span>分类：${item.category}</span> · 
-        <span>发布日期：${formatDate(item.date)}</span> · 
-        <span>阅读量：${item.read}</span> · 
-        <span>评论数：${item.comment}</span>
-    `;
+    if (!item) return;
+    const statsEl = document.getElementById('detailMetaStats');
+    if (statsEl) {
+        statsEl.innerHTML = `
+            <span>${getIcon('calendar', '', 14)} 发布日期：${typeof formatDateTime === 'function' ? formatDateTime(item.date) : formatDate(item.date)}</span> · 
+            <span>${getIcon('book-open', '', 14)} 阅读 (${item.read})</span> · 
+            <span>${getIcon('like', '', 14)} 点赞 (${typeof getArticleLikes === 'function' ? getArticleLikes(item) : (item.like || 0)})</span> · 
+            <span style="cursor:pointer; color:var(--primary);" onclick="scrollToComments()">${getIcon('comment', '', 14)} 评论 (${item.comment})</span>
+        `;
+    }
 }
 
 function renderInlineArticleComments(articleId) {
@@ -561,18 +607,23 @@ function renderInlineArticleComments(articleId) {
     if (!article.commentList) article.commentList = [];
 
     if (article.commentList.length === 0) {
-        listEl.innerHTML = '<p style="color:#64748b; font-size:14px; padding:10px 0;">暂无针对本文的评论，快来抢沙发发表第一条想法吧！</p>';
+        listEl.innerHTML = '<p style="color:var(--text-muted); font-size:13.5px; padding:20px 0; text-align:center;">暂无针对本文的评论，快来抢沙发发表第一条想法吧！</p>';
         return;
     }
 
-    const esc = typeof escHtml === 'function' ? escHtml : (s => String(s == null ? '' : s));
-    const contactBadge = c => c.contact
-        ? `<span class="comment-contact" title="联系方式：${esc(c.contact)}">${esc(c.contact)}</span>`
-        : '';
-    const adminDelete = c => state.isAdmin
-        ? `<button type="button" class="delete-comment-btn" data-action="delete-comment"
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s)));
+
+    const visitor = (typeof loadVisitorInfo === 'function') ? loadVisitorInfo() : null;
+    const visitorName = visitor ? (visitor.name || '') : '';
+    const visitorContact = visitor ? (visitor.contact || '') : '';
+    const isAdmin = !!(state && state.isAdmin);
+
+    const userCanDelete = (c) => isAdmin || (visitorName && c.name === visitorName) || (visitorContact && c.contact && c.contact === visitorContact);
+
+    const renderDeleteBtn = (c) => userCanDelete(c)
+        ? `<button type="button" class="comment-link-btn delete-btn" data-action="delete-comment"
               data-scope="article" data-article-id="${articleId}" data-id="${c.id}"
-              title="删除此条评论">🗑️ 删除</button>`
+              title="删除此条评论">删除</button>`
         : '';
 
     // 只渲染顶级评论
@@ -584,42 +635,45 @@ function renderInlineArticleComments(articleId) {
     const renderReplies = (parentId) => {
         const replies = (typeof getReplies === 'function') ? getReplies(parentId, 'article', articleId) : [];
         if (!replies.length) return '';
-        return replies.map(r => `
-            <div class="comment-reply-item">
-                <div class="comment-item-row">
-                    <div class="comment-meta" style="flex:1 1 auto;">
-                        <div class="comment-byline">
-                            <span class="comment-name">${esc(r.name)}</span>${contactBadge(r)}
-                        </div>
-                        <div style="opacity:0.75; margin-top:2px;">${esc(r.date || '刚刚')}</div>
+        return `
+            <div class="comment-replies-wrap">
+                ${replies.map(r => `
+                <div class="comment-reply-item">
+                    <div class="reply-item-content">
+                        <span class="reply-author-name${r.contact ? ' comment-name-clickable' : ''}" ${r.contact ? `data-contact="${esc(r.contact)}" title="点击查看联系方式"` : ''}>${esc(r.name)}</span>:
+                        <span class="reply-text-body">${esc(r.content)}</span>
+                        <span class="reply-time-tag">(${typeof formatDateTime === 'function' ? formatDateTime(r.date) : esc(r.date || '刚刚')})</span>
                     </div>
-                    ${adminDelete(r)}
+                    <div class="reply-item-actions">
+                        <button type="button" class="comment-link-btn reply-btn" data-action="toggle-reply" data-scope="article" data-article-id="${articleId}" data-id="${parentId}" data-reply-to="${esc(r.name)}">回复</button>
+                        ${renderDeleteBtn(r)}
+                    </div>
                 </div>
-                <div style="font-size:14px; color:#334155; line-height:1.6;">${esc(r.content)}</div>
+                `).join('')}
             </div>
-        `).join('');
+        `;
     };
 
     listEl.innerHTML = topList.map(c => `
         <div class="comment-item" data-comment-id="${c.id}">
-            <div class="comment-item-row">
-                <div class="comment-meta" style="flex:1 1 auto;">
-                    <div class="comment-byline">
-                        <span class="comment-name">${esc(c.name)}</span>${contactBadge(c)}
-                    </div>
-                    <div style="opacity:0.75; margin-top:2px;">${esc(c.date || '刚刚')}</div>
+            <div class="comment-item-header">
+                <div class="comment-header-left">
+                    <span class="comment-user-name${c.contact ? ' comment-name-clickable' : ''}" ${c.contact ? `data-contact="${esc(c.contact)}" title="点击查看联系方式"` : ''}>${esc(c.name)}</span>
+                    <span class="comment-date-badge">${typeof formatDateTime === 'function' ? formatDateTime(c.date) : esc(c.date || '刚刚')}</span>
                 </div>
-                ${adminDelete(c)}
+                <div class="comment-header-right">
+                    <button type="button" class="comment-link-btn reply-btn" data-action="toggle-reply" data-scope="article" data-article-id="${articleId}" data-id="${c.id}" title="回复此评论">回复</button>
+                    ${renderDeleteBtn(c)}
+                </div>
             </div>
-            <div style="font-size:14px; color:#334155; line-height:1.6;">${esc(c.content)}</div>
-            <div class="comment-actions">
-                <button type="button" class="reply-toggle-btn" data-action="toggle-reply" data-scope="article" data-article-id="${articleId}" data-id="${c.id}" title="回复此评论">回复</button>
-            </div>
+            <div class="comment-body-content">${esc(c.content)}</div>
             <div class="comment-reply-box" data-reply-box="${c.id}" style="display:none;">
-                <textarea class="reply-textarea" rows="2" placeholder="写下你的回复..." data-reply-input="${c.id}"></textarea>
-                <div class="reply-box-actions">
-                    <button type="button" class="reply-submit-btn" data-action="submit-reply" data-scope="article" data-article-id="${articleId}" data-id="${c.id}">发表回复</button>
-                    <button type="button" class="reply-cancel-btn" data-action="cancel-reply" data-id="${c.id}">取消</button>
+                <div class="reply-input-wrap">
+                    <textarea class="reply-textarea" rows="2" placeholder="写下你的回复..." data-reply-input="${c.id}"></textarea>
+                    <div class="reply-box-actions">
+                        <button type="button" class="primary-btn reply-submit-btn" data-action="submit-reply" data-scope="article" data-article-id="${articleId}" data-id="${c.id}">发表回复</button>
+                        <button type="button" class="secondary-btn reply-cancel-btn" data-action="cancel-reply" data-id="${c.id}">取消</button>
+                    </div>
                 </div>
             </div>
             <div class="comment-reply-list" data-reply-list="${c.id}">
@@ -825,6 +879,9 @@ function initVditor(initialValue = '') {
                             if (typeof saveGalleryImages === 'function') {
                                 saveGalleryImages(images);
                             }
+                            if (typeof addArticleContentImage === 'function') {
+                                addArticleContentImage(dataUrl);
+                            }
 
                             // 2. 将数据名与相对路径均关联映射至 DataURL
                             if (typeof setGalleryImageName === 'function') {
@@ -961,7 +1018,7 @@ function openArticleEditor(article) {
             try {
                 const draft = JSON.parse(rawDraft);
                 if (draft && (draft.title || draft.content)) {
-                    if (confirm(`检测到您上次于 ${draft.savedAt} 编辑的未保存文章草稿，是否恢复？`)) {
+                    const doRestore = () => {
                         if (titleInput) titleInput.value = draft.title || '';
                         const draftCat = draft.category || '';
                         if (categoryInput) categoryInput.value = draftCat;
@@ -976,9 +1033,20 @@ function openArticleEditor(article) {
                                 setCoverMode('url');
                             }
                         }
-                        rawContent = draft.content || '';
-                    } else {
-                        clearArticleDraft();
+                        if (typeof setLiveMarkdownContent === 'function') {
+                            setLiveMarkdownContent(null, draft.content || '');
+                        }
+                        if (typeof showToast === 'function') showToast('已恢复未保存草稿', 'success');
+                    };
+                    if (typeof showConfirmModal === 'function') {
+                        showConfirmModal({
+                            title: '恢复文章草稿',
+                            message: `检测到您上次于 ${draft.savedAt} 编辑的未保存文章草稿，是否恢复？`,
+                            confirmText: '恢复草稿',
+                            cancelText: '放弃草稿',
+                            onConfirm: doRestore,
+                            onCancel: () => clearArticleDraft()
+                        });
                     }
                 }
             } catch (e) {
@@ -1052,7 +1120,7 @@ function saveArticle() {
     }
 
     if (!title || !markdown) {
-        alert('请填写文章标题和正文内容');
+        if (typeof showToast === 'function') showToast('请填写文章标题和正文内容', 'warning');
         return;
     }
 
@@ -1299,11 +1367,12 @@ function renderSocialEditorList() {
     if (!container) return;
 
     const socials = getProfileSocials();
+    const trashIcon = (typeof getIcon === 'function') ? getIcon('trash', '', 14) : '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
     container.innerHTML = socials.map(item => `
         <div class="social-edit-row">
             <input type="text" class="social-label-input" placeholder="名称(如 GitHub/QQ)" value="${item.label || ''}" style="width:120px;">
             <input type="text" class="social-value-input" placeholder="内容/用户名(如 用户名 或 URL)" value="${item.value || ''}" style="flex:1;">
-            <button type="button" class="action-btn delete-btn remove-social-row-btn" style="padding:6px 10px;" title="删除此项">🗑️</button>
+            <button type="button" class="action-btn delete-btn remove-social-row-btn" style="padding:6px 10px;" title="删除此项">${trashIcon}</button>
         </div>
     `).join('');
 
@@ -1319,12 +1388,13 @@ function addSocialEditorRow(label = '', value = '') {
     const container = document.getElementById('profileSocialEditorList');
     if (!container) return;
 
+    const trashIcon = (typeof getIcon === 'function') ? getIcon('trash', '', 14) : '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
     const div = document.createElement('div');
     div.className = 'social-edit-row';
     div.innerHTML = `
         <input type="text" class="social-label-input" placeholder="名称(如 GitHub/QQ)" value="${label}" style="width:120px;">
         <input type="text" class="social-value-input" placeholder="内容/用户名(如 用户名 或 URL)" value="${value}" style="flex:1;">
-        <button type="button" class="action-btn delete-btn remove-social-row-btn" style="padding:6px 10px;" title="删除此项">🗑️</button>
+        <button type="button" class="action-btn delete-btn remove-social-row-btn" style="padding:6px 10px;" title="删除此项">${trashIcon}</button>
     `;
 
     div.querySelector('.remove-social-row-btn').addEventListener('click', () => div.remove());
@@ -1467,9 +1537,19 @@ function renderTagManagerList() {
     container.querySelectorAll('button[data-rename-tag]').forEach(btn => {
         btn.addEventListener('click', () => {
             const oldTag = btn.dataset.renameTag;
-            const newTag = prompt(`把标签 "${oldTag}" 重命名为：`, oldTag);
-            if (newTag && newTag.trim() && newTag.trim() !== oldTag) {
-                renameTagInArticles(oldTag, newTag.trim());
+            if (typeof showPromptModal === 'function') {
+                showPromptModal({
+                    title: '重命名标签',
+                    message: `把标签 "${oldTag}" 重命名为：`,
+                    defaultValue: oldTag,
+                    placeholder: '输入新标签名称',
+                    onConfirm: (newTag) => {
+                        if (newTag && newTag.trim() && newTag.trim() !== oldTag) {
+                            renameTagInArticles(oldTag, newTag.trim());
+                            if (typeof showToast === 'function') showToast('标签重命名成功', 'success');
+                        }
+                    }
+                });
             }
         });
     });
@@ -1477,8 +1557,21 @@ function renderTagManagerList() {
     container.querySelectorAll('button[data-delete-tag]').forEach(btn => {
         btn.addEventListener('click', () => {
             const tagToDelete = btn.dataset.deleteTag;
-            if (confirm(`确定要在所有文章中移除标签 "${tagToDelete}" 吗？`)) {
+            const doDelTag = () => {
                 deleteTagFromArticles(tagToDelete);
+                if (typeof showToast === 'function') showToast(`标签「${tagToDelete}」已删除`, 'info');
+            };
+            if (typeof showConfirmModal === 'function') {
+                showConfirmModal({
+                    title: '删除标签',
+                    message: `确定要在所有文章中移除标签 "${tagToDelete}" 吗？`,
+                    confirmText: '确认移除',
+                    cancelText: '取消',
+                    danger: true,
+                    onConfirm: doDelTag
+                });
+            } else {
+                doDelTag();
             }
         });
     });
@@ -1557,56 +1650,341 @@ function initSearch(inputId, callback) {
     });
 }
 
-// ========== 极简 Toast 提示消息 ==========
-function showToast(message) {
+// ========== 极简优雅 Toast 浮动提示通知 (统一矢量图标 + 毛玻璃) ==========
+function showToast(message, type = 'info', duration = 2500) {
     let container = document.getElementById('toastContainer');
     if (!container) {
         container = document.createElement('div');
         container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    } else if (container.parentElement !== document.body) {
         document.body.appendChild(container);
     }
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s || '')));
+    
+    // 矢量图标映射
+    let iconSvg = '';
+    if (type === 'success') {
+        iconSvg = typeof getIcon === 'function' ? getIcon('check-circle', 'toast-icon success', 18) : '';
+    } else if (type === 'warning') {
+        iconSvg = typeof getIcon === 'function' ? getIcon('alert', 'toast-icon warning', 18) : '';
+    } else if (type === 'error') {
+        iconSvg = typeof getIcon === 'function' ? getIcon('close', 'toast-icon error', 18) : '';
+    } else {
+        iconSvg = typeof getIcon === 'function' ? getIcon('info', 'toast-icon info', 18) : '';
+    }
+
     const toast = document.createElement('div');
-    toast.className = 'toast-message';
-    toast.innerHTML = `<span>${message}</span>`;
+    toast.className = `toast-message toast-${type}`;
+    toast.innerHTML = `
+        <span class="toast-icon-wrap">${iconSvg}</span>
+        <span class="toast-text">${esc(message)}</span>
+    `;
     container.appendChild(toast);
+
     setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-10px)';
-        toast.style.transition = 'all 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 2500);
+        toast.classList.add('toast-leave');
+        setTimeout(() => toast.remove(), 250);
+    }, duration);
 }
 
-// ========== 动感交互：点赞爆炸特效 ==========
-function triggerBurstEffect(event, type = 'heart') {
+// ========== 高颜值确认弹窗 (Confirm Modal) ==========
+function showConfirmModal(options) {
+    const {
+        title = '确认操作',
+        message = '确定要执行此操作吗？',
+        confirmText = '确定',
+        cancelText = '取消',
+        danger = false,
+        icon = '',
+        onConfirm = () => {},
+        onCancel = () => {}
+    } = options || {};
+
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s || '')));
+
+    const existing = document.getElementById('globalConfirmModal');
+    if (existing) existing.remove();
+
+    const iconHtml = icon || (danger 
+        ? (typeof getIcon === 'function' ? getIcon('trash', '', 24) : '') 
+        : (typeof getIcon === 'function' ? getIcon('alert', '', 24) : ''));
+
+    const modal = document.createElement('div');
+    modal.id = 'globalConfirmModal';
+    modal.className = 'confirm-modal-backdrop';
+    modal.innerHTML = `
+        <div class="confirm-modal-card" role="dialog" aria-modal="true">
+            <div class="confirm-modal-icon-wrap ${danger ? 'danger' : 'primary'}">
+                ${iconHtml}
+            </div>
+            <h4 class="confirm-modal-title">${esc(title)}</h4>
+            <p class="confirm-modal-message">${esc(message)}</p>
+            <div class="confirm-modal-actions">
+                <button type="button" class="confirm-modal-btn cancel-btn" id="confirmModalCancelBtn">${esc(cancelText)}</button>
+                <button type="button" class="confirm-modal-btn ok-btn ${danger ? 'danger' : 'primary'}" id="confirmModalOkBtn">${esc(confirmText)}</button>
+            </div>
+        </div>
+    `;
+
+    document.documentElement.appendChild(modal);
+
+    const close = () => {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 200);
+    };
+
+    const handleKey = (e) => {
+        if (e.key === 'Escape') {
+            close();
+            onCancel();
+            document.removeEventListener('keydown', handleKey);
+        }
+    };
+    document.addEventListener('keydown', handleKey);
+
+    const cancelBtn = modal.querySelector('#confirmModalCancelBtn');
+    if (cancelBtn) {
+        cancelBtn.onclick = () => {
+            document.removeEventListener('keydown', handleKey);
+            close();
+            onCancel();
+        };
+    }
+
+    const okBtn = modal.querySelector('#confirmModalOkBtn');
+    if (okBtn) {
+        okBtn.onclick = () => {
+            document.removeEventListener('keydown', handleKey);
+            close();
+            onConfirm();
+        };
+    }
+
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            document.removeEventListener('keydown', handleKey);
+            close();
+            onCancel();
+        }
+    };
+
+    requestAnimationFrame(() => {
+        modal.classList.add('active');
+    });
+}
+
+// ========== 高颜值输入弹窗 (Prompt Modal - 替代原生 prompt) ==========
+function showPromptModal(options) {
+    const {
+        title = '请输入内容',
+        message = '',
+        placeholder = '请输入...',
+        defaultValue = '',
+        confirmText = '确定',
+        cancelText = '取消',
+        inputType = 'text',
+        onConfirm = () => {},
+        onCancel = () => {}
+    } = options || {};
+
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s || '')));
+
+    const existing = document.getElementById('globalPromptModal');
+    if (existing) existing.remove();
+
+    const editIcon = typeof getIcon === 'function' ? getIcon('edit', '', 22) : '';
+
+    const modal = document.createElement('div');
+    modal.id = 'globalPromptModal';
+    modal.className = 'confirm-modal-backdrop prompt-modal-backdrop';
+    modal.innerHTML = `
+        <div class="confirm-modal-card prompt-modal-card" role="dialog" aria-modal="true">
+            <div class="confirm-modal-icon-wrap primary">
+                ${editIcon}
+            </div>
+            <h4 class="confirm-modal-title">${esc(title)}</h4>
+            ${message ? `<p class="confirm-modal-message">${esc(message)}</p>` : ''}
+            <div style="margin: 14px 0 20px 0;">
+                <input type="${inputType}" class="prompt-input" id="globalPromptInput" value="${esc(defaultValue)}" placeholder="${esc(placeholder)}">
+            </div>
+            <div class="confirm-modal-actions">
+                <button type="button" class="confirm-modal-btn cancel-btn" id="promptModalCancelBtn">${esc(cancelText)}</button>
+                <button type="button" class="confirm-modal-btn ok-btn primary" id="promptModalOkBtn">${esc(confirmText)}</button>
+            </div>
+        </div>
+    `;
+
+    document.documentElement.appendChild(modal);
+    const input = modal.querySelector('#globalPromptInput');
+
+    const close = () => {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 200);
+    };
+
+    const submit = () => {
+        const val = input ? input.value : '';
+        document.removeEventListener('keydown', handleKey);
+        close();
+        onConfirm(val);
+    };
+
+    const cancel = () => {
+        document.removeEventListener('keydown', handleKey);
+        close();
+        onCancel();
+    };
+
+    const handleKey = (e) => {
+        if (e.key === 'Escape') {
+            cancel();
+        } else if (e.key === 'Enter') {
+            submit();
+        }
+    };
+    document.addEventListener('keydown', handleKey);
+
+    const cancelBtn = modal.querySelector('#promptModalCancelBtn');
+    if (cancelBtn) cancelBtn.onclick = cancel;
+
+    const okBtn = modal.querySelector('#promptModalOkBtn');
+    if (okBtn) okBtn.onclick = submit;
+
+    modal.onclick = (e) => {
+        if (e.target === modal) cancel();
+    };
+
+    requestAnimationFrame(() => {
+        modal.classList.add('active');
+        if (input) {
+            input.focus();
+            input.select();
+        }
+    });
+}
+
+// ========== 高颜值信息提示弹窗 (Alert Modal - 替代原生 alert) ==========
+function showAlertModal(options) {
+    let opts = options;
+    if (typeof options === 'string') {
+        opts = { message: options, title: '系统提示' };
+    }
+    const {
+        title = '系统提示',
+        message = '',
+        confirmText = '我知道了',
+        type = 'info',
+        onConfirm = () => {}
+    } = opts || {};
+
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s || '')));
+
+    const existing = document.getElementById('globalAlertModal');
+    if (existing) existing.remove();
+
+    let iconSvg = '';
+    if (type === 'success') {
+        iconSvg = typeof getIcon === 'function' ? getIcon('check-circle', '', 24) : '';
+    } else if (type === 'warning') {
+        iconSvg = typeof getIcon === 'function' ? getIcon('alert', '', 24) : '';
+    } else if (type === 'error') {
+        iconSvg = typeof getIcon === 'function' ? getIcon('close', '', 24) : '';
+    } else {
+        iconSvg = typeof getIcon === 'function' ? getIcon('info', '', 24) : '';
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'globalAlertModal';
+    modal.className = 'confirm-modal-backdrop';
+    modal.innerHTML = `
+        <div class="confirm-modal-card" role="dialog" aria-modal="true">
+            <div class="confirm-modal-icon-wrap ${type === 'error' || type === 'warning' ? 'danger' : 'primary'}">
+                ${iconSvg}
+            </div>
+            <h4 class="confirm-modal-title">${esc(title)}</h4>
+            <p class="confirm-modal-message">${esc(message)}</p>
+            <div class="confirm-modal-actions">
+                <button type="button" class="confirm-modal-btn ok-btn primary" id="alertModalOkBtn" style="width:100%;">${esc(confirmText)}</button>
+            </div>
+        </div>
+    `;
+
+    document.documentElement.appendChild(modal);
+
+    const close = () => {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 200);
+    };
+
+    const handleKey = (e) => {
+        if (e.key === 'Escape' || e.key === 'Enter') {
+            document.removeEventListener('keydown', handleKey);
+            close();
+            onConfirm();
+        }
+    };
+    document.addEventListener('keydown', handleKey);
+
+    const okBtn = modal.querySelector('#alertModalOkBtn');
+    if (okBtn) {
+        okBtn.onclick = () => {
+            document.removeEventListener('keydown', handleKey);
+            close();
+            onConfirm();
+        };
+    }
+
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            document.removeEventListener('keydown', handleKey);
+            close();
+            onConfirm();
+        }
+    };
+
+    requestAnimationFrame(() => {
+        modal.classList.add('active');
+    });
+}
+
+// ========== 动感交互：点赞 / 收藏爆炸特效 ==========
+function triggerBurstEffect(eventOrEl, type = 'heart') {
     let x, y;
 
-    // 优先取触发按钮元素的中心物理坐标
-    const targetEl = (event instanceof HTMLElement) 
-        ? event 
-        : (event && (event.currentTarget || event.target) instanceof HTMLElement 
-            ? (event.currentTarget || event.target) 
-            : null);
+    let el = null;
+    if (eventOrEl instanceof HTMLElement) {
+        el = eventOrEl;
+    } else if (eventOrEl && eventOrEl.currentTarget instanceof HTMLElement) {
+        el = eventOrEl.currentTarget;
+    } else if (eventOrEl && eventOrEl.target instanceof HTMLElement) {
+        el = eventOrEl.target.closest('button') || eventOrEl.target;
+    }
 
-    if (targetEl) {
-        const rect = targetEl.getBoundingClientRect();
+    if (el) {
+        const rect = el.getBoundingClientRect();
         x = rect.left + rect.width / 2;
         y = rect.top + rect.height / 2;
-    } else if (event && typeof event.clientX === 'number' && event.clientX > 0) {
-        x = event.clientX;
-        y = event.clientY;
+    } else if (eventOrEl && typeof eventOrEl.clientX === 'number' && eventOrEl.clientX > 0) {
+        x = eventOrEl.clientX;
+        y = eventOrEl.clientY;
     } else {
         x = window.innerWidth / 2;
         y = window.innerHeight / 2;
     }
 
-    const icons = type === 'heart' ? ['❤️', '💖', '✨', '💕', '⭐', '🌸'] : ['✨', '🌟', '🎉', '💥'];
+    const heartSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="var(--primary, #ec4899)" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+    const starSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="#eab308" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+    const sparkleSvg = '<svg viewBox="0 0 24 24" width="16" height="16" fill="#f59e0b" stroke="none"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"></path></svg>';
+    
+    const svgTemplates = (type === 'heart') ? [heartSvg, sparkleSvg] : [starSvg, sparkleSvg];
     const count = 12;
 
     for (let i = 0; i < count; i++) {
         const particle = document.createElement('div');
         particle.className = 'like-particle';
-        particle.textContent = icons[Math.floor(Math.random() * icons.length)];
+        particle.innerHTML = svgTemplates[i % svgTemplates.length];
         
         const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
         const speed = 40 + Math.random() * 60;
@@ -1614,13 +1992,14 @@ function triggerBurstEffect(event, type = 'heart') {
         const dy = Math.sin(angle) * speed - 30;
         const rot = (Math.random() - 0.5) * 120;
 
-        particle.style.left = `${x}px`;
-        particle.style.top = `${y}px`;
-        particle.style.setProperty('--dx', `${dx}px`);
-        particle.style.setProperty('--dy', `${dy}px`);
-        particle.style.setProperty('--rot', `${rot}deg`);
+        particle.style.left = `${Math.round(x)}px`;
+        particle.style.top = `${Math.round(y)}px`;
+        particle.style.setProperty('--dx', `${Math.round(dx)}px`);
+        particle.style.setProperty('--dy', `${Math.round(dy)}px`);
+        particle.style.setProperty('--rot', `${Math.round(rot)}deg`);
 
-        document.body.appendChild(particle);
+        // 挂载到 documentElement，彻底避免 body filter / transform 导致的定位偏移
+        document.documentElement.appendChild(particle);
         setTimeout(() => particle.remove(), 900);
     }
 }
@@ -1628,57 +2007,117 @@ function triggerBurstEffect(event, type = 'heart') {
 // ========== 应用高级主题配置 ==========
 function applyThemeCustomizations() {
     // 1. 背景纹理
-    document.body.setAttribute('data-bg', state.themeBg || 'gradient');
+    const bg = state.themeBg || localStorage.getItem('themeBg') || 'gradient';
+    document.body.setAttribute('data-bg', bg);
+
     // 2. 字体库
     document.body.classList.remove('font-default', 'font-serif', 'font-mono', 'font-rounded');
-    if (state.themeFont && state.themeFont !== 'default') {
-        document.body.classList.add(`font-${state.themeFont}`);
+    const font = state.themeFont || localStorage.getItem('themeFont') || 'default';
+    if (font && font !== 'default') {
+        document.body.classList.add(`font-${font}`);
     }
-    // 3. 卡片圆角
-    if (state.themeRadius) {
-        document.documentElement.style.setProperty('--card-radius', `${state.themeRadius}px`);
-    }
-    // 4. 玻璃透明度与模糊
-    const opacity = (Number(state.themeOpacity) || 75) / 100;
-    const blur = Number(state.themeBlur) || 16;
-    document.documentElement.style.setProperty('--glass-opacity', opacity);
+
+    // 3. 卡片圆角与侧栏圆角
+    const cardRadius = state.themeRadius || localStorage.getItem('themeRadius') || '20';
+    const sidebarRadius = state.themeSidebarRadius || localStorage.getItem('themeSidebarRadius') || '18';
+    document.documentElement.style.setProperty('--card-radius', `${cardRadius}px`);
+    document.documentElement.style.setProperty('--sidebar-radius', `${sidebarRadius}px`);
+
+    // 4. 玻璃透明度（区分文章卡片透明度与板块透明度，支持最低 0%）与高斯模糊
+    const cardOpacityVal = (state.themeCardOpacity !== undefined && state.themeCardOpacity !== null && state.themeCardOpacity !== '')
+        ? state.themeCardOpacity
+        : (localStorage.getItem('themeCardOpacity') ?? state.themeOpacity ?? '85');
+    const sidebarOpacityVal = (state.themeSidebarOpacity !== undefined && state.themeSidebarOpacity !== null && state.themeSidebarOpacity !== '')
+        ? state.themeSidebarOpacity
+        : (localStorage.getItem('themeSidebarOpacity') ?? state.themeOpacity ?? '85');
+    const blurVal = (state.themeBlur !== undefined && state.themeBlur !== null && state.themeBlur !== '')
+        ? state.themeBlur
+        : (localStorage.getItem('themeBlur') ?? '16');
+
+    const cardOpacity = (!isNaN(Number(cardOpacityVal))) ? Math.max(0, Math.min(1, Number(cardOpacityVal) / 100)) : 0.85;
+    const sidebarOpacity = (!isNaN(Number(sidebarOpacityVal))) ? Math.max(0, Math.min(1, Number(sidebarOpacityVal) / 100)) : 0.85;
+    const blur = (!isNaN(Number(blurVal))) ? Math.max(0, Number(blurVal)) : 16;
+
+    document.documentElement.style.setProperty('--card-opacity', cardOpacity);
+    document.documentElement.style.setProperty('--sidebar-opacity', sidebarOpacity);
+    document.documentElement.style.setProperty('--glass-opacity', cardOpacity);
     document.documentElement.style.setProperty('--glass-blur', `${blur}px`);
 
-    // 5. 颜色 Preset 或 Color Picker
-    if (state.themePresetColor) {
-        document.documentElement.style.setProperty('--primary', state.themePresetColor);
-    }
-    // 6. 绳索悬挂粗细
+    document.documentElement.style.setProperty('--card-surface', `rgba(255, 255, 255, ${cardOpacity})`);
+    document.documentElement.style.setProperty('--sidebar-surface', `rgba(255, 255, 255, ${sidebarOpacity})`);
+    document.documentElement.style.setProperty('--surface', `rgba(255, 255, 255, ${cardOpacity})`);
+
+    // 5. 文章卡片尺寸（高度百分比 & 宽度百分比）
+    const cardHeightPercent = state.themeCardHeight || localStorage.getItem('themeCardHeight') || '100';
+    const cardWidth = state.themeCardWidth || localStorage.getItem('themeCardWidth') || '100';
+    document.documentElement.style.setProperty('--card-height-percent', `${cardHeightPercent}`);
+    document.documentElement.style.setProperty('--card-height', `calc(320px * (${cardHeightPercent} / 100))`);
+    document.documentElement.style.setProperty('--card-width-percent', `${cardWidth}%`);
+    document.documentElement.style.setProperty('--card-max-width', `${cardWidth}%`);
+
+    // 6. 颜色 Preset 或 Color Picker & 衍生变量
+    const primaryColor = state.themePresetColor || localStorage.getItem('themePresetColor') || '#6366f1';
+    document.documentElement.style.setProperty('--primary', primaryColor);
+    try {
+        const hex = primaryColor.replace('#', '');
+        if (hex.length === 6) {
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+            document.documentElement.style.setProperty('--primary-light', `rgba(${r}, ${g}, ${b}, 0.12)`);
+            document.documentElement.style.setProperty('--primary-border', `rgba(${r}, ${g}, ${b}, 0.28)`);
+            document.documentElement.style.setProperty('--primary-shadow', `rgba(${r}, ${g}, ${b}, 0.35)`);
+        }
+    } catch (e) { }
+
+    // 7. 绳索悬挂粗细
     const ropeWidth = state.themeRopeWidth || localStorage.getItem('themeRopeWidth') || '3.5';
     document.documentElement.style.setProperty('--rope-width', `${ropeWidth}px`);
 
-    // 7. 布局间隙与侧边栏圆角
-    const gridGapX = state.themeGridGapX || localStorage.getItem('themeGridGapX') || '6';
+    // 8. 布局间隙、侧栏板块间距与文章卡片上下独立间隙
     const topGap = state.themeTopGap || localStorage.getItem('themeTopGap') || '8';
+    const gridGapX = state.themeGridGapX || localStorage.getItem('themeGridGapX') || '6';
     const cardGapY = state.themeCardGapY || localStorage.getItem('themeCardGapY') || '10';
-    const sidebarRadius = state.themeSidebarRadius || localStorage.getItem('themeSidebarRadius') || '18';
+    const articleGapTop = state.themeArticleGapTop || localStorage.getItem('themeArticleGapTop') || '0';
+    const articleGapBottom = state.themeArticleGapBottom || localStorage.getItem('themeArticleGapBottom') || '14';
 
-    document.documentElement.style.setProperty('--grid-gap-x', `${gridGapX}px`);
     document.documentElement.style.setProperty('--top-gap', `${topGap}px`);
+    document.documentElement.style.setProperty('--grid-gap-x', `${gridGapX}px`);
     document.documentElement.style.setProperty('--card-gap-y', `${cardGapY}px`);
-    document.documentElement.style.setProperty('--sidebar-radius', `${sidebarRadius}px`);
+    document.documentElement.style.setProperty('--article-gap-top', `${articleGapTop}px`);
+    document.documentElement.style.setProperty('--article-gap-bottom', `${articleGapBottom}px`);
 
-    // 8. 实时联动更新控制面板 Live Preview 调试区示例组件
+    // 9. 实时联动更新控制面板 Live Preview 沙盘调试区 (顶栏、左侧栏、中间主区、右侧栏)
     const previewStage = document.getElementById('previewStageContainer');
     if (previewStage) {
-        previewStage.setAttribute('data-bg', state.themeBg || 'gradient');
-    }
-    const previewRopeLine = document.getElementById('previewRopeLine');
-    if (previewRopeLine) {
-        previewRopeLine.style.width = `${ropeWidth}px`;
+        previewStage.setAttribute('data-bg', bg);
+        previewStage.style.setProperty('--mini-top-gap', `${topGap}px`);
+        previewStage.style.setProperty('--mini-grid-gap-x', `${gridGapX}px`);
+        previewStage.style.setProperty('--mini-card-gap-y', `${cardGapY}px`);
+        previewStage.style.setProperty('--mini-article-gap-top', `${Math.round(Number(articleGapTop) * 0.35)}px`);
+        previewStage.style.setProperty('--mini-article-gap-bottom', `${Math.max(2, Math.round(Number(articleGapBottom) * 0.35))}px`);
+        previewStage.style.setProperty('--card-radius', `${cardRadius}px`);
+        previewStage.style.setProperty('--sidebar-radius', `${sidebarRadius}px`);
+        previewStage.style.setProperty('--card-opacity', cardOpacity);
+        previewStage.style.setProperty('--sidebar-opacity', sidebarOpacity);
+        previewStage.style.setProperty('--glass-opacity', cardOpacity);
+        previewStage.style.setProperty('--glass-blur', `${blur}px`);
+        previewStage.style.setProperty('--primary', primaryColor);
+
+        // 缩放尺寸到沙盘
+        const miniHeight = Math.max(28, Math.round(50 * (Number(cardHeightPercent) / 100)));
+        previewStage.style.setProperty('--mini-card-height', `${miniHeight}px`);
+        previewStage.style.setProperty('--mini-card-width-percent', `${cardWidth}%`);
+
+        if (font && font !== 'default') {
+            previewStage.className = `preview-stage-container font-${font}`;
+        } else {
+            previewStage.className = 'preview-stage-container';
+        }
     }
     const previewBlob1 = document.getElementById('previewBlob1');
-    if (previewBlob1 && state.themePresetColor) {
-        previewBlob1.style.background = state.themePresetColor;
-    }
-    const previewCard = document.getElementById('previewSampleCard');
-    if (previewCard) {
-        previewCard.className = `preview-sample-card ${state.themeFont && state.themeFont !== 'default' ? 'font-' + state.themeFont : ''}`;
+    if (previewBlob1) {
+        previewBlob1.style.background = primaryColor;
     }
 }
 
@@ -1945,6 +2384,556 @@ function scrollToComments() {
     const commentSection = document.getElementById('inlineArticleCommentForm') || document.getElementById('sidebarCommentsCard');
     if (commentSection) {
         commentSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+// ========== 首页个人简历与介绍编辑弹窗逻辑 (Admin Home Editor) ==========
+
+let tempHeroAvatarDataUrl = '';
+
+function switchHomeResumeTab(tabName) {
+    const tabs = document.querySelectorAll('.hre-tabs .tab-btn');
+    tabs.forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-hre-tab') === tabName);
+    });
+
+    const panes = {
+        hero: document.getElementById('hrePaneHero'),
+        about: document.getElementById('hrePaneAbout'),
+        skills: document.getElementById('hrePaneSkills'),
+        projects: document.getElementById('hrePaneProjects'),
+        timeline: document.getElementById('hrePaneTimeline'),
+        contact: document.getElementById('hrePaneContact')
+    };
+
+    Object.keys(panes).forEach(k => {
+        if (panes[k]) {
+            panes[k].style.display = k === tabName ? 'block' : 'none';
+        }
+    });
+}
+
+function handleHeroAvatarFile(input) {
+    if (!input || !input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 2 * 1024 * 1024) {
+        if (typeof showToast === 'function') showToast('头像图片大小不能超过 2MB！');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        tempHeroAvatarDataUrl = e.target.result;
+        const avatarInput = document.getElementById('hreHeroAvatar');
+        if (avatarInput) avatarInput.value = tempHeroAvatarDataUrl;
+        if (typeof showToast === 'function') showToast('已选取本地头像图片');
+    };
+    reader.readAsDataURL(file);
+}
+
+// 辅助生成卡片操作栏（上移/下移/删除）
+function getHreCardControlsHtml(label, type) {
+    return `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="font-size:13px; color:var(--text-main); display:inline-flex; align-items:center; gap:5px;">
+                <span class="hre-item-index-badge" style="background:var(--primary-light); color:var(--primary); font-size:11px; padding:2px 8px; border-radius:999px; font-weight:700;">${label}</span>
+            </strong>
+            <div style="display:flex; gap:6px; align-items:center;">
+                <button type="button" class="mini-admin-btn" onclick="moveHreRow(this, -1)" title="上移" style="padding:2px 6px;">${getIcon('prev', '', 12)}</button>
+                <button type="button" class="mini-admin-btn" onclick="moveHreRow(this, 1)" title="下移" style="padding:2px 6px;">${getIcon('next', '', 12)}</button>
+                <button type="button" class="mini-admin-btn" onclick="this.closest('.hre-edit-item-card').remove(); updateHreItemBadges('${type}');" style="color:var(--danger); border-color:var(--danger-light); padding:2px 8px;" title="删除">删除</button>
+            </div>
+        </div>
+    `;
+}
+
+function moveHreRow(btn, direction) {
+    const card = btn.closest('.hre-edit-item-card');
+    if (!card) return;
+    const parent = card.parentElement;
+    if (!parent) return;
+    if (direction === -1 && card.previousElementSibling) {
+        parent.insertBefore(card, card.previousElementSibling);
+    } else if (direction === 1 && card.nextElementSibling) {
+        parent.insertBefore(card.nextElementSibling, card);
+    }
+}
+
+function updateHreItemBadges(type) {
+    const containerMap = {
+        about: '#hreAboutCardsContainer',
+        skills: '#hreSkillsListContainer',
+        projects: '#hreProjectsListContainer',
+        timeline: '#hreTimelineListContainer'
+    };
+    const prefixMap = {
+        about: '关于我卡片',
+        skills: '分类',
+        projects: '作品',
+        timeline: '节点'
+    };
+    const sel = containerMap[type];
+    if (!sel) return;
+    const container = document.querySelector(sel);
+    if (!container) return;
+    const badges = container.querySelectorAll('.hre-item-index-badge');
+    badges.forEach((b, idx) => {
+        b.textContent = `${prefixMap[type]} #${idx + 1}`;
+    });
+}
+
+// 1. 关于我卡片编辑器
+function renderHreAboutEditor(aboutList) {
+    const container = document.getElementById('hreAboutCardsContainer');
+    if (!container) return;
+    const items = aboutList || [];
+    const iconOptions = ['layers', 'palette', 'lightbulb', 'sprout', 'code', 'rocket', 'globe', 'sparkle', 'terminal', 'cpu', 'card', 'user'];
+
+    container.innerHTML = items.map((item, idx) => {
+        let currentIcon = item.icon || 'layers';
+        if (currentIcon.includes('🚀')) currentIcon = 'rocket';
+        else if (currentIcon.includes('🎨')) currentIcon = 'palette';
+        else if (currentIcon.includes('💡')) currentIcon = 'lightbulb';
+        else if (currentIcon.includes('🌱')) currentIcon = 'sprout';
+        else if (currentIcon.includes('💻')) currentIcon = 'code';
+
+        const optionsHtml = iconOptions.map(opt => `<option value="${opt}" ${opt === currentIcon ? 'selected' : ''}>${opt}</option>`).join('');
+
+        return `
+            <div class="hre-edit-item-card hre-about-edit-card" style="padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);" data-about-idx="${idx}">
+                ${getHreCardControlsHtml(`关于我卡片 #${idx + 1}`, 'about')}
+                <div style="display:flex; gap:10px; margin-bottom:8px; align-items:center;">
+                    <select class="hre-about-icon" style="padding:7px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main); min-width:110px;">
+                        ${optionsHtml}
+                    </select>
+                    <input type="text" class="hre-about-title" value="${esc(item.title || '')}" placeholder="卡片标题" style="flex:1;">
+                </div>
+                <textarea class="hre-about-desc" rows="2" placeholder="卡片描述内容..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;">${esc(item.desc || '')}</textarea>
+            </div>
+        `;
+    }).join('');
+}
+
+function addHreAboutRow() {
+    const container = document.getElementById('hreAboutCardsContainer');
+    if (!container) return;
+    const cards = container.querySelectorAll('.hre-about-edit-card');
+    const newIdx = cards.length;
+    const iconOptions = ['layers', 'palette', 'lightbulb', 'sprout', 'code', 'rocket', 'globe', 'sparkle', 'terminal', 'cpu', 'card', 'user'];
+    const optionsHtml = iconOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+
+    const div = document.createElement('div');
+    div.className = 'hre-edit-item-card hre-about-edit-card';
+    div.style.cssText = 'padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);';
+    div.setAttribute('data-about-idx', newIdx);
+    div.innerHTML = `
+        ${getHreCardControlsHtml(`关于我卡片 #${newIdx + 1}`, 'about')}
+        <div style="display:flex; gap:10px; margin-bottom:8px; align-items:center;">
+            <select class="hre-about-icon" style="padding:7px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main); min-width:110px;">
+                ${optionsHtml}
+            </select>
+            <input type="text" class="hre-about-title" value="" placeholder="卡片标题" style="flex:1;">
+        </div>
+        <textarea class="hre-about-desc" rows="2" placeholder="卡片描述内容..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;"></textarea>
+    `;
+    container.appendChild(div);
+}
+
+// 2. 专业技能分类编辑器
+function renderHreSkillsEditor(skillsCategories) {
+    const container = document.getElementById('hreSkillsListContainer');
+    if (!container) return;
+    const list = skillsCategories || [];
+
+    container.innerHTML = list.map((cat, idx) => `
+        <div class="hre-edit-item-card hre-skill-category-edit-card" style="padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);" data-skill-idx="${idx}">
+            ${getHreCardControlsHtml(`分类 #${idx + 1}`, 'skills')}
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:8px;">
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">分类标题</label>
+                    <input type="text" class="hre-skill-cat-title" value="${esc(cat.title || '')}" placeholder="分类标题 (如: 前端开发)">
+                </div>
+                <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">视觉指示色</label>
+                    <select class="hre-skill-cat-indicator" style="width:100%; padding:7px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
+                        <option value="front" ${cat.indicator === 'front' ? 'selected' : ''}>蓝绿色调 (前端/主色)</option>
+                        <option value="back" ${cat.indicator === 'back' ? 'selected' : ''}>蓝紫色调 (后端/数据)</option>
+                        <option value="tool" ${cat.indicator === 'tool' ? 'selected' : ''}>橙金色调 (工具/工程)</option>
+                    </select>
+                </div>
+            </div>
+            <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">技能标签列表 (逗号或换行分隔)</label>
+            <textarea class="hre-skill-cat-items" rows="3" placeholder="JavaScript, TypeScript, Vue.js, React, CSS3..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;">${esc((cat.items || []).join(', '))}</textarea>
+        </div>
+    `).join('');
+}
+
+function addHreSkillCategoryRow() {
+    const container = document.getElementById('hreSkillsListContainer');
+    if (!container) return;
+    const cards = container.querySelectorAll('.hre-skill-category-edit-card');
+    const newIdx = cards.length;
+
+    const div = document.createElement('div');
+    div.className = 'hre-edit-item-card hre-skill-category-edit-card';
+    div.style.cssText = 'padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);';
+    div.setAttribute('data-skill-idx', newIdx);
+    div.innerHTML = `
+        ${getHreCardControlsHtml(`分类 #${newIdx + 1}`, 'skills')}
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:8px;">
+            <div>
+                <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">分类标题</label>
+                <input type="text" class="hre-skill-cat-title" value="" placeholder="分类标题 (如: AI 与智能体实践)">
+            </div>
+            <div>
+                <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">视觉指示色</label>
+                <select class="hre-skill-cat-indicator" style="width:100%; padding:7px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
+                    <option value="front">蓝绿色调 (前端/主色)</option>
+                    <option value="back">蓝紫色调 (后端/数据)</option>
+                    <option value="tool" selected>橙金色调 (工具/工程)</option>
+                </select>
+            </div>
+        </div>
+        <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">技能标签列表 (逗号或换行分隔)</label>
+        <textarea class="hre-skill-cat-items" rows="2" placeholder="输入技能项..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;"></textarea>
+    `;
+    container.appendChild(div);
+}
+
+// 3. 精选作品编辑器
+function renderHreProjectsEditor(projectsList) {
+    const container = document.getElementById('hreProjectsListContainer');
+    if (!container) return;
+    const items = projectsList || [];
+
+    container.innerHTML = items.map((item, idx) => `
+        <div class="hre-edit-item-card hre-project-edit-card" style="padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body); position:relative;" data-project-idx="${idx}">
+            ${getHreCardControlsHtml(`作品 #${idx + 1}`, 'projects')}
+            <div style="display:grid; grid-template-columns:1fr 2fr; gap:8px; margin-bottom:8px;">
+                <input type="text" class="hre-proj-badge" value="${esc(item.badge || '')}" placeholder="角标 (如: 核心开源项目)">
+                <input type="text" class="hre-proj-title" value="${esc(item.title || '')}" placeholder="作品名称">
+            </div>
+            <textarea class="hre-proj-desc" rows="2" placeholder="作品详细描述..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit; margin-bottom:8px;">${esc(item.desc || '')}</textarea>
+            <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:8px; margin-bottom:8px;">
+                <input type="text" class="hre-proj-tags" value="${esc((item.tags || []).join(', '))}" placeholder="技术标签 (逗号分隔)">
+                <select class="hre-proj-link" onchange="toggleHreProjectCustomUrl(this)" style="border-radius:8px; border:1px solid #cbd5e1; padding:6px 10px; font-size:13px; background:var(--bg-card); color:var(--text-main);">
+                    <option value="list" ${item.link === 'list' ? 'selected' : ''}>跳转到文章列表</option>
+                    <option value="space" ${item.link === 'space' ? 'selected' : ''}>跳转到空间动态</option>
+                    <option value="custom" ${item.link === 'custom' ? 'selected' : ''}>自定义外部链接</option>
+                </select>
+            </div>
+            <div class="hre-proj-custom-url-row" style="display:${item.link === 'custom' ? 'block' : 'none'};">
+                <input type="url" class="hre-proj-custom-url" value="${esc(item.customUrl || '')}" placeholder="https://your-project-link.com">
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleHreProjectCustomUrl(selectEl) {
+    const row = selectEl.closest('.hre-project-edit-card')?.querySelector('.hre-proj-custom-url-row');
+    if (row) {
+        row.style.display = selectEl.value === 'custom' ? 'block' : 'none';
+    }
+}
+
+function addHreProjectRow() {
+    const container = document.getElementById('hreProjectsListContainer');
+    if (!container) return;
+    const cards = container.querySelectorAll('.hre-project-edit-card');
+    const newIdx = cards.length;
+    const div = document.createElement('div');
+    div.className = 'hre-edit-item-card hre-project-edit-card';
+    div.style.cssText = 'padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body); position:relative;';
+    div.setAttribute('data-project-idx', newIdx);
+    div.innerHTML = `
+        ${getHreCardControlsHtml(`作品 #${newIdx + 1}`, 'projects')}
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:8px; margin-bottom:8px;">
+            <input type="text" class="hre-proj-badge" value="代表作品" placeholder="角标">
+            <input type="text" class="hre-proj-title" value="" placeholder="作品名称">
+        </div>
+        <textarea class="hre-proj-desc" rows="2" placeholder="作品详细描述..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit; margin-bottom:8px;"></textarea>
+        <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:8px; margin-bottom:8px;">
+            <input type="text" class="hre-proj-tags" value="" placeholder="技术标签 (逗号分隔)">
+            <select class="hre-proj-link" onchange="toggleHreProjectCustomUrl(this)" style="border-radius:8px; border:1px solid #cbd5e1; padding:6px 10px; font-size:13px; background:var(--bg-card); color:var(--text-main);">
+                <option value="list">跳转到文章列表</option>
+                <option value="space">跳转到空间动态</option>
+                <option value="custom">自定义外部链接</option>
+            </select>
+        </div>
+        <div class="hre-proj-custom-url-row" style="display:none;">
+            <input type="url" class="hre-proj-custom-url" value="" placeholder="https://your-project-link.com">
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+// 4. 成长历程编辑器
+function renderHreTimelineEditor(timelineList) {
+    const container = document.getElementById('hreTimelineListContainer');
+    if (!container) return;
+    const items = timelineList || [];
+    container.innerHTML = items.map((item, idx) => `
+        <div class="hre-edit-item-card hre-timeline-edit-card" style="padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body); position:relative;" data-timeline-idx="${idx}">
+            ${getHreCardControlsHtml(`节点 #${idx + 1}`, 'timeline')}
+            <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; margin-bottom:8px;">
+                <input type="text" class="hre-time-year" value="${esc(item.year || '')}" placeholder="时间/年份 (如: 2026)">
+                <input type="text" class="hre-time-title" value="${esc(item.title || '')}" placeholder="节点标题">
+            </div>
+            <textarea class="hre-time-desc" rows="2" placeholder="成长经历或突破描述..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;">${esc(item.desc || '')}</textarea>
+        </div>
+    `).join('');
+}
+
+function addHreTimelineRow() {
+    const container = document.getElementById('hreTimelineListContainer');
+    if (!container) return;
+    const cards = container.querySelectorAll('.hre-timeline-edit-card');
+    const newIdx = cards.length;
+    const div = document.createElement('div');
+    div.className = 'hre-edit-item-card hre-timeline-edit-card';
+    div.style.cssText = 'padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body); position:relative;';
+    div.setAttribute('data-timeline-idx', newIdx);
+    div.innerHTML = `
+        ${getHreCardControlsHtml(`节点 #${newIdx + 1}`, 'timeline')}
+        <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; margin-bottom:8px;">
+            <input type="text" class="hre-time-year" value="2026" placeholder="时间/年份">
+            <input type="text" class="hre-time-title" value="" placeholder="节点标题">
+        </div>
+        <textarea class="hre-time-desc" rows="2" placeholder="成长经历或突破描述..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;"></textarea>
+    `;
+    container.appendChild(div);
+}
+
+// 5. 打开首页编辑弹窗并回填
+function openHomeResumeEditor(targetTab = 'hero') {
+    moveModalToRoot('homeResumeEditorModal');
+    const modal = document.getElementById('homeResumeEditorModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+
+    const data = typeof getHomeResumeData === 'function' ? getHomeResumeData() : defaultHomeResume;
+    tempHeroAvatarDataUrl = '';
+
+    // 1. 回填 Hero
+    const hero = data.hero || {};
+    const greetingEl = document.getElementById('hreHeroGreeting');
+    const nameEl = document.getElementById('hreHeroName');
+    const statusEl = document.getElementById('hreHeroStatus');
+    const githubEl = document.getElementById('hreHeroGithub');
+    const titleEl = document.getElementById('hreHeroTitle');
+    const mottoEl = document.getElementById('hreHeroMotto');
+    const avatarEl = document.getElementById('hreHeroAvatar');
+    const tagsEl = document.getElementById('hreHeroTags');
+    const priBtnTextEl = document.getElementById('hreHeroPrimaryBtnText');
+    const priBtnLinkEl = document.getElementById('hreHeroPrimaryBtnLink');
+    const secBtnTextEl = document.getElementById('hreHeroSecondaryBtnText');
+    const secBtnLinkEl = document.getElementById('hreHeroSecondaryBtnLink');
+
+    if (greetingEl) greetingEl.value = hero.greeting || '';
+    if (nameEl) nameEl.value = hero.name || '';
+    if (statusEl) statusEl.value = hero.status || '';
+    if (githubEl) githubEl.value = hero.github || '';
+    if (titleEl) titleEl.value = hero.title || '';
+    if (mottoEl) mottoEl.value = hero.motto || '';
+    if (avatarEl) avatarEl.value = hero.avatar || '';
+    if (tagsEl) tagsEl.value = (hero.tags || []).join('\n');
+    if (priBtnTextEl) priBtnTextEl.value = hero.primaryBtnText || '阅读我的文章';
+    if (priBtnLinkEl) priBtnLinkEl.value = hero.primaryBtnLink || 'list';
+    if (secBtnTextEl) secBtnTextEl.value = hero.secondaryBtnText || '空间动态';
+    if (secBtnLinkEl) secBtnLinkEl.value = hero.secondaryBtnLink || 'space';
+
+    // 2. 回填关于我
+    const aboutSection = data.aboutSection || defaultHomeResume.aboutSection;
+    const aboutSecTitleEl = document.getElementById('hreAboutSectionTitle');
+    const aboutSecSubtitleEl = document.getElementById('hreAboutSectionSubtitle');
+    const aboutSecIconEl = document.getElementById('hreAboutSectionIcon');
+    if (aboutSecTitleEl) aboutSecTitleEl.value = aboutSection.title || '';
+    if (aboutSecSubtitleEl) aboutSecSubtitleEl.value = aboutSection.subtitle || '';
+    if (aboutSecIconEl) aboutSecIconEl.value = aboutSection.icon || 'info';
+    renderHreAboutEditor(data.about || defaultHomeResume.about);
+
+    // 3. 回填专业技能
+    const skillsSection = data.skillsSection || defaultHomeResume.skillsSection;
+    const skillsSecTitleEl = document.getElementById('hreSkillsSectionTitle');
+    const skillsSecSubtitleEl = document.getElementById('hreSkillsSectionSubtitle');
+    const skillsSecIconEl = document.getElementById('hreSkillsSectionIcon');
+    if (skillsSecTitleEl) skillsSecTitleEl.value = skillsSection.title || '';
+    if (skillsSecSubtitleEl) skillsSecSubtitleEl.value = skillsSection.subtitle || '';
+    if (skillsSecIconEl) skillsSecIconEl.value = skillsSection.icon || 'code';
+    renderHreSkillsEditor(data.skillsCategories || defaultHomeResume.skillsCategories);
+
+    // 4. 回填精选作品
+    const projectsSection = data.projectsSection || defaultHomeResume.projectsSection;
+    const projectsSecTitleEl = document.getElementById('hreProjectsSectionTitle');
+    const projectsSecSubtitleEl = document.getElementById('hreProjectsSectionSubtitle');
+    const projectsSecIconEl = document.getElementById('hreProjectsSectionIcon');
+    if (projectsSecTitleEl) projectsSecTitleEl.value = projectsSection.title || '';
+    if (projectsSecSubtitleEl) projectsSecSubtitleEl.value = projectsSection.subtitle || '';
+    if (projectsSecIconEl) projectsSecIconEl.value = projectsSection.icon || 'layout';
+    renderHreProjectsEditor(data.projects || defaultHomeResume.projects);
+
+    // 5. 回填成长历程
+    const timelineSection = data.timelineSection || defaultHomeResume.timelineSection;
+    const timelineSecTitleEl = document.getElementById('hreTimelineSectionTitle');
+    const timelineSecSubtitleEl = document.getElementById('hreTimelineSectionSubtitle');
+    const timelineSecIconEl = document.getElementById('hreTimelineSectionIcon');
+    if (timelineSecTitleEl) timelineSecTitleEl.value = timelineSection.title || '';
+    if (timelineSecSubtitleEl) timelineSecSubtitleEl.value = timelineSection.subtitle || '';
+    if (timelineSecIconEl) timelineSecIconEl.value = timelineSection.icon || 'calendar';
+    renderHreTimelineEditor(data.timeline || defaultHomeResume.timeline);
+
+    // 6. 回填底部联系
+    const contactSection = data.contactSection || defaultHomeResume.contactSection;
+    const cTitle = document.getElementById('hreContactTitle');
+    const cDesc = document.getElementById('hreContactDesc');
+    const cPills = document.getElementById('hreContactPills');
+    const cCta = document.getElementById('hreContactCtaText');
+    const cCtaLink = document.getElementById('hreContactCtaLink');
+
+    if (cTitle) cTitle.value = contactSection.title || '';
+    if (cDesc) cDesc.value = contactSection.desc || '';
+    if (cPills) cPills.value = (contactSection.pills || []).join(', ');
+    if (cCta) cCta.value = contactSection.ctaText || '';
+    if (cCtaLink) cCtaLink.value = contactSection.ctaLink || 'list';
+
+    // 切换到目标 Tab
+    switchHomeResumeTab(targetTab || 'hero');
+}
+
+function closeHomeResumeEditor() {
+    const modal = document.getElementById('homeResumeEditorModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function saveHomeResumeEditor() {
+    // 1. 提取 Hero 数据
+    const greeting = document.getElementById('hreHeroGreeting')?.value.trim() || defaultHomeResume.hero.greeting;
+    const name = document.getElementById('hreHeroName')?.value.trim() || defaultHomeResume.hero.name;
+    const status = document.getElementById('hreHeroStatus')?.value.trim() || defaultHomeResume.hero.status;
+    const github = document.getElementById('hreHeroGithub')?.value.trim() || defaultHomeResume.hero.github;
+    const title = document.getElementById('hreHeroTitle')?.value.trim() || defaultHomeResume.hero.title;
+    const motto = document.getElementById('hreHeroMotto')?.value.trim() || defaultHomeResume.hero.motto;
+    const avatar = document.getElementById('hreHeroAvatar')?.value.trim() || defaultHomeResume.hero.avatar;
+    const rawTags = document.getElementById('hreHeroTags')?.value || '';
+    const tags = rawTags.split(/[\n,，]/).map(t => t.trim()).filter(Boolean);
+    const primaryBtnText = document.getElementById('hreHeroPrimaryBtnText')?.value.trim() || '阅读我的文章';
+    const primaryBtnLink = document.getElementById('hreHeroPrimaryBtnLink')?.value.trim() || 'list';
+    const secondaryBtnText = document.getElementById('hreHeroSecondaryBtnText')?.value.trim() || '空间动态';
+    const secondaryBtnLink = document.getElementById('hreHeroSecondaryBtnLink')?.value.trim() || 'space';
+
+    // 2. 提取关于我
+    const aboutSecTitle = document.getElementById('hreAboutSectionTitle')?.value.trim() || defaultHomeResume.aboutSection.title;
+    const aboutSecSubtitle = document.getElementById('hreAboutSectionSubtitle')?.value.trim() || defaultHomeResume.aboutSection.subtitle;
+    const aboutSecIcon = document.getElementById('hreAboutSectionIcon')?.value || 'info';
+
+    const aboutRows = document.querySelectorAll('#hreAboutCardsContainer .hre-about-edit-card');
+    const about = [];
+    aboutRows.forEach(row => {
+        const icon = row.querySelector('.hre-about-icon')?.value.trim() || 'layers';
+        const aTitle = row.querySelector('.hre-about-title')?.value.trim() || '';
+        const desc = row.querySelector('.hre-about-desc')?.value.trim() || '';
+        if (aTitle || desc) {
+            about.push({ icon, title: aTitle, desc });
+        }
+    });
+
+    // 3. 提取专业技能分类
+    const skillsSecTitle = document.getElementById('hreSkillsSectionTitle')?.value.trim() || defaultHomeResume.skillsSection.title;
+    const skillsSecSubtitle = document.getElementById('hreSkillsSectionSubtitle')?.value.trim() || defaultHomeResume.skillsSection.subtitle;
+    const skillsSecIcon = document.getElementById('hreSkillsSectionIcon')?.value || 'code';
+
+    const skillCategoryRows = document.querySelectorAll('#hreSkillsListContainer .hre-skill-category-edit-card');
+    const skillsCategories = [];
+    skillCategoryRows.forEach(row => {
+        const sTitle = row.querySelector('.hre-skill-cat-title')?.value.trim() || '';
+        const indicator = row.querySelector('.hre-skill-cat-indicator')?.value || 'tool';
+        const sItems = (row.querySelector('.hre-skill-cat-items')?.value || '').split(/[,，\n]/).map(s => s.trim()).filter(Boolean);
+        if (sTitle || sItems.length) {
+            skillsCategories.push({ title: sTitle, indicator, items: sItems });
+        }
+    });
+
+    // 4. 提取精选作品
+    const projectsSecTitle = document.getElementById('hreProjectsSectionTitle')?.value.trim() || defaultHomeResume.projectsSection.title;
+    const projectsSecSubtitle = document.getElementById('hreProjectsSectionSubtitle')?.value.trim() || defaultHomeResume.projectsSection.subtitle;
+    const projectsSecIcon = document.getElementById('hreProjectsSectionIcon')?.value || 'layout';
+
+    const projRows = document.querySelectorAll('#hreProjectsListContainer .hre-project-edit-card');
+    const projects = [];
+    projRows.forEach(row => {
+        const pBadge = row.querySelector('.hre-proj-badge')?.value.trim() || '代表作品';
+        const pTitle = row.querySelector('.hre-proj-title')?.value.trim() || '';
+        const pDesc = row.querySelector('.hre-proj-desc')?.value.trim() || '';
+        const pTags = (row.querySelector('.hre-proj-tags')?.value || '').split(/[,，\n]/).map(t => t.trim()).filter(Boolean);
+        const link = row.querySelector('.hre-proj-link')?.value || 'list';
+        const customUrl = row.querySelector('.hre-proj-custom-url')?.value.trim() || '';
+        if (pTitle) {
+            projects.push({ badge: pBadge, title: pTitle, desc: pDesc, tags: pTags, link, customUrl });
+        }
+    });
+
+    // 5. 提取成长历程
+    const timelineSecTitle = document.getElementById('hreTimelineSectionTitle')?.value.trim() || defaultHomeResume.timelineSection.title;
+    const timelineSecSubtitle = document.getElementById('hreTimelineSectionSubtitle')?.value.trim() || defaultHomeResume.timelineSection.subtitle;
+    const timelineSecIcon = document.getElementById('hreTimelineSectionIcon')?.value || 'calendar';
+
+    const timeRows = document.querySelectorAll('#hreTimelineListContainer .hre-timeline-edit-card');
+    const timeline = [];
+    timeRows.forEach(row => {
+        const year = row.querySelector('.hre-time-year')?.value.trim() || '';
+        const tTitle = row.querySelector('.hre-time-title')?.value.trim() || '';
+        const desc = row.querySelector('.hre-time-desc')?.value.trim() || '';
+        if (tTitle || year) {
+            timeline.push({ year, title: tTitle, desc });
+        }
+    });
+
+    // 6. 提取底部联系
+    const cTitle = document.getElementById('hreContactTitle')?.value.trim() || defaultHomeResume.contactSection.title;
+    const cDesc = document.getElementById('hreContactDesc')?.value.trim() || defaultHomeResume.contactSection.desc;
+    const cPills = (document.getElementById('hreContactPills')?.value || '').split(/[,，\n]/).map(p => p.trim()).filter(Boolean);
+    const cCta = document.getElementById('hreContactCtaText')?.value.trim() || defaultHomeResume.contactSection.ctaText;
+    const cCtaLink = document.getElementById('hreContactCtaLink')?.value.trim() || 'list';
+
+    const dataToSave = {
+        hero: { 
+            greeting, name, status, github, title, motto, avatar, 
+            tags: tags.length ? tags : defaultHomeResume.hero.tags,
+            primaryBtnText, primaryBtnLink, secondaryBtnText, secondaryBtnLink,
+            githubBtnText: 'GitHub'
+        },
+        aboutSection: { title: aboutSecTitle, subtitle: aboutSecSubtitle, icon: aboutSecIcon },
+        about: about.length ? about : defaultHomeResume.about,
+        skillsSection: { title: skillsSecTitle, subtitle: skillsSecSubtitle, icon: skillsSecIcon },
+        skillsCategories: skillsCategories.length ? skillsCategories : defaultHomeResume.skillsCategories,
+        projectsSection: { title: projectsSecTitle, subtitle: projectsSecSubtitle, icon: projectsSecIcon },
+        projects: projects.length ? projects : defaultHomeResume.projects,
+        timelineSection: { title: timelineSecTitle, subtitle: timelineSecSubtitle, icon: timelineSecIcon },
+        timeline: timeline.length ? timeline : defaultHomeResume.timeline,
+        contactSection: { title: cTitle, desc: cDesc, pills: cPills.length ? cPills : defaultHomeResume.contactSection.pills, ctaText: cCta, ctaLink: cCtaLink }
+    };
+
+    saveHomeResumeData(dataToSave);
+    closeHomeResumeEditor();
+    if (typeof renderHomeResumeView === 'function') {
+        renderHomeResumeView();
+    }
+    if (typeof showToast === 'function') {
+        showToast('首页内容修改已成功保存并生效！');
+    }
+}
+
+function resetHomeResumeEditor() {
+    if (!confirm('确定要恢复首页内容为系统默认预设吗？自定义修改将被清除。')) return;
+    resetHomeResumeData();
+    closeHomeResumeEditor();
+    if (typeof renderHomeResumeView === 'function') {
+        renderHomeResumeView();
+    }
+    if (typeof showToast === 'function') {
+        showToast('已恢复首页默认预设！');
     }
 }
 

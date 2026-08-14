@@ -40,6 +40,9 @@ function init() {
     // 渲染文章列表
     renderArticles();
 
+    // 默认激活首页（个人简历与介绍）
+    switchView('home');
+
     // 置顶轮播
     changeHero(0);
 

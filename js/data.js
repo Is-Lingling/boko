@@ -147,7 +147,7 @@ function createArticle(data) {
     const newArticle = {
         id: Date.now(),
         title: data.title,
-        date: new Date().toISOString().slice(0, 10),
+        date: new Date().toISOString(),
         category: data.category || '随笔',
         tags: data.tags.length ? data.tags : ['随笔'],
         read: 0,
@@ -334,6 +334,245 @@ function saveProfileData() {
     localStorage.setItem('blogProfile', JSON.stringify(profile));
 }
 
+// ========== 首页个人简历与介绍数据管理 ==========
+
+function getHomeResumeData() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEYS.homeResume);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            const rawHero = parsed.hero || {};
+            const cleanTags = (rawHero.tags || defaultHomeResume.hero.tags).map(t => 
+                String(t || '').replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}|\s+/gu, '').trim() || t
+            );
+            const cleanGreeting = String(rawHero.greeting || defaultHomeResume.hero.greeting).replace(/👋/g, '').trim();
+
+            // 关于我卡片
+            const rawAbout = Array.isArray(parsed.about) && parsed.about.length ? parsed.about : defaultHomeResume.about;
+            const cleanAbout = rawAbout.map(item => {
+                let icon = item.icon || 'layers';
+                if (icon.includes('🚀')) icon = 'rocket';
+                else if (icon.includes('🎨')) icon = 'palette';
+                else if (icon.includes('💡')) icon = 'lightbulb';
+                else if (icon.includes('🌱')) icon = 'sprout';
+                else if (icon.includes('💻')) icon = 'code';
+                return { ...item, icon };
+            });
+
+            // 技能分类转换与向下兼容
+            let cleanSkillsCategories = [];
+            if (Array.isArray(parsed.skillsCategories) && parsed.skillsCategories.length) {
+                cleanSkillsCategories = parsed.skillsCategories;
+            } else if (parsed.skills) {
+                // 从旧版 skills: { frontend, backend, devops } 结构平滑迁移
+                if (parsed.skills.frontend) {
+                    cleanSkillsCategories.push({
+                        title: parsed.skills.frontend.title || '前端开发 (Frontend Core)',
+                        indicator: 'front',
+                        items: parsed.skills.frontend.items || []
+                    });
+                }
+                if (parsed.skills.backend) {
+                    cleanSkillsCategories.push({
+                        title: parsed.skills.backend.title || '后端服务与数据 (Backend & Storage)',
+                        indicator: 'back',
+                        items: parsed.skills.backend.items || []
+                    });
+                }
+                if (parsed.skills.devops) {
+                    cleanSkillsCategories.push({
+                        title: parsed.skills.devops.title || '工程化与设计协同 (DevOps & Tools)',
+                        indicator: 'tool',
+                        items: parsed.skills.devops.items || []
+                    });
+                }
+            }
+            if (!cleanSkillsCategories.length) {
+                cleanSkillsCategories = JSON.parse(JSON.stringify(defaultHomeResume.skillsCategories));
+            }
+
+            const rawContact = parsed.contactSection || parsed.contact || {};
+
+            return {
+                hero: { 
+                    ...defaultHomeResume.hero, 
+                    ...rawHero,
+                    greeting: cleanGreeting,
+                    tags: cleanTags,
+                    primaryBtnText: rawHero.primaryBtnText || defaultHomeResume.hero.primaryBtnText,
+                    primaryBtnLink: rawHero.primaryBtnLink || defaultHomeResume.hero.primaryBtnLink,
+                    secondaryBtnText: rawHero.secondaryBtnText || defaultHomeResume.hero.secondaryBtnText,
+                    secondaryBtnLink: rawHero.secondaryBtnLink || defaultHomeResume.hero.secondaryBtnLink,
+                    githubBtnText: rawHero.githubBtnText || defaultHomeResume.hero.githubBtnText
+                },
+                aboutSection: { ...defaultHomeResume.aboutSection, ...(parsed.aboutSection || {}) },
+                about: cleanAbout,
+                skillsSection: { ...defaultHomeResume.skillsSection, ...(parsed.skillsSection || {}) },
+                skillsCategories: cleanSkillsCategories,
+                projectsSection: { ...defaultHomeResume.projectsSection, ...(parsed.projectsSection || {}) },
+                projects: Array.isArray(parsed.projects) && parsed.projects.length ? parsed.projects : defaultHomeResume.projects,
+                timelineSection: { ...defaultHomeResume.timelineSection, ...(parsed.timelineSection || {}) },
+                timeline: Array.isArray(parsed.timeline) && parsed.timeline.length ? parsed.timeline : defaultHomeResume.timeline,
+                contactSection: { 
+                    ...defaultHomeResume.contactSection, 
+                    ...rawContact,
+                    ctaText: String(rawContact.ctaText || defaultHomeResume.contactSection.ctaText).replace(/^👉\s*/, '').trim(),
+                    ctaLink: rawContact.ctaLink || defaultHomeResume.contactSection.ctaLink || 'list',
+                    customUrl: rawContact.customUrl || ''
+                }
+            };
+        }
+    } catch (e) {
+        console.warn('Failed to load home resume data', e);
+    }
+    return JSON.parse(JSON.stringify(defaultHomeResume));
+}
+
+function saveHomeResumeData(data) {
+    try {
+        localStorage.setItem(STORAGE_KEYS.homeResume, JSON.stringify(data || defaultHomeResume));
+    } catch (e) {
+        console.error('Failed to save home resume data', e);
+    }
+}
+
+function resetHomeResumeData() {
+    try {
+        localStorage.removeItem(STORAGE_KEYS.homeResume);
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(defaultHomeResume));
+}
+
+// ========== 分类图片管理 ==========
+
+function getArticleContentImages() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEYS.articleContentImages);
+        return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+}
+
+function saveArticleContentImages(images) {
+    localStorage.setItem(STORAGE_KEYS.articleContentImages, JSON.stringify(images || []));
+}
+
+function addArticleContentImage(url) {
+    if (!url) return;
+    const images = getArticleContentImages();
+    if (!images.includes(url)) {
+        images.push(url);
+        saveArticleContentImages(images);
+    }
+}
+
+function getOtherImages() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEYS.otherImages);
+        return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+}
+
+function saveOtherImages(images) {
+    localStorage.setItem(STORAGE_KEYS.otherImages, JSON.stringify(images || []));
+}
+
+function addOtherImage(url) {
+    if (!url) return;
+    const images = getOtherImages();
+    if (!images.includes(url)) {
+        images.push(url);
+        saveOtherImages(images);
+    }
+}
+
+// ========== 文件管理 ==========
+
+function getFileStore() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEYS.files);
+        return saved ? JSON.parse(saved) : { root: [] };
+    } catch (e) { return { root: [] }; }
+}
+
+function saveFileStore(store) {
+    localStorage.setItem(STORAGE_KEYS.files, JSON.stringify(store || { root: [] }));
+}
+
+function getFilesInFolder(folderId) {
+    const store = getFileStore();
+    return store[folderId || 'root'] || [];
+}
+
+function createFolder(parentId, name) {
+    const store = getFileStore();
+    const parent = parentId || 'root';
+    if (!store[parent]) store[parent] = [];
+    const folder = {
+        type: 'folder',
+        name: name || '新建文件夹',
+        id: 'folder_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        createdAt: new Date().toISOString()
+    };
+    store[parent].push(folder);
+    store[folder.id] = [];
+    saveFileStore(store);
+    return folder;
+}
+
+function uploadFile(parentId, name, size, dataUrl) {
+    const store = getFileStore();
+    const parent = parentId || 'root';
+    if (!store[parent]) store[parent] = [];
+    const file = {
+        type: 'file',
+        name: name,
+        id: 'file_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        size: size,
+        data: dataUrl,
+        createdAt: new Date().toISOString()
+    };
+    store[parent].push(file);
+    saveFileStore(store);
+    return file;
+}
+
+function deleteFileOrFolder(parentId, itemId) {
+    const store = getFileStore();
+    const parent = parentId || 'root';
+    if (!store[parent]) return;
+    const idx = store[parent].findIndex(item => item.id === itemId);
+    if (idx === -1) return;
+    const item = store[parent][idx];
+    if (item.type === 'folder' && store[item.id]) {
+        const children = store[item.id] || [];
+        children.forEach(child => {
+            if (child.type === 'folder') deleteFileOrFolder(item.id, child.id);
+        });
+        delete store[item.id];
+    }
+    store[parent].splice(idx, 1);
+    saveFileStore(store);
+}
+
+function renameFileOrFolder(parentId, itemId, newName) {
+    const store = getFileStore();
+    const parent = parentId || 'root';
+    if (!store[parent]) return;
+    const item = store[parent].find(i => i.id === itemId);
+    if (item) {
+        item.name = newName;
+        saveFileStore(store);
+    }
+}
+
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
 // ========== 评论 ==========
 
 function migrateCommentsIfNeeded() {
@@ -377,7 +616,7 @@ function migrateCommentsIfNeeded() {
 }
 
 function addComment(name, contact, content, parentId) {
-    const today = formatDate(new Date().toISOString());
+    const today = new Date().toISOString();
     state.comments.unshift({
         id: Date.now() + Math.floor(Math.random() * 1000),
         name: name || '匿名',
@@ -422,7 +661,7 @@ function addArticleReply(articleId, parentId, name, contact, content) {
         name: name || '匿名',
         contact: contact || '',
         content,
-        date: new Date().toISOString().slice(0, 10),
+        date: new Date().toISOString(),
         parentId: Number(parentId)
     };
     article.commentList.push(newReply);
@@ -467,8 +706,10 @@ function loadVisitorInfo() {
 }
 
 function deleteCommentById(commentId) {
+    const targetId = Number(commentId);
     const before = state.comments.length;
-    state.comments = state.comments.filter(c => Number(c.id) !== Number(commentId));
+    // 删除目标评论及其所属子回复
+    state.comments = state.comments.filter(c => Number(c.id) !== targetId && Number(c.parentId) !== targetId);
     if (state.comments.length !== before) {
         localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(state.comments));
         return true;
@@ -479,10 +720,13 @@ function deleteCommentById(commentId) {
 function deleteArticleComment(articleId, commentId) {
     const article = getArticleById(articleId);
     if (!article || !Array.isArray(article.commentList)) return false;
+    const targetId = Number(commentId);
     const before = article.commentList.length;
-    article.commentList = article.commentList.filter(c => Number(c.id) !== Number(commentId));
+    // 删除目标评论及其所属子回复
+    article.commentList = article.commentList.filter(c => Number(c.id) !== targetId && Number(c.parentId) !== targetId);
     if (article.commentList.length !== before) {
-        article.comment = Math.max(0, (article.comment || 0) - 1);
+        const deletedCount = before - article.commentList.length;
+        article.comment = Math.max(0, (article.comment || 0) - deletedCount);
         saveArticlesToStorage();
         return true;
     }
