@@ -985,12 +985,6 @@ function renderLeftNav() {
                             <span class="accordion-cat-name">${escHtml(cat.name)}</span>
                             <span class="accordion-cat-count" aria-label="${escHtml(cat.name)} 下有 ${catCount} 篇文章">${catCount}</span>
                         </a>
-                        ${admin ? `
-                            <span class="accordion-cat-admin">
-                                <button type="button" class="mini-admin-btn accordion-add-tag" data-for-cat="${escHtml(cat.name)}" title="新增标签">＋ 标签</button>
-                                <button type="button" class="mini-admin-btn accordion-del-cat" data-del-cat="${escHtml(cat.name)}" title="删除分类">删除</button>
-                            </span>
-                        ` : ''}
                     </div>
                     <ul class="accordion-tag-list">
                         ${cat.tags.length ? cat.tags.map(tag => {
@@ -1001,9 +995,8 @@ function renderLeftNav() {
                                     <span class="accordion-tag-text">${escHtml(tag)}</span>
                                     <span class="accordion-tag-count" aria-label="${escHtml(tag)} 下有 ${c} 篇文章">${c}</span>
                                 </a>
-                                ${admin ? `<button type="button" class="mini-admin-btn accordion-del-tag" data-cat="${escHtml(cat.name)}" data-tag="${escHtml(tag)}" title="移除此标签">移除</button>` : ''}
                             </li>`;
-                        }).join('') : `<li class="accordion-empty">${admin ? '暂无标签，点击右侧「＋ 标签」添加' : '该分类暂无标签'}</li>`}
+                        }).join('') : `<li class="accordion-empty">该分类暂无标签</li>`}
                     </ul>
                 </li>`;
             }) : [];
@@ -1012,17 +1005,15 @@ function renderLeftNav() {
             ? `<li class="accordion-empty-cats" style="padding:16px 14px; color:var(--text-muted); font-size:13px; text-align:center;">${admin ? '暂无文章，发布文章后分类会自动生成' : '暂无内容'}</li>`
             : '';
         zuchengList.innerHTML = [
-            // 顶部标题行 + 管理员新增分类按钮
             `<li class="daohanglan accordion-header-row">
                 <span class="accent-bar" aria-hidden="true"></span>
                 <span class="accordion-header-text">分类</span>
-                ${admin ? `<button type="button" class="mini-admin-btn accordion-add-cat" title="新增分类">＋ 分类</button>` : ''}
             </li>`,
             emptyState,
             ...catItems
         ].filter(Boolean).join('');
 
-        // 风箱交互：点击分类行（不是管理按钮）→ 切换展开，收起其他（真正风箱：开一个关其他）
+        // 风箱交互：点击分类行 → 切换展开，收起其他（真正风箱：开一个关其他）
         zuchengList.querySelectorAll('[data-accordion-cat]').forEach(item => {
             const titleEl = item.querySelector('.accordion-cat-title');
             if (titleEl) {
@@ -1050,104 +1041,6 @@ function renderLeftNav() {
             });
         });
 
-        // 管理员：新增分类 / 新增标签 / 删除分类 / 删除标签
-        if (admin) {
-            const addCatBtn = zuchengList.querySelector('.accordion-add-cat');
-            if (addCatBtn) {
-                addCatBtn.addEventListener('click', e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (typeof showPromptModal === 'function') {
-                        showPromptModal({
-                            title: '新建分类',
-                            placeholder: '输入新分类名称',
-                            onConfirm: (name) => {
-                                if (name && addCategory(name.trim())) {
-                                    renderAll();
-                                    if (typeof showToast === 'function') showToast(`分类「${name.trim()}」创建成功`, 'success');
-                                } else if (name) {
-                                    if (typeof showToast === 'function') showToast('分类已存在或输入无效', 'warning');
-                                }
-                            }
-                        });
-                    }
-                });
-            }
-            zuchengList.querySelectorAll('.accordion-add-tag').forEach(btn => {
-                btn.addEventListener('click', e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const catName = btn.getAttribute('data-for-cat');
-                    if (typeof showPromptModal === 'function') {
-                        showPromptModal({
-                            title: '新增标签',
-                            message: `在「${catName}」分类下新增一个标签：`,
-                            placeholder: '输入标签名称',
-                            onConfirm: (tagName) => {
-                                if (!tagName) return;
-                                if (addTagToCategory(catName, tagName.trim())) {
-                                    renderAll();
-                                    if (typeof showToast === 'function') showToast(`标签「${tagName.trim()}」添加成功`, 'success');
-                                } else {
-                                    if (typeof showToast === 'function') showToast('标签已存在或输入无效', 'warning');
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-            zuchengList.querySelectorAll('.accordion-del-cat').forEach(btn => {
-                btn.addEventListener('click', e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const catName = btn.getAttribute('data-del-cat');
-                    const doDel = () => {
-                        if (deleteCategory(catName)) {
-                            renderAll();
-                            if (typeof showToast === 'function') showToast(`分类「${catName}」已删除`, 'info');
-                        }
-                    };
-                    if (typeof showConfirmModal === 'function') {
-                        showConfirmModal({
-                            title: '删除分类',
-                            message: `确定删除分类「${catName}」吗？（仅删除分类结构，文章仍保留在“未分类”下）`,
-                            confirmText: '确认删除',
-                            cancelText: '取消',
-                            danger: true,
-                            onConfirm: doDel
-                        });
-                    } else {
-                        doDel();
-                    }
-                });
-            });
-            zuchengList.querySelectorAll('.accordion-del-tag').forEach(btn => {
-                btn.addEventListener('click', e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const catName = btn.getAttribute('data-cat');
-                    const tagName = btn.getAttribute('data-tag');
-                    const doDelTag = () => {
-                        if (deleteTagFromCategory(catName, tagName)) {
-                            renderAll();
-                            if (typeof showToast === 'function') showToast(`标签「${tagName}」已移除`, 'info');
-                        }
-                    };
-                    if (typeof showConfirmModal === 'function') {
-                        showConfirmModal({
-                            title: '移除标签',
-                            message: `确定从分类「${catName}」中移除标签「${tagName}」吗？`,
-                            confirmText: '确认移除',
-                            cancelText: '取消',
-                            danger: true,
-                            onConfirm: doDelTag
-                        });
-                    } else {
-                        doDelTag();
-                    }
-                });
-            });
-        }
     });
 }
 

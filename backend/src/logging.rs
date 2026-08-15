@@ -10,7 +10,7 @@ use serde::Serialize;
 ///
 /// # 参数
 /// * `action`     - "create" | "update" | "delete"
-/// * `entity`     - 实体名：article / profile / feed / home_resume / kv / friend_link / comment / category / song
+/// * `entity`     - 实体名：article / profile / feed / home_resume / kv / friend_link / comment / song
 /// * `entity_id`  - 记录 ID（单例如 profile 传 "1"）
 /// * `before`     - 操作前数据（create 时传 None）
 /// * `after`      - 操作后数据（delete 时传 None）

@@ -96,26 +96,6 @@ INSERT OR IGNORE INTO articles (id, title, date, category, tags, read_count, com
      '前端统计与本地存储结合，打造简单访客数据展示。',
      'img/img6.jpg', '', 0, 0);
 
--- ========== Initial categories derived from seed articles ==========
-INSERT OR IGNORE INTO categories (id, name) VALUES
-    (1, '前端'),
-    (2, '随笔'),
-    (3, '工具'),
-    (4, '设计'),
-    (5, '产品');
-
-INSERT OR IGNORE INTO category_tags (category_id, tag) VALUES
-    (1, '前端'), (1, '性能'), (1, '优化'),
-    (1, 'CSS'), (1, '响应式'), (1, '布局'),
-    (1, 'SEO'), (1, '博客'), (1, '静态站点'),
-    (1, '移动端'), (1, '触控'), (1, '导航'),
-    (2, '考研'), (2, '学习'), (2, '时间管理'),
-    (2, '友链'), (2, '社区'), (2, '站点'),
-    (3, 'VSCode'), (3, '开发效率'), (3, '插件'),
-    (3, 'RSS'), (3, 'Sitemap'), (3, '订阅'),
-    (4, '暗黑模式'), (4, '主题切换'), (4, '体验'),
-    (5, '统计'), (5, '本地存储'), (5, '交互');
-
 -- ========== Space feeds (动态/说说) — from defaultSpaceFeeds in data.js ==========
 INSERT OR IGNORE INTO space_feeds (id, content, date, images, likes) VALUES
     (1723482000000, '🎉 欢迎来到我的个人空间动态！这里记录我的日常随笔、项目想法与极客技术探讨，欢迎在下方点赞与留言交互~ ✨', '2026-08-12 18:30', '["img/img6.jpg"]', 18),

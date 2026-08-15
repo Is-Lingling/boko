@@ -1233,29 +1233,6 @@ function bindEvents() {
             if (typeof triggerAutoSave === 'function') triggerAutoSave();
         });
     }
-    // + 新分类按钮：管理员可快速新增一个自定义分类
-    if (inlineAddCategoryBtn) {
-        inlineAddCategoryBtn.addEventListener('click', () => {
-            if (!(state && state.isAdmin)) return;
-            if (typeof showPromptModal === 'function') {
-                showPromptModal({
-                    title: '新建文章分类',
-                    message: '输入新分类名称（将同步添加到侧边栏分类风箱）：',
-                    placeholder: '例如：前端技术',
-                    onConfirm: (name) => {
-                        if (!name) return;
-                        const catName = name.toString().trim();
-                        if (!catName) return;
-                        if (typeof addCategory === 'function') addCategory(catName);
-                        const hidden = document.getElementById('inlineArticleCategory');
-                        if (hidden) hidden.value = catName;
-                        if (typeof renderAll === 'function') renderAll();
-                    }
-                });
-            }
-        });
-    }
-
     ['inlineArticleTitle', 'inlineArticleCategorySelect', 'inlineArticleTags', 'inlineArticleCover'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {

@@ -90,11 +90,6 @@ fn api_router() -> Router<Db> {
         .route("/music/playlist", post(handlers::music::add_song))
         .route("/music/playlist/:idx", delete(handlers::music::remove_song))
         .route("/music/api-base", put(handlers::music::set_api_base))
-        // ---- Categories ----
-        .route("/categories", get(handlers::categories::list).post(handlers::categories::create))
-        .route("/categories/:name", put(handlers::categories::rename).delete(handlers::categories::delete))
-        .route("/categories/:name/tags", post(handlers::categories::add_tag))
-        .route("/categories/:name/tags/:tag", delete(handlers::categories::delete_tag))
         // ---- Stats ----
         .route("/stats", get(handlers::stats::get))
         .route("/stats/visit", post(handlers::stats::visit))

@@ -233,21 +233,6 @@ pub async fn rollback(
             ).map_err(|e| AppError::internal(e.to_string()))?;
             format!("已回滚：恢复已删除评论 id={cid}")
         }
-        ("create", "category") => {
-            let name = entity_id.as_deref().unwrap_or("");
-            conn.execute("DELETE FROM categories WHERE name = ?1", params![name])
-                .map_err(|e| AppError::internal(e.to_string()))?;
-            conn.execute("DELETE FROM category_tags WHERE category = ?1", params![name])
-                .map_err(|e| AppError::internal(e.to_string()))?;
-            format!("已回滚：删除分类 name={name}")
-        }
-        ("delete", "category") => {
-            let name = before.get("name").and_then(|v| v.as_str())
-                .ok_or_else(|| AppError::bad_request("category before_data 缺少 name"))?;
-            conn.execute("INSERT OR IGNORE INTO categories (name, sort_order) VALUES (?1, 0)", params![name])
-                .map_err(|e| AppError::internal(e.to_string()))?;
-            format!("已回滚：恢复已删除分类 name={name}")
-        }
         _ => return Err(AppError::bad_request(format!(
             "暂不支持回滚此操作：action={}, entity={}", action, entity
         ))),

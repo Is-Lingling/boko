@@ -188,24 +188,6 @@ pub struct MusicApiBaseInput {
     pub api_base: String,
 }
 
-// ========== Categories ==========
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Category {
-    pub name: String,
-    pub tags: Vec<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct RenameCategoryInput {
-    #[serde(rename = "newName")]
-    pub new_name: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct TagInput {
-    pub tag: String,
-}
 
 // ========== Visitor stats ==========
 

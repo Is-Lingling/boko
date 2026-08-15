@@ -92,21 +92,10 @@ function loadCategoriesFromStorage() {
     return null;
 }
 
-/** 后台同步分类变更到后端（fire-and-forget） */
-function _syncCategoryToApi(method, path, body) {
-    return fetch((window.API_BASE || '') + path, {
-        method,
-        headers: Object.assign({ 'Content-Type': 'application/json' },
-            (localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {})),
-        body: body ? JSON.stringify(body) : undefined
-    }).catch(err => console.warn('[API] 分类同步失败:', err && err.message));
-}
-
 /**
  * 初始化分类 —— 纯从文章派生：
  * 分类和标签的显示完全取决于文章中的 category/tags 字段。
  * 没有文章就没有分类；文章删除后分类自动刷新。
- * categories 表仅供管理员管理分类名称（编辑器下拉选项），不影响侧边栏显示。
  */
 async function initCategories() {
     syncCategoriesFromArticles();
@@ -118,73 +107,6 @@ async function initCategories() {
 function syncCategoriesFromArticles() {
     state.categories = collectCategoriesFromArticles();
     saveCategoriesToStorage();
-}
-
-function addCategory(catName) {
-    if (!state.isAdmin) return false;
-    const name = (catName || '').toString().trim();
-    if (!name) return false;
-    if (state.categories.some(c => c.name === name)) return false;
-    state.categories.push({ name, tags: [] });
-    saveCategoriesToStorage();
-    _syncCategoryToApi('POST', '/api/categories', { name, tags: [] });
-    return true;
-}
-
-function deleteCategory(catName) {
-    if (!state.isAdmin) return false;
-    const idx = state.categories.findIndex(c => c.name === catName);
-    if (idx === -1) return false;
-    state.categories.splice(idx, 1);
-    saveCategoriesToStorage();
-    _syncCategoryToApi('DELETE', '/api/categories/' + encodeURIComponent(catName));
-    return true;
-}
-
-function renameCategory(oldName, newName) {
-    if (!state.isAdmin) return false;
-    newName = (newName || '').toString().trim();
-    if (!newName) return false;
-    const target = state.categories.find(c => c.name === oldName);
-    if (!target) return false;
-    if (state.categories.some(c => c.name === newName)) return false;
-    target.name = newName;
-    // 同步改一下现有 articles 的 category 字段，保证一致性
-    articles.forEach(art => {
-        if (art.category === oldName) art.category = newName;
-    });
-    saveCategoriesToStorage();
-    saveArticlesToStorage && saveArticlesToStorage();
-    _syncCategoryToApi('PUT', '/api/categories/' + encodeURIComponent(oldName), { newName });
-    return true;
-}
-
-function addTagToCategory(catName, tagName) {
-    if (!state.isAdmin) return false;
-    tagName = (tagName || '').toString().trim();
-    if (!tagName) return false;
-    let cat = state.categories.find(c => c.name === catName);
-    if (!cat) {
-        state.categories.push({ name: catName, tags: [] });
-        cat = state.categories[state.categories.length - 1];
-    }
-    if (cat.tags.indexOf(tagName) !== -1) return false;
-    cat.tags.push(tagName);
-    saveCategoriesToStorage();
-    _syncCategoryToApi('POST', '/api/categories/' + encodeURIComponent(catName) + '/tags', { tag: tagName });
-    return true;
-}
-
-function deleteTagFromCategory(catName, tagName) {
-    if (!state.isAdmin) return false;
-    const cat = state.categories.find(c => c.name === catName);
-    if (!cat) return false;
-    const idx = cat.tags.indexOf(tagName);
-    if (idx === -1) return false;
-    cat.tags.splice(idx, 1);
-    saveCategoriesToStorage();
-    _syncCategoryToApi('DELETE', '/api/categories/' + encodeURIComponent(catName) + '/tags/' + encodeURIComponent(tagName));
-    return true;
 }
 
 function getCategoryTags(catName) {

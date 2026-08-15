@@ -100,19 +100,6 @@ CREATE TABLE IF NOT EXISTS music_config (
     api_base TEXT NOT NULL DEFAULT 'https://netease-cloud-music-api.fe-mm.com'
 );
 
--- ========== Categories & tags (admin-managed) ==========
-CREATE TABLE IF NOT EXISTS categories (
-    id    INTEGER PRIMARY KEY AUTOINCREMENT,
-    name  TEXT NOT NULL UNIQUE
-);
-CREATE TABLE IF NOT EXISTS category_tags (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    category_id  INTEGER NOT NULL,
-    tag          TEXT NOT NULL,
-    UNIQUE(category_id, tag),
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
-);
-
 -- ========== Singleton: visitor stats ==========
 CREATE TABLE IF NOT EXISTS visitor_stats (
     id          INTEGER PRIMARY KEY CHECK (id = 1),

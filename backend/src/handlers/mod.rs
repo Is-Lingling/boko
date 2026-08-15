@@ -1,6 +1,5 @@
 pub mod articles;
 pub mod auth;
-pub mod categories;
 pub mod comments;
 pub mod db_viewer;
 pub mod friend_links;

@@ -119,14 +119,6 @@ const Api = {
     removeSongAt: (idx) => request('DELETE', `/api/music/playlist/${idx}`),
     setMusicApiBase: (apiBase) => request('PUT', '/api/music/api-base', { apiBase }),
 
-    // Categories
-    listCategories: () => request('GET', '/api/categories'),
-    createCategory: (data) => request('POST', '/api/categories', data),
-    renameCategory: (oldName, newName) => request('PUT', `/api/categories/${encodeURIComponent(oldName)}`, { newName }),
-    deleteCategory: (name) => request('DELETE', `/api/categories/${encodeURIComponent(name)}`),
-    addTag: (catName, tag) => request('POST', `/api/categories/${encodeURIComponent(catName)}/tags`, { tag }),
-    deleteTag: (catName, tag) => request('DELETE', `/api/categories/${encodeURIComponent(catName)}/tags/${encodeURIComponent(tag)}`),
-
     // Visitor stats
     recordVisit: () => fetch(API_BASE + '/api/stats/visit', {
         method: 'POST',
