@@ -1241,6 +1241,34 @@
         .accordion-tag-count[data-count="0"] {
             opacity: 0.55;
         }
+        /* —— 分类文章数徽章：显示在「分类名」右侧 —— */
+        .accordion-cat-count {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            padding: 0 8px;
+            height: 20px;
+            line-height: 20px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary);
+            background: var(--primary-light);
+            margin-left: 6px;
+            transition: all 0.18s ease;
+        }
+        body.dark .accordion-cat-count {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.18);
+        }
+        .accordion-cat-title:hover .accordion-cat-count {
+            transform: scale(1.05);
+            background: var(--primary);
+            color: #fff;
+        }
+
         .accordion-cat-admin {
             display: inline-flex;
             align-items: center;

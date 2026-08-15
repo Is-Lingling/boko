@@ -19,7 +19,14 @@ const STORAGE_KEYS = {
     articleContentImages: 'blogArticleContentImages',
     otherImages: 'blogOtherImages',
     files: 'blogFiles',
-    homeResume: 'blogHomeResume'
+    homeResume: 'blogHomeResume',
+    articles: 'articlesData',
+    profile: 'blogProfile',
+    isAdmin: 'isAdmin',
+    trash: 'blogTrashArticles',
+    feeds: 'blog_space_feeds',
+    calendarMemos: 'blog_calendar_memos',
+    customAdminLinks: 'customAdminLinks'
 };
 
 // ========== 首页个人简历与介绍默认配置 ==========

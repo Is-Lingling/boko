@@ -38,7 +38,7 @@ function getAllTrash() {
  * @param {object} [overrideData] 可选：恢复时一并覆盖文章字段（供「编辑后再发布」使用）
  * @returns {object|null} 恢复后的文章对象
  */
-function restoreFromTrash(id, overrideData) {
+async function restoreFromTrash(id, overrideData) {
     const idx = trash.findIndex(item => item && item.id === Number(id));
     if (idx === -1) return null;
     const raw = trash[idx];
@@ -55,56 +55,105 @@ function restoreFromTrash(id, overrideData) {
     }
     saveArticlesToStorage();
     saveTrashToStorage();
+    // 同步到后端：恢复（await 确保成功）
+    try {
+        await Api.restoreArticle(id);
+        // 若有字段覆盖，再 PUT 一次更新
+        if (overrideData) {
+            await Api.updateArticle(id, {
+                title: restored.title,
+                category: restored.category,
+                tags: restored.tags,
+                summary: restored.summary,
+                cover: restored.cover,
+                content: restored.content,
+                featured: !!restored.featured,
+                date: restored.date
+            });
+        }
+    } catch (err) {
+        console.error('[API] 恢复文章失败，回滚:', err && err.message);
+        // 回滚：把文章放回回收站
+        trash.splice(idx, 0, raw);
+        const artIdx = articles.findIndex(x => x && x.id === Number(restored.id));
+        if (artIdx > -1) articles.splice(artIdx, 1);
+        saveArticlesToStorage();
+        saveTrashToStorage();
+        throw err;
+    }
+    // 刷新分类/标签
+    if (typeof syncCategoriesFromArticles === 'function') {
+        syncCategoriesFromArticles();
+    }
     return restored;
 }
 
 /**
  * 彻底删除回收站中的文章（无恢复可能）。
  */
-function permanentDeleteFromTrash(id) {
+async function permanentDeleteFromTrash(id) {
     const before = trash.length;
+    const item = trash.find(item => item && item.id === Number(id));
     trash = trash.filter(item => item && item.id !== Number(id));
     if (trash.length !== before) {
         saveTrashToStorage();
+        // 同步到后端：永久删除（await 确保成功）
+        try {
+            await Api.permanentDeleteArticle(id);
+        } catch (err) {
+            console.error('[API] 永久删除失败，回滚:', err && err.message);
+            if (item) trash.unshift(item);
+            saveTrashToStorage();
+            throw err;
+        }
+        // 刷新分类/标签
+        if (typeof syncCategoriesFromArticles === 'function') {
+            syncCategoriesFromArticles();
+        }
         return true;
     }
     return false;
 }
 
-function clearDefaultMockDataIfNeeded() {
-    try {
-        const mockPurgedKey = 'mock_data_purged_v1';
-        if (!localStorage.getItem(mockPurgedKey)) {
-            localStorage.removeItem('articlesData');
-            localStorage.removeItem('blogComments');
-            localStorage.removeItem('blogMusicPlaylist');
-            localStorage.setItem(mockPurgedKey, '1');
-            articles = [];
-            if (typeof state !== 'undefined') {
-                state.comments = [];
-                state.musicPlaylist = [];
-            }
-        }
-    } catch(e) {}
-}
-
 async function loadArticlesFromFile() {
-    clearDefaultMockDataIfNeeded();
-    // 仅从 localStorage 加载用户自行添加/编辑的文章
+    // 从后端 REST API 加载文章（数据源：SQLite）
     try {
-        const saved = JSON.parse(localStorage.getItem('articlesData') || 'null');
-        if (Array.isArray(saved)) {
-            articles = saved;
-        } else {
+        const data = await Api.listArticles();
+        if (Array.isArray(data) && data.length > 0) {
+            articles = data;
+            // 写入 localStorage 仅作离线缓存（API 不可用时的兜底）
+            try { localStorage.setItem(STORAGE_KEYS.articles, JSON.stringify(articles)); } catch (e) {}
+            return;
+        }
+        articles = [];
+    } catch (error) {
+        console.warn('[API] 加载文章失败，回退到本地缓存:', error && error.message);
+        try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.articles) || 'null');
+            articles = Array.isArray(saved) ? saved : [];
+        } catch (e) {
             articles = [];
         }
-    } catch (error) {
-        articles = [];
     }
 }
 
 function saveArticlesToStorage() {
-    localStorage.setItem('articlesData', JSON.stringify(articles));
+    // 数据持久化已迁移到后端；此函数仅保留为离线缓存写入，避免破坏旧调用点。
+    try {
+        localStorage.setItem(STORAGE_KEYS.articles, JSON.stringify(articles || []));
+    } catch (e) {
+        console.warn('Failed to cache articles locally:', e);
+    }
+}
+
+/** 后台同步：把单篇文章的变更 PUT 到后端（失败仅告警，不影响 UI） */
+function _syncArticleToApi(method, path, body) {
+    return fetch((window.API_BASE || '') + path, {
+        method,
+        headers: Object.assign({ 'Content-Type': 'application/json' },
+            (localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {})),
+        body: body ? JSON.stringify(body) : undefined
+    }).catch(err => console.warn('[API] 文章同步失败:', err && err.message));
 }
 
 function getArticleById(id) {
@@ -143,7 +192,7 @@ function filterArticles() {
     });
 }
 
-function createArticle(data) {
+async function createArticle(data) {
     const newArticle = {
         id: Date.now(),
         title: data.title,
@@ -159,14 +208,72 @@ function createArticle(data) {
     };
     articles.unshift(newArticle);
     saveArticlesToStorage();
+    // 同步到后端（await 确保写入数据库，失败则回滚内存中的临时文章）
+    try {
+        const created = await Api.createArticle({
+            title: newArticle.title,
+            category: newArticle.category,
+            tags: newArticle.tags,
+            summary: newArticle.summary,
+            cover: newArticle.cover,
+            content: newArticle.content,
+            featured: !!newArticle.featured
+        });
+        if (created && created.id) {
+            // 用后端返回的真实 id 替换临时 id
+            const idx = articles.findIndex(a => a.id === newArticle.id);
+            if (idx > -1) {
+                articles[idx].id = created.id;
+                articles[idx].date = created.date || newArticle.date;
+            }
+            saveArticlesToStorage();
+        }
+    } catch (err) {
+        console.error('[API] 创建文章失败，回滚内存:', err && err.message);
+        // 回滚：从内存中移除临时文章
+        const idx = articles.findIndex(a => a.id === newArticle.id);
+        if (idx > -1) articles.splice(idx, 1);
+        saveArticlesToStorage();
+        throw err;
+    }
+    // 刷新分类/标签（新文章可能引入新的分类或标签）
+    if (typeof syncCategoriesFromArticles === 'function') {
+        syncCategoriesFromArticles();
+    }
     return newArticle;
 }
 
-function updateArticle(id, data) {
+async function updateArticle(id, data) {
     const article = getArticleById(id);
     if (!article) return null;
+    const oldCategory = article.category;
+    const oldTags = [...(article.tags || [])];
     Object.assign(article, data);
     saveArticlesToStorage();
+    // 同步到后端（await 确保写入数据库）
+    try {
+        await Api.updateArticle(id, {
+            title: article.title,
+            category: article.category,
+            tags: article.tags,
+            summary: article.summary,
+            cover: article.cover,
+            content: article.content,
+            featured: !!article.featured,
+            date: article.date
+        });
+    } catch (err) {
+        console.error('[API] 更新文章失败:', err && err.message);
+        // 回滚分类/标签修改
+        article.category = oldCategory;
+        article.tags = oldTags;
+        saveArticlesToStorage();
+        throw err;
+    }
+    // 刷新分类/标签（分类或标签可能变化）
+    if (typeof syncCategoriesFromArticles === 'function') {
+        syncCategoriesFromArticles();
+    }
     return article;
 }
 
@@ -175,7 +282,7 @@ function updateArticle(id, data) {
  * @param {number} id 文章 ID
  * @returns {boolean} 是否成功移入回收站
  */
-function deleteArticle(id) {
+async function deleteArticle(id) {
     if (!state.isAdmin) return false;
     const targetId = Number(id);
     const idx = articles.findIndex(item => item && item.id === targetId);
@@ -188,7 +295,65 @@ function deleteArticle(id) {
     trash.unshift(moved);
     saveArticlesToStorage();
     saveTrashToStorage();
+    // 同步到后端：软删除（await 确保删除成功）
+    try {
+        await Api.softDeleteArticle(targetId);
+    } catch (err) {
+        console.error('[API] 删除文章失败，回滚:', err && err.message);
+        // 回滚：把文章从回收站移回正式列表
+        trash = trash.filter(item => item && item.id !== targetId);
+        articles.splice(idx, 0, moved);
+        delete moved.deletedAt;
+        saveArticlesToStorage();
+        saveTrashToStorage();
+        throw err;
+    }
+    // 刷新分类/标签（删除文章后，某些分类/标签可能不再有文章使用）
+    if (typeof syncCategoriesFromArticles === 'function') {
+        syncCategoriesFromArticles();
+    }
     return true;
+}
+
+// ========== KV store 同步助手 ==========
+// 管理员可编辑的配置数据（图册命名、封面计数、图片库、文件管理、日历备忘、
+// 管理员快捷链接）统一通过后端 kv_store 表持久化。
+
+/** 后台同步 KV 数据到后端（fire-and-forget） */
+function _syncKvToApi(key, value) {
+    Api.setKv(key, value)
+       .catch(err => console.warn(`[API] 同步 KV(${key}) 失败:`, err && err.message));
+}
+
+/** 初始化时从后端批量加载所有 KV 数据并写入 localStorage 缓存 */
+async function loadKvFromApi() {
+    const keys = [
+        'gallery_images', 'gallery_names', 'cover_usage',
+        'article_content_images', 'other_images', 'files',
+        'custom_admin_links', 'calendar_memos'
+    ];
+    const keyMap = {
+        'gallery_images': 'galleryImages',
+        'gallery_names': STORAGE_KEYS.galleryNames,
+        'cover_usage': STORAGE_KEYS.coverUsage,
+        'article_content_images': STORAGE_KEYS.articleContentImages,
+        'other_images': STORAGE_KEYS.otherImages,
+        'files': STORAGE_KEYS.files,
+        'custom_admin_links': 'customAdminLinks',
+        'calendar_memos': 'blog_calendar_memos'
+    };
+    const promises = keys.map(async (k) => {
+        try {
+            const v = await Api.getKv(k);
+            if (v !== null && v !== undefined) {
+                const lsKey = keyMap[k];
+                if (lsKey) localStorage.setItem(lsKey, JSON.stringify(v));
+            }
+        } catch (err) {
+            // 静默失败，使用 localStorage 现有值
+        }
+    });
+    await Promise.all(promises);
 }
 
 // ========== 图册命名管理 & 封面使用计数 ==========
@@ -205,6 +370,7 @@ function saveGalleryNames(names) {
     try {
         localStorage.setItem(STORAGE_KEYS.galleryNames, JSON.stringify(names || {}));
     } catch (e) { /* 忽略 */ }
+    _syncKvToApi('gallery_names', names || {});
 }
 
 /** 获取图册图片的显示名称（默认 img1/img2/...，可被自定义覆盖） */
@@ -270,6 +436,7 @@ function saveCoverUsage(usage) {
     try {
         localStorage.setItem(STORAGE_KEYS.coverUsage, JSON.stringify(usage || {}));
     } catch (e) { /* 忽略 */ }
+    _syncKvToApi('cover_usage', usage || {});
 }
 
 /** 增加某张图作为自动封面的使用计数 */
@@ -319,7 +486,17 @@ function pickAutoCover() {
 
 // ========== 个人资料 ==========
 
-function loadProfileData() {
+async function loadProfileData() {
+    try {
+        const data = await Api.getProfile();
+        if (data && typeof data === 'object') {
+            profile = Object.assign({}, defaultProfile, data);
+            try { localStorage.setItem('blogProfile', JSON.stringify(profile)); } catch (e) {}
+            return;
+        }
+    } catch (err) {
+        console.warn('[API] 加载个人资料失败，回退到本地缓存:', err && err.message);
+    }
     try {
         const saved = JSON.parse(localStorage.getItem('blogProfile') || 'null');
         if (saved && typeof saved === 'object') {
@@ -331,10 +508,29 @@ function loadProfileData() {
 }
 
 function saveProfileData() {
-    localStorage.setItem('blogProfile', JSON.stringify(profile));
+    try { localStorage.setItem('blogProfile', JSON.stringify(profile)); } catch (e) {}
+    // 同步到后端
+    fetch((window.API_BASE || '') + '/api/profile', {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' },
+            (localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {})),
+        body: JSON.stringify(profile)
+    }).catch(err => console.warn('[API] 保存个人资料失败:', err && err.message));
 }
 
 // ========== 首页个人简历与介绍数据管理 ==========
+
+/** 从后端拉取首页简历数据并写入 localStorage 缓存（在 init 中调用） */
+async function loadHomeResumeDataFromApi() {
+    try {
+        const data = await Api.getHomeResume();
+        if (data && typeof data === 'object') {
+            localStorage.setItem(STORAGE_KEYS.homeResume, JSON.stringify(data));
+        }
+    } catch (err) {
+        console.warn('[API] 加载首页简历失败，回退到本地缓存:', err && err.message);
+    }
+}
 
 function getHomeResumeData() {
     try {
@@ -434,12 +630,26 @@ function saveHomeResumeData(data) {
     } catch (e) {
         console.error('Failed to save home resume data', e);
     }
+    // 同步到后端
+    fetch((window.API_BASE || '') + '/api/home-resume', {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' },
+            (localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {})),
+        body: JSON.stringify(data || defaultHomeResume)
+    }).catch(err => console.warn('[API] 保存首页简历失败:', err && err.message));
 }
 
 function resetHomeResumeData() {
     try {
         localStorage.removeItem(STORAGE_KEYS.homeResume);
     } catch (e) {}
+    // 同步到后端：用默认数据覆盖
+    fetch((window.API_BASE || '') + '/api/home-resume', {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' },
+            (localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {})),
+        body: JSON.stringify(defaultHomeResume)
+    }).catch(err => console.warn('[API] 重置首页简历失败:', err && err.message));
     return JSON.parse(JSON.stringify(defaultHomeResume));
 }
 
@@ -454,6 +664,7 @@ function getArticleContentImages() {
 
 function saveArticleContentImages(images) {
     localStorage.setItem(STORAGE_KEYS.articleContentImages, JSON.stringify(images || []));
+    _syncKvToApi('article_content_images', images || []);
 }
 
 function addArticleContentImage(url) {
@@ -474,6 +685,7 @@ function getOtherImages() {
 
 function saveOtherImages(images) {
     localStorage.setItem(STORAGE_KEYS.otherImages, JSON.stringify(images || []));
+    _syncKvToApi('other_images', images || []);
 }
 
 function addOtherImage(url) {
@@ -496,6 +708,7 @@ function getFileStore() {
 
 function saveFileStore(store) {
     localStorage.setItem(STORAGE_KEYS.files, JSON.stringify(store || { root: [] }));
+    _syncKvToApi('files', store || { root: [] });
 }
 
 function getFilesInFolder(folderId) {
@@ -617,15 +830,34 @@ function migrateCommentsIfNeeded() {
 
 function addComment(name, contact, content, parentId) {
     const today = new Date().toISOString();
-    state.comments.unshift({
+    const newComment = {
         id: Date.now() + Math.floor(Math.random() * 1000),
         name: name || '匿名',
         contact: contact || '',
         content,
         date: today,
         parentId: parentId ? Number(parentId) : null
-    });
-    localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(state.comments));
+    };
+    state.comments.unshift(newComment);
+    try { localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(state.comments)); } catch (e) {}
+    // 同步到后端
+    fetch((window.API_BASE || '') + '/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: newComment.name,
+            contact: newComment.contact,
+            content: newComment.content,
+            parent_id: newComment.parentId
+        })
+    }).then(r => r.json()).then(saved => {
+        if (saved && saved.id) {
+            // 用后端真实 id 替换临时 id
+            const c = state.comments.find(c => c.id === newComment.id);
+            if (c) c.id = saved.id;
+            try { localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(state.comments)); } catch (e) {}
+        }
+    }).catch(err => console.warn('[API] 同步站点评论失败:', err && err.message));
 }
 
 /** 获取某条顶级评论的回复列表（按时间正序） */
@@ -667,6 +899,23 @@ function addArticleReply(articleId, parentId, name, contact, content) {
     article.commentList.push(newReply);
     article.comment = (article.comment || 0) + 1;
     saveArticlesToStorage();
+    // 同步到后端
+    fetch((window.API_BASE || '') + '/api/articles/' + articleId + '/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: newReply.name,
+            contact: newReply.contact,
+            content: newReply.content,
+            parent_id: newReply.parentId
+        })
+    }).then(r => r.json()).then(saved => {
+        if (saved && saved.id) {
+            const c = article.commentList.find(c => c.id === newReply.id);
+            if (c) c.id = saved.id;
+            saveArticlesToStorage();
+        }
+    }).catch(err => console.warn('[API] 同步文章评论失败:', err && err.message));
     return newReply;
 }
 
@@ -711,7 +960,12 @@ function deleteCommentById(commentId) {
     // 删除目标评论及其所属子回复
     state.comments = state.comments.filter(c => Number(c.id) !== targetId && Number(c.parentId) !== targetId);
     if (state.comments.length !== before) {
-        localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(state.comments));
+        try { localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(state.comments)); } catch (e) {}
+        // 同步到后端（管理员操作）
+        fetch((window.API_BASE || '') + '/api/comments/' + targetId, {
+            method: 'DELETE',
+            headers: localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {}
+        }).catch(err => console.warn('[API] 删除站点评论失败:', err && err.message));
         return true;
     }
     return false;
@@ -728,46 +982,86 @@ function deleteArticleComment(articleId, commentId) {
         const deletedCount = before - article.commentList.length;
         article.comment = Math.max(0, (article.comment || 0) - deletedCount);
         saveArticlesToStorage();
+        // 同步到后端（管理员操作）
+        fetch((window.API_BASE || '') + '/api/articles/' + articleId + '/comments/' + targetId, {
+            method: 'DELETE',
+            headers: localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {}
+        }).catch(err => console.warn('[API] 删除文章评论失败:', err && err.message));
         return true;
     }
     return false;
 }
 
+// ========== 站点评论：从后端加载 ==========
+
+async function loadCommentsFromApi() {
+    try {
+        const data = await Api.listComments();
+        if (Array.isArray(data)) {
+            state.comments = data;
+            try { localStorage.setItem(STORAGE_KEYS.comments, JSON.stringify(state.comments)); } catch (e) {}
+        }
+    } catch (err) {
+        console.warn('[API] 加载站点评论失败，回退到本地缓存:', err && err.message);
+    }
+}
+
 // ========== 访客统计 ==========
 
 function updateVisitorStats() {
-    const now = Date.now();
-    let pv = Number(localStorage.getItem(STORAGE_KEYS.pv) || '0');
-    let uv = Number(localStorage.getItem(STORAGE_KEYS.uv) || '0');
-    const lastVisit = Number(localStorage.getItem(STORAGE_KEYS.lastVisit) || '0');
-    pv += 1;
-    localStorage.setItem(STORAGE_KEYS.pv, pv.toString());
-    if (!lastVisit || now - lastVisit > 24 * 60 * 60 * 1000) {
-        uv += 1;
-        localStorage.setItem(STORAGE_KEYS.uv, uv.toString());
-        localStorage.setItem(STORAGE_KEYS.lastVisit, now.toString());
-    }
+    // 优先调用后端统计接口（数据源：SQLite），失败时回退到本地计数
+    const vid = (typeof Api === 'object' && Api.getVisitorId) ? Api.getVisitorId() : '';
+    fetch((window.API_BASE || '') + '/api/stats/visit', {
+        method: 'POST',
+        headers: vid ? { 'X-Visitor-Id': vid } : {}
+    }).then(r => r.json()).then(stats => {
+        if (stats && typeof stats.pv === 'number') {
+            localStorage.setItem(STORAGE_KEYS.pv, String(stats.pv));
+            localStorage.setItem(STORAGE_KEYS.uv, String(stats.uv));
+            if (typeof updateStats === 'function') updateStats();
+        }
+    }).catch(err => {
+        console.warn('[API] 上报访客失败，回退到本地计数:', err && err.message);
+        const now = Date.now();
+        let pv = Number(localStorage.getItem(STORAGE_KEYS.pv) || '0');
+        let uv = Number(localStorage.getItem(STORAGE_KEYS.uv) || '0');
+        const lastVisit = Number(localStorage.getItem(STORAGE_KEYS.lastVisit) || '0');
+        pv += 1;
+        localStorage.setItem(STORAGE_KEYS.pv, pv.toString());
+        if (!lastVisit || now - lastVisit > 24 * 60 * 60 * 1000) {
+            uv += 1;
+            localStorage.setItem(STORAGE_KEYS.uv, uv.toString());
+            localStorage.setItem(STORAGE_KEYS.lastVisit, now.toString());
+        }
+    });
 }
 
 // ========== 点赞 / 收藏 ==========
 
 function toggleLike(articleId) {
     const article = getArticleById(articleId);
-    if (state.likes.includes(articleId)) {
-        state.likes = state.likes.filter(id => id !== articleId);
-        if (article) {
-            const currentLikes = getArticleLikes(article);
-            article.like = Math.max(0, currentLikes - 1);
-        }
-    } else {
+    const liked = !state.likes.includes(articleId);
+    if (liked) {
         state.likes = [...state.likes, articleId];
         if (article) {
             const currentLikes = getArticleLikes(article);
             article.like = currentLikes + 1;
         }
+    } else {
+        state.likes = state.likes.filter(id => id !== articleId);
+        if (article) {
+            const currentLikes = getArticleLikes(article);
+            article.like = Math.max(0, currentLikes - 1);
+        }
     }
     localStorage.setItem(STORAGE_KEYS.likes, JSON.stringify(state.likes));
     saveArticlesToStorage();
+    // 同步到后端：调整文章 like 计数
+    fetch((window.API_BASE || '') + '/api/articles/' + articleId + '/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ liked })
+    }).catch(err => console.warn('[API] 同步点赞失败:', err && err.message));
 }
 
 function toggleFavorite(articleId) {
@@ -784,6 +1078,12 @@ function toggleFavorite(articleId) {
 function handleAdminLogout() {
     localStorage.removeItem('isAdmin');
     state.isAdmin = false;
+    // 清除 token 并通知后端
+    if (typeof Api === 'object' && Api.setAdminToken) Api.setAdminToken('');
+    fetch((window.API_BASE || '') + '/api/auth/logout', {
+        method: 'POST',
+        headers: localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {}
+    }).catch(() => {});
     if (typeof closeMobileDrawer === 'function') closeMobileDrawer();
     document.body.style.overflow = '';
     document.body.style.removeProperty('overflow');
@@ -812,64 +1112,76 @@ const FALLBACK_PLAYLIST = [
     }
 ];
 
-/** 加载歌单与 API 地址 */
-function loadMusicFromStorage() {
+/** 加载歌单与 API 地址（数据源：后端 SQLite） */
+async function loadMusicFromStorage() {
     try {
-        const rawPlaylist = localStorage.getItem(STORAGE_KEYS.musicPlaylist);
-        const parsedPlaylist = rawPlaylist ? JSON.parse(rawPlaylist) : null;
-        if (Array.isArray(parsedPlaylist) && parsedPlaylist.length > 0) {
-            state.musicPlaylist = parsedPlaylist.filter(s => s && s.name);
-            // 补全：若原有列表缺少这三首歌，自动合并添加进去
+        const cfg = await Api.getMusic();
+        if (cfg && Array.isArray(cfg.musicPlaylist) && cfg.musicPlaylist.length > 0) {
+            state.musicPlaylist = cfg.musicPlaylist.filter(s => s && s.name);
+            // 补全：若后端列表缺少 FALLBACK 中的歌曲，自动合并添加进去
             FALLBACK_PLAYLIST.forEach(fallbackSong => {
                 const exists = state.musicPlaylist.some(s => s.name === fallbackSong.name || Number(s.id) === Number(fallbackSong.id));
-                if (!exists) {
-                    state.musicPlaylist.push(fallbackSong);
-                }
+                if (!exists) state.musicPlaylist.push(fallbackSong);
             });
         } else {
             state.musicPlaylist = [...FALLBACK_PLAYLIST];
         }
+        if (cfg && cfg.musicApiBase) {
+            state.musicApiBase = cfg.musicApiBase;
+            try { localStorage.setItem(STORAGE_KEYS.musicApiBase, cfg.musicApiBase); } catch (e) {}
+        }
+        try { localStorage.setItem(STORAGE_KEYS.musicPlaylist, JSON.stringify(state.musicPlaylist)); } catch (e) {}
     } catch (err) {
-        state.musicPlaylist = [...FALLBACK_PLAYLIST];
+        console.warn('[API] 加载歌单失败，回退到本地缓存:', err && err.message);
+        try {
+            const rawPlaylist = localStorage.getItem(STORAGE_KEYS.musicPlaylist);
+            const parsedPlaylist = rawPlaylist ? JSON.parse(rawPlaylist) : null;
+            if (Array.isArray(parsedPlaylist) && parsedPlaylist.length > 0) {
+                state.musicPlaylist = parsedPlaylist.filter(s => s && s.name);
+                FALLBACK_PLAYLIST.forEach(fallbackSong => {
+                    const exists = state.musicPlaylist.some(s => s.name === fallbackSong.name || Number(s.id) === Number(fallbackSong.id));
+                    if (!exists) state.musicPlaylist.push(fallbackSong);
+                });
+            } else {
+                state.musicPlaylist = [...FALLBACK_PLAYLIST];
+            }
+        } catch (e) {
+            state.musicPlaylist = [...FALLBACK_PLAYLIST];
+        }
+        const savedApi = localStorage.getItem(STORAGE_KEYS.musicApiBase);
+        if (savedApi && /^https?:\/\//i.test(savedApi)) {
+            state.musicApiBase = savedApi.replace(/\/+$/, '');
+        } else if (typeof DEFAULT_NETEASE_API_BASE === 'string') {
+            state.musicApiBase = DEFAULT_NETEASE_API_BASE;
+        }
     }
     if (!Number.isInteger(state.curSongIdx) || state.curSongIdx < 0) state.curSongIdx = 0;
     if (state.curSongIdx >= state.musicPlaylist.length) state.curSongIdx = Math.max(0, state.musicPlaylist.length - 1);
-    const savedApi = localStorage.getItem(STORAGE_KEYS.musicApiBase);
-    const OLD_DEAD_APIS = [
-        'netease-cloud-music-api-six-dun-40.vercel.app',
-        'netease-cloud-music-api.vercel.app'
-    ];
-    if (savedApi && /^https?:\/\//i.test(savedApi)) {
-        const normalized = savedApi.replace(/\/+$/, '');
-        const isDead = OLD_DEAD_APIS.some(d => normalized.indexOf(d) !== -1);
-        if (isDead) {
-            console.warn('[网易云] 检测到旧的已失效 API 地址，自动切换到默认地址');
-            localStorage.removeItem(STORAGE_KEYS.musicApiBase);
-            state.musicApiBase = DEFAULT_NETEASE_API_BASE;
-        } else {
-            state.musicApiBase = normalized;
-        }
-    } else if (typeof DEFAULT_NETEASE_API_BASE === 'string') {
-        state.musicApiBase = DEFAULT_NETEASE_API_BASE;
-    }
 }
 
-/** 保存歌单到 localStorage（管理员添加/删除时调用） */
+/** 保存歌单到 localStorage（缓存用）；持久化由后端负责 */
 function saveMusicPlaylistToStorage() {
     try {
         localStorage.setItem(STORAGE_KEYS.musicPlaylist, JSON.stringify(state.musicPlaylist || []));
     } catch (err) { /* 忽略 quota */ }
 }
 
-/** 保存网易云 API Base URL 到 localStorage */
+/** 保存网易云 API Base URL（同步到后端 + 本地缓存） */
 function saveMusicApiBaseToStorage(base) {
     const clean = (base || '').toString().trim().replace(/\/+$/, '');
     if (!/^https?:\/\//i.test(clean)) return false;
     state.musicApiBase = clean;
     try {
         localStorage.setItem(STORAGE_KEYS.musicApiBase, clean);
-        return true;
-    } catch (err) { return false; }
+    } catch (err) {}
+    // 同步到后端
+    fetch((window.API_BASE || '') + '/api/music/api-base', {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' },
+            (localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {})),
+        body: JSON.stringify({ apiBase: clean })
+    }).catch(err => console.warn('[API] 保存网易云 API 地址失败:', err && err.message));
+    return true;
 }
 
 /** 管理员：向歌单末尾添加一首歌曲（支持多平台云链接与动态解析） */
@@ -879,7 +1191,7 @@ function addSongToPlaylist(song) {
     const id = Number(song.id) || 0;
     const songIdEnc = String(song.songIdEnc || '').trim();
     const songUrl = String(song.url || song.audioUrl || '').trim();
-    
+
     // 去重判定：按名称/链接/ID混合排重
     const exists = state.musicPlaylist.some(s => {
         if (songUrl && (s.url === songUrl || s.audioUrl === songUrl)) return true;
@@ -890,7 +1202,7 @@ function addSongToPlaylist(song) {
     });
     if (exists) return false;
 
-    state.musicPlaylist.push({
+    const newSong = {
         id,
         songIdEnc,
         platform: String(song.platform || 'netease'),
@@ -898,8 +1210,24 @@ function addSongToPlaylist(song) {
         artist: String(song.artist || '未知艺术家').trim(),
         picUrl: String(song.picUrl || '').trim(),
         url: songUrl
-    });
+    };
+    state.musicPlaylist.push(newSong);
     saveMusicPlaylistToStorage();
+    // 同步到后端
+    fetch((window.API_BASE || '') + '/api/music/playlist', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' },
+            (localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {})),
+        body: JSON.stringify({
+            id: newSong.id,
+            song_id_enc: newSong.songIdEnc,
+            url: newSong.url,
+            name: newSong.name,
+            artist: newSong.artist,
+            pic_url: newSong.picUrl,
+            platform: newSong.platform
+        })
+    }).catch(err => console.warn('[API] 同步新增歌曲失败:', err && err.message));
     return true;
 }
 
@@ -913,6 +1241,11 @@ function removeSongAt(idx) {
         state.curSongIdx = Math.max(0, state.musicPlaylist.length - 1);
     }
     saveMusicPlaylistToStorage();
+    // 同步到后端
+    fetch((window.API_BASE || '') + '/api/music/playlist/' + i, {
+        method: 'DELETE',
+        headers: localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {}
+    }).catch(err => console.warn('[API] 同步删除歌曲失败:', err && err.message));
     return true;
 }
 
@@ -1438,6 +1771,9 @@ function stepSong(delta) {
 
 const FEEDS_STORAGE_KEY = 'blog_space_feeds';
 
+// 内存缓存：从后端加载后缓存在此，供同步读取的代码使用
+let _spaceFeedsCache = null;
+
 const defaultSpaceFeeds = [
     {
         id: 1723482000000,
@@ -1474,21 +1810,35 @@ const defaultSpaceFeeds = [
     }
 ];
 
+/** 从后端加载空间动态并写入内存缓存（在 init 中调用） */
+async function loadSpaceFeedsFromApi() {
+    try {
+        const data = await Api.listFeeds();
+        if (Array.isArray(data)) {
+            _spaceFeedsCache = data;
+            try { localStorage.setItem(FEEDS_STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+        }
+    } catch (err) {
+        console.warn('[API] 加载空间动态失败，回退到本地缓存:', err && err.message);
+    }
+}
+
 function getSpaceFeeds() {
+    if (_spaceFeedsCache) return _spaceFeedsCache;
     try {
         const raw = localStorage.getItem(FEEDS_STORAGE_KEY);
         if (!raw) return defaultSpaceFeeds;
         const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : defaultSpaceFeeds;
+        _spaceFeedsCache = Array.isArray(parsed) ? parsed : defaultSpaceFeeds;
+        return _spaceFeedsCache;
     } catch(e) {
         return defaultSpaceFeeds;
     }
 }
 
 function saveSpaceFeeds(feeds) {
-    try {
-        localStorage.setItem(FEEDS_STORAGE_KEY, JSON.stringify(feeds));
-    } catch(e) {}
+    _spaceFeedsCache = feeds;
+    try { localStorage.setItem(FEEDS_STORAGE_KEY, JSON.stringify(feeds)); } catch(e) {}
 }
 
 function createSpaceFeed({ content, images }) {
@@ -1506,6 +1856,16 @@ function createSpaceFeed({ content, images }) {
     };
     feeds.unshift(newFeed);
     saveSpaceFeeds(feeds);
+    // 同步到后端
+    Api.createFeed({ content: newFeed.content, images: newFeed.images })
+      .then(saved => {
+          if (saved && saved.id) {
+              // 用后端真实 id 替换临时 id
+              const f = feeds.find(f => f.id === newFeed.id);
+              if (f) f.id = saved.id;
+              saveSpaceFeeds(feeds);
+          }
+      }).catch(err => console.warn('[API] 同步空间动态失败:', err && err.message));
     return newFeed;
 }
 
@@ -1516,6 +1876,9 @@ function updateSpaceFeed(feedId, { content, images }) {
     if (typeof content === 'string') target.content = content.trim();
     if (Array.isArray(images)) target.images = images;
     saveSpaceFeeds(feeds);
+    // 同步到后端
+    Api.updateFeed(feedId, { content: target.content, images: target.images })
+      .catch(err => console.warn('[API] 更新空间动态失败:', err && err.message));
     return true;
 }
 
@@ -1523,6 +1886,9 @@ function deleteSpaceFeed(feedId) {
     let feeds = getSpaceFeeds();
     feeds = feeds.filter(f => f.id !== Number(feedId));
     saveSpaceFeeds(feeds);
+    // 同步到后端
+    Api.deleteFeed(feedId)
+      .catch(err => console.warn('[API] 删除空间动态失败:', err && err.message));
 }
 
 function getLikedSpaceFeeds() {
@@ -1563,6 +1929,9 @@ function likeSpaceFeed(feedId) {
     } catch(e) {}
 
     saveSpaceFeeds(feeds);
+    // 同步到后端：调整 likes 计数
+    Api.likeFeed(numId, !currentlyLiked)
+      .catch(err => console.warn('[API] 同步动态点赞失败:', err && err.message));
     return { likes: target.likes, isLiked: !currentlyLiked };
 }
 
@@ -1598,6 +1967,26 @@ function addSpaceFeedComment(feedId, { name, contact, text, replyToId }) {
     }
 
     saveSpaceFeeds(feeds);
+    // 同步到后端
+    Api.addFeedComment(feedId, {
+        name: newComment.name,
+        contact: newComment.contact,
+        text: newComment.text,
+        reply_to_id: replyToId ? Number(replyToId) : null
+    }).then(saved => {
+        if (saved && saved.id) {
+            // 用后端真实 id 替换临时 id
+            if (replyToId) {
+                const parent = target.comments.find(c => c.id === Number(replyToId));
+                const c = parent && parent.replies.find(r => r.id === newComment.id);
+                if (c) c.id = saved.id;
+            } else {
+                const c = target.comments.find(c => c.id === newComment.id);
+                if (c) c.id = saved.id;
+            }
+            saveSpaceFeeds(feeds);
+        }
+    }).catch(err => console.warn('[API] 同步动态评论失败:', err && err.message));
     return newComment;
 }
 
@@ -1612,12 +2001,18 @@ function deleteSpaceFeedComment(feedId, commentId, replyId) {
         if (parentComment && Array.isArray(parentComment.replies)) {
             parentComment.replies = parentComment.replies.filter(r => r.id !== Number(replyId));
             saveSpaceFeeds(feeds);
+            // 同步到后端
+            Api.deleteFeedComment(feedId, replyId)
+              .catch(err => console.warn('[API] 删除动态评论回复失败:', err && err.message));
             return true;
         }
     } else {
         // 删除主评论及其子回复
         target.comments = target.comments.filter(c => c.id !== Number(commentId));
         saveSpaceFeeds(feeds);
+        // 同步到后端
+        Api.deleteFeedComment(feedId, commentId)
+          .catch(err => console.warn('[API] 删除动态评论失败:', err && err.message));
         return true;
     }
     return false;
@@ -1638,6 +2033,7 @@ function saveCalendarMemos(memos) {
     try {
         localStorage.setItem('blog_calendar_memos', JSON.stringify(memos || {}));
     } catch(e) {}
+    _syncKvToApi('calendar_memos', memos || {});
 }
 
 function getDateMemo(dateStr) {

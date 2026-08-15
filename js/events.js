@@ -168,7 +168,7 @@ function initAdminLoginDropdown() {
     });
 
     if (form) {
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const u = userInput ? userInput.value.trim() : '';
             const p = passInput ? passInput.value.trim() : '';
@@ -181,24 +181,41 @@ function initAdminLoginDropdown() {
                 return;
             }
 
-            // 登录验证逻辑
-            if ((u === 'admin' && p === 'admin123') || (u && p)) {
-                state.isAdmin = true;
-                localStorage.setItem('isAdmin', 'true');
-                if (typeof renderAdminUI === 'function') {
-                    renderAdminUI();
+            // 通过后端验证账号密码（数据源：SQLite admin_user 表）
+            try {
+                const res = await Api.login(u, p);
+                if (res && res.success) {
+                    if (res.token) Api.setAdminToken(res.token);
+                    state.isAdmin = true;
+                    localStorage.setItem('isAdmin', 'true');
+                    if (typeof renderAdminUI === 'function') renderAdminUI();
+                    if (typeof renderArticles === 'function') renderArticles();
+                    toggleDropdown(false);
+                    if (userInput) userInput.value = '';
+                    if (passInput) passInput.value = '';
+                    showToast('登录成功，已解锁管理员权限', 'success');
+                } else {
+                    if (errorMsg) {
+                        errorMsg.textContent = (res && res.message) || '账号或密码错误';
+                        errorMsg.style.display = 'block';
+                    }
                 }
-                if (typeof renderArticles === 'function') {
-                    renderArticles();
-                }
-                toggleDropdown(false);
-                if (userInput) userInput.value = '';
-                if (passInput) passInput.value = '';
-                showToast('登录成功，已解锁管理员权限', 'success');
-            } else {
-                if (errorMsg) {
-                    errorMsg.textContent = '账号或密码错误';
-                    errorMsg.style.display = 'block';
+            } catch (err) {
+                // 后端不可用时回退到本地默认账号（仅用于离线开发）
+                if ((u === 'admin' && p === 'admin123')) {
+                    state.isAdmin = true;
+                    localStorage.setItem('isAdmin', 'true');
+                    if (typeof renderAdminUI === 'function') renderAdminUI();
+                    if (typeof renderArticles === 'function') renderArticles();
+                    toggleDropdown(false);
+                    if (userInput) userInput.value = '';
+                    if (passInput) passInput.value = '';
+                    showToast('已离线登录（后端未响应）', 'warning');
+                } else {
+                    if (errorMsg) {
+                        errorMsg.textContent = '登录失败：' + (err && err.message || '网络错误');
+                        errorMsg.style.display = 'block';
+                    }
                 }
             }
         });
@@ -2504,6 +2521,14 @@ function bindEvents() {
     if (fileManagerBackBtn) {
         fileManagerBackBtn.addEventListener('click', () => switchView('adminControl'));
     }
+
+    // ========== 操作日志 / 数据库查看 卡片 ==========
+    // 操作日志卡片
+    const openLogsBtn = document.getElementById('openLogsBtn');
+    if (openLogsBtn) openLogsBtn.onclick = () => { if (typeof openLogsPanel === 'function') openLogsPanel(); };
+    // 数据库查看卡片
+    const openDbViewerBtn = document.getElementById('openDbViewerBtn');
+    if (openDbViewerBtn) openDbViewerBtn.onclick = () => { if (typeof openDbViewerPanel === 'function') openDbViewerPanel(); };
 
     const fileNewFolderBtn = document.getElementById('fileNewFolderBtn');
     if (fileNewFolderBtn) {

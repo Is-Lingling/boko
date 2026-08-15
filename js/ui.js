@@ -1097,7 +1097,7 @@ function resetArticleEditor() {
     if (typeof renderTagPickerUI === 'function') renderTagPickerUI('', []);
 }
 
-function saveArticle() {
+async function saveArticle() {
     const titleInput = document.getElementById('inlineArticleTitle');
     const categoryInput = document.getElementById('inlineArticleCategory');
     const coverInput = document.getElementById('inlineArticleCover');
@@ -1149,13 +1149,13 @@ function saveArticle() {
     if (isEditingFromTrash) {
         const target = Number(window.__editingFromTrashId) || Number(currentEditingArticleId) || 0;
         if (target && typeof restoreFromTrash === 'function') {
-            savedArticle = restoreFromTrash(target, newData);
+            savedArticle = await restoreFromTrash(target, newData);
         }
         window.__editingFromTrashId = null;
     } else if (currentEditingArticleId) {
-        savedArticle = updateArticle(currentEditingArticleId, newData);
+        savedArticle = await updateArticle(currentEditingArticleId, newData);
     } else {
-        savedArticle = createArticle(Object.assign({ date: new Date().toISOString().slice(0,10) }, newData));
+        savedArticle = await createArticle(Object.assign({ date: new Date().toISOString().slice(0,10) }, newData));
     }
 
     if (typeof syncCategoriesFromArticles === 'function') syncCategoriesFromArticles();
@@ -2485,6 +2485,7 @@ function updateHreItemBadges(type) {
 function renderHreAboutEditor(aboutList) {
     const container = document.getElementById('hreAboutCardsContainer');
     if (!container) return;
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s)));
     const items = aboutList || [];
     const iconOptions = ['layers', 'palette', 'lightbulb', 'sprout', 'code', 'rocket', 'globe', 'sparkle', 'terminal', 'cpu', 'card', 'user'];
 
@@ -2542,6 +2543,7 @@ function addHreAboutRow() {
 function renderHreSkillsEditor(skillsCategories) {
     const container = document.getElementById('hreSkillsListContainer');
     if (!container) return;
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s)));
     const list = skillsCategories || [];
 
     container.innerHTML = list.map((cat, idx) => `
@@ -2603,6 +2605,7 @@ function addHreSkillCategoryRow() {
 function renderHreProjectsEditor(projectsList) {
     const container = document.getElementById('hreProjectsListContainer');
     if (!container) return;
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s)));
     const items = projectsList || [];
 
     container.innerHTML = items.map((item, idx) => `
@@ -2670,6 +2673,7 @@ function addHreProjectRow() {
 function renderHreTimelineEditor(timelineList) {
     const container = document.getElementById('hreTimelineListContainer');
     if (!container) return;
+    const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s)));
     const items = timelineList || [];
     container.innerHTML = items.map((item, idx) => `
         <div class="hre-edit-item-card hre-timeline-edit-card" style="padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body); position:relative;" data-timeline-idx="${idx}">

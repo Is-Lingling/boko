@@ -45,7 +45,9 @@ function renderProfile() {
 }
 
 function getProfileSocials() {
-    if (Array.isArray(profile.socials) && profile.socials.length > 0) {
+    // 如果 socials 是数组（即使是空数组）就直接使用 —— 表示用户明确设置过
+    // 只有 undefined / null 才回退到兼容模式（兼容 localStorage 旧数据）
+    if (Array.isArray(profile.socials)) {
         return profile.socials;
     }
     const list = [];
@@ -263,6 +265,10 @@ function getGalleryImages() {
 
 function saveGalleryImages(images) {
     localStorage.setItem('galleryImages', JSON.stringify(images));
+    // 同步到后端 KV store
+    if (typeof Api !== 'undefined' && Api.setKv) {
+        Api.setKv('gallery_images', images).catch(() => {});
+    }
 }
 
 function getArticleCoverUrl(item) {
@@ -564,11 +570,19 @@ function renderArchive() {
 
 // ========== 友链 ==========
 
-function renderFriendLinks() {
+async function renderFriendLinks() {
     const friendEl = document.getElementById('friendLinks');
     if (!friendEl) return;
-    friendEl.innerHTML = friendLinks.map(link =>
-        `<a href="${link.url}" title="${link.titleText}">${link.title}</a>`
+    // 优先从后端拉取友链（数据源：SQLite），失败则回退到 config.js 静态配置
+    let links = friendLinks;
+    try {
+        const data = await Api.listFriendLinks();
+        if (Array.isArray(data) && data.length > 0) links = data;
+    } catch (err) {
+        console.warn('[API] 加载友链失败，使用静态配置:', err && err.message);
+    }
+    friendEl.innerHTML = links.map(link =>
+        `<a href="${link.url}" title="${link.titleText || link.title_text || ''}">${link.title}</a>`
     ).join('');
 }
 
@@ -948,34 +962,33 @@ function renderLeftNav() {
     });
 
     // -------------------- 分类（风箱）：标签后显示"该标签下的文章数"徽章 --------------------
+    // 分类和标签完全从文章派生：没有文章就没有分类，文章删除后分类自动刷新。
+    const cats = Array.isArray(state && state.categories) ? state.categories : [];
+    // 每个分类 / 标签下的文章数（按实际文章统计）
+    const countByCategory = {};
+    (articles || []).forEach(item => {
+        const c = ((item.category || '').toString().trim() || '未分类');
+        countByCategory[c] = (countByCategory[c] || 0) + 1;
+    });
     const countByTag = getTagArticleCounts(); // 每个标签 → 文章数
     document.querySelectorAll('.zucheng ul').forEach(zuchengList => {
-        const cats = Array.isArray(state.categories) && state.categories.length
-            ? state.categories
-            : [{ name: '未分类', tags: [] }];
         const admin = !!(state && state.isAdmin);
-        zuchengList.innerHTML = [
-            // 顶部标题行 + 管理员新增分类按钮
-            `<li class="daohanglan accordion-header-row">
-                <span class="accent-bar" aria-hidden="true"></span>
-                <span class="accordion-header-text">分类</span>
-                ${admin ? `<button type="button" class="mini-admin-btn accordion-add-cat" title="新增分类">＋ 分类</button>` : ''}
-            </li>`,
-            // 每个分类：点击分类行 → 展开/收起；其他分类自动收起（风箱行为）
-            ...cats.map((cat, idx) => {
+        const catItems = cats.length ? cats.map((cat, idx) => {
                 const isExpanded = idx === 0;
                 const expandedAttr = isExpanded ? ' data-expanded="true"' : '';
+                const catCount = countByCategory[cat.name] || 0;
                 return `
                 <li class="accordion-cat-item" data-accordion-cat="${cat.name}"${expandedAttr}>
                     <div class="accordion-cat-row">
                         <a href="javascript:void(0)" data-cat="${cat.name}" class="accordion-cat-title" title="按此分类筛选">
                             <span class="accordion-caret" aria-hidden="true"></span>
-                            <span class="accordion-cat-name">${cat.name}</span>
+                            <span class="accordion-cat-name">${escHtml(cat.name)}</span>
+                            <span class="accordion-cat-count" aria-label="${escHtml(cat.name)} 下有 ${catCount} 篇文章">${catCount}</span>
                         </a>
                         ${admin ? `
                             <span class="accordion-cat-admin">
-                                <button type="button" class="mini-admin-btn accordion-add-tag" data-for-cat="${cat.name}" title="新增标签">＋ 标签</button>
-                                <button type="button" class="mini-admin-btn accordion-del-cat" data-del-cat="${cat.name}" title="删除分类">删除</button>
+                                <button type="button" class="mini-admin-btn accordion-add-tag" data-for-cat="${escHtml(cat.name)}" title="新增标签">＋ 标签</button>
+                                <button type="button" class="mini-admin-btn accordion-del-cat" data-del-cat="${escHtml(cat.name)}" title="删除分类">删除</button>
                             </span>
                         ` : ''}
                     </div>
@@ -984,17 +997,30 @@ function renderLeftNav() {
                             const c = countByTag[tag] || 0;
                             return `
                             <li>
-                                <a href="javascript:void(0)" data-tag="${tag}" title="查看「${tag}」标签下的所有文章">
-                                    <span class="accordion-tag-text">${tag}</span>
-                                    <span class="accordion-tag-count" aria-label="${tag} 下有 ${c} 篇文章">${c}</span>
+                                <a href="javascript:void(0)" data-tag="${escHtml(tag)}" title="查看「${escHtml(tag)}」标签下的所有文章">
+                                    <span class="accordion-tag-text">${escHtml(tag)}</span>
+                                    <span class="accordion-tag-count" aria-label="${escHtml(tag)} 下有 ${c} 篇文章">${c}</span>
                                 </a>
-                                ${admin ? `<button type="button" class="mini-admin-btn accordion-del-tag" data-cat="${cat.name}" data-tag="${tag}" title="移除此标签">移除</button>` : ''}
+                                ${admin ? `<button type="button" class="mini-admin-btn accordion-del-tag" data-cat="${escHtml(cat.name)}" data-tag="${escHtml(tag)}" title="移除此标签">移除</button>` : ''}
                             </li>`;
                         }).join('') : `<li class="accordion-empty">${admin ? '暂无标签，点击右侧「＋ 标签」添加' : '该分类暂无标签'}</li>`}
                     </ul>
                 </li>`;
-            })
-        ].join('');
+            }) : [];
+        // 没有文章 → 没有分类 → 显示空状态
+        const emptyState = cats.length === 0
+            ? `<li class="accordion-empty-cats" style="padding:16px 14px; color:var(--text-muted); font-size:13px; text-align:center;">${admin ? '暂无文章，发布文章后分类会自动生成' : '暂无内容'}</li>`
+            : '';
+        zuchengList.innerHTML = [
+            // 顶部标题行 + 管理员新增分类按钮
+            `<li class="daohanglan accordion-header-row">
+                <span class="accent-bar" aria-hidden="true"></span>
+                <span class="accordion-header-text">分类</span>
+                ${admin ? `<button type="button" class="mini-admin-btn accordion-add-cat" title="新增分类">＋ 分类</button>` : ''}
+            </li>`,
+            emptyState,
+            ...catItems
+        ].filter(Boolean).join('');
 
         // 风箱交互：点击分类行（不是管理按钮）→ 切换展开，收起其他（真正风箱：开一个关其他）
         zuchengList.querySelectorAll('[data-accordion-cat]').forEach(item => {
@@ -1143,8 +1169,8 @@ function renderAll() {
 // ========== 管理面板快捷链接与图册数据处理与渲染 ==========
 
 const defaultAdminLinks = [
-    { title: "📖 官方文档", url: "https://ndmiao.cn/" },
-    { title: "💻 我的 GitHub", url: "https://github.com" }
+    { title: "官方文档", url: "https://ndmiao.cn/" },
+    { title: "我的 GitHub", url: "https://github.com" }
 ];
 
 function getCustomAdminLinks() {
@@ -1162,6 +1188,10 @@ function getCustomAdminLinks() {
 
 function saveCustomAdminLinks(links) {
     localStorage.setItem('customAdminLinks', JSON.stringify(links));
+    // 同步到后端 KV store
+    if (typeof Api !== 'undefined' && Api.setKv) {
+        Api.setKv('custom_admin_links', links).catch(() => {});
+    }
 }
 
 function renderAdminControlLinks() {
@@ -1172,8 +1202,8 @@ function renderAdminControlLinks() {
     listEl.innerHTML = links.map((link, idx) => `
         <div class="admin-square-card link-card" style="position:relative; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; aspect-ratio:1/1; border:1px solid #cbd5e1; border-radius:16px; transition:all 0.3s ease; background:rgba(255,255,255,0.05); padding:16px; text-align:center;" onclick="window.open('${link.url}', '_blank')">
             <button type="button" class="delete-link-btn" data-idx="${idx}" style="position:absolute; top:8px; right:8px; background:rgba(239,68,68,0.15); color:#ef4444; border:none; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer; font-weight:700;" title="删除此链接" onclick="event.stopPropagation(); deleteCustomAdminLink(${idx});">×</button>
-            <span style="font-size:36px; margin-bottom:10px;">🔗</span>
-            <span style="font-weight:700; font-size:14px; color:inherit; text-decoration:none; display:block; text-overflow:ellipsis; overflow:hidden; width:100%; white-space:nowrap;">${link.title}</span>
+            <span style="font-size:32px; margin-bottom:10px; color:var(--primary);">${getIcon('link', '', 32)}</span>
+            <span style="font-weight:700; font-size:14px; color:inherit; text-decoration:none; display:block; text-overflow:ellipsis; overflow:hidden; width:100%; white-space:nowrap;">${escHtml(link.title)}</span>
         </div>
     `).join('');
 }

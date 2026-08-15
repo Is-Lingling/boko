@@ -68,7 +68,7 @@ function collectCategoriesFromArticles() {
 }
 
 function saveCategoriesToStorage() {
-    localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(state.categories));
+    try { localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(state.categories)); } catch (e) {}
 }
 
 function loadCategoriesFromStorage() {
@@ -92,16 +92,29 @@ function loadCategoriesFromStorage() {
     return null;
 }
 
+/** 后台同步分类变更到后端（fire-and-forget） */
+function _syncCategoryToApi(method, path, body) {
+    return fetch((window.API_BASE || '') + path, {
+        method,
+        headers: Object.assign({ 'Content-Type': 'application/json' },
+            (localStorage.getItem('adminToken') ? { 'Authorization': 'Bearer ' + localStorage.getItem('adminToken') } : {})),
+        body: body ? JSON.stringify(body) : undefined
+    }).catch(err => console.warn('[API] 分类同步失败:', err && err.message));
+}
+
 /**
- * 初始化分类：
- * 1. 优先读 localStorage；
- * 2. 没有则从 articles 汇总并写入；
- * 3. 之后把 articles 中出现但 categories 里缺失的分类/标签**合并追加**进去（新建文章后也应调用一次 syncCategoriesFromArticles）。
+ * 初始化分类 —— 纯从文章派生：
+ * 分类和标签的显示完全取决于文章中的 category/tags 字段。
+ * 没有文章就没有分类；文章删除后分类自动刷新。
+ * categories 表仅供管理员管理分类名称（编辑器下拉选项），不影响侧边栏显示。
  */
-function initCategories() {
+async function initCategories() {
     syncCategoriesFromArticles();
 }
 
+/**
+ * 刷新分类（文章 CRUD 后调用）—— 直接从当前文章列表派生。
+ */
 function syncCategoriesFromArticles() {
     state.categories = collectCategoriesFromArticles();
     saveCategoriesToStorage();
@@ -114,6 +127,7 @@ function addCategory(catName) {
     if (state.categories.some(c => c.name === name)) return false;
     state.categories.push({ name, tags: [] });
     saveCategoriesToStorage();
+    _syncCategoryToApi('POST', '/api/categories', { name, tags: [] });
     return true;
 }
 
@@ -123,6 +137,7 @@ function deleteCategory(catName) {
     if (idx === -1) return false;
     state.categories.splice(idx, 1);
     saveCategoriesToStorage();
+    _syncCategoryToApi('DELETE', '/api/categories/' + encodeURIComponent(catName));
     return true;
 }
 
@@ -140,6 +155,7 @@ function renameCategory(oldName, newName) {
     });
     saveCategoriesToStorage();
     saveArticlesToStorage && saveArticlesToStorage();
+    _syncCategoryToApi('PUT', '/api/categories/' + encodeURIComponent(oldName), { newName });
     return true;
 }
 
@@ -155,6 +171,7 @@ function addTagToCategory(catName, tagName) {
     if (cat.tags.indexOf(tagName) !== -1) return false;
     cat.tags.push(tagName);
     saveCategoriesToStorage();
+    _syncCategoryToApi('POST', '/api/categories/' + encodeURIComponent(catName) + '/tags', { tag: tagName });
     return true;
 }
 
@@ -166,6 +183,7 @@ function deleteTagFromCategory(catName, tagName) {
     if (idx === -1) return false;
     cat.tags.splice(idx, 1);
     saveCategoriesToStorage();
+    _syncCategoryToApi('DELETE', '/api/categories/' + encodeURIComponent(catName) + '/tags/' + encodeURIComponent(tagName));
     return true;
 }
 
