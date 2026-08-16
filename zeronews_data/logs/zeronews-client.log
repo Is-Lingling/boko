@@ -1,0 +1,403 @@
+{"level":"info","time":"2026-08-16 15:34:21","message":"trying to connect zeronews cloud server"}
+{"level":"info","time":"2026-08-16 15:34:22","message":"authtoken: bdb0ff0196744ef4a9a3ed8cb8e37613, clientid: 550733a27e8a435faa257d7adfa09662"}
+{"level":"info","time":"2026-08-16 15:34:22","message":"prepared client login metadata: client_id=550733a27e8a435faa257d7adfa09662 cloud_server_addr=zns1012.fzv2.zeronews.cc:7000 runtime_goos=linux runtime_goarch=arm64 env_client_arch=\"\" build_client_arch=\"\" env_client_version=\"\" build_client_version=\"4.0.6\" resolved_os=\"linux\" resolved_arch=\"arm64\" resolved_version=\"4.0.6\" resolved_resource_version=\"4.0.6\" resolved_partner_channel=\"docker\" resolved_hostname=\"zeronews\" runtime_hostname=\"zeronews\""}
+{"level":"info","time":"2026-08-16 15:34:22","message":"sending client login message to cloud server: client_id=550733a27e8a435faa257d7adfa09662 remote_server=zns1012.fzv2.zeronews.cc:7000 partner_channel=\"docker\" os=\"linux\" arch=\"arm64\" hostname=\"zeronews\" version=\"4.0.6\" resource_version=\"4.0.6\" timestamp=1786865662"}
+{"level":"info","time":"2026-08-16 15:34:22","message":"client login message sent: client_id=550733a27e8a435faa257d7adfa09662 remote_server=zns1012.fzv2.zeronews.cc:7000 partner_channel=\"docker\" os=\"linux\" arch=\"arm64\" version=\"4.0.6\" resource_version=\"4.0.6\""}
+{"level":"info","time":"2026-08-16 15:34:22","message":"Session Connected: client_id=550733a27e8a435faa257d7adfa09662 server=zns1012.fzv2.zeronews.cc:7000 hostname=zeronews"}
+{"level":"info","time":"2026-08-16 15:36:07","message":"[diag] received NewBackendEndpoint: id=bf1767227f5741079c1050ea46acb645 type=https domain=\"624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc\" tunnel_id=b67e84b1f8604d0e9718344118c5822f"}
+{"level":"info","time":"2026-08-16 15:36:07","message":"endpoint [bf1767227f5741079c1050ea46acb645] added (type=https, domain=624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc)"}
+{"level":"info","time":"2026-08-16 15:36:07","message":"endpoint [624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc] active (type=https)"}
+{"level":"info","time":"2026-08-16 15:36:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 15:36:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65481 DstPort:0 Error:}"}
+{"level":"error","time":"2026-08-16 15:36:15","message":"connect to local program <127.0.0.1:8287> failed: dial tcp 127.0.0.1:8287: connect: connection refused"}
+{"level":"error","time":"2026-08-16 15:36:15","message":"dial local service failed: dial tcp 127.0.0.1:8287: connect: connection refused"}
+{"level":"info","time":"2026-08-16 15:36:20","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 15:36:20","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65481 DstPort:0 Error:}"}
+{"level":"error","time":"2026-08-16 15:36:20","message":"connect to local program <127.0.0.1:8287> failed: dial tcp 127.0.0.1:8287: connect: connection refused"}
+{"level":"error","time":"2026-08-16 15:36:20","message":"dial local service failed: dial tcp 127.0.0.1:8287: connect: connection refused"}
+{"level":"info","time":"2026-08-16 16:56:22","message":"trying to connect zeronews cloud server"}
+{"level":"info","time":"2026-08-16 16:56:25","message":"authtoken: bdb0ff0196744ef4a9a3ed8cb8e37613, clientid: 550733a27e8a435faa257d7adfa09662"}
+{"level":"info","time":"2026-08-16 16:56:25","message":"prepared client login metadata: client_id=550733a27e8a435faa257d7adfa09662 cloud_server_addr=zns1012.fzv2.zeronews.cc:7000 runtime_goos=linux runtime_goarch=arm64 env_client_arch=\"\" build_client_arch=\"\" env_client_version=\"\" build_client_version=\"4.0.6\" resolved_os=\"linux\" resolved_arch=\"arm64\" resolved_version=\"4.0.6\" resolved_resource_version=\"4.0.6\" resolved_partner_channel=\"docker\" resolved_hostname=\"zeronews\" runtime_hostname=\"zeronews\""}
+{"level":"info","time":"2026-08-16 16:56:25","message":"sending client login message to cloud server: client_id=550733a27e8a435faa257d7adfa09662 remote_server=zns1012.fzv2.zeronews.cc:7000 partner_channel=\"docker\" os=\"linux\" arch=\"arm64\" hostname=\"zeronews\" version=\"4.0.6\" resource_version=\"4.0.6\" timestamp=1786870585"}
+{"level":"info","time":"2026-08-16 16:56:25","message":"client login message sent: client_id=550733a27e8a435faa257d7adfa09662 remote_server=zns1012.fzv2.zeronews.cc:7000 partner_channel=\"docker\" os=\"linux\" arch=\"arm64\" version=\"4.0.6\" resource_version=\"4.0.6\""}
+{"level":"info","time":"2026-08-16 16:56:25","message":"Session Connected: client_id=550733a27e8a435faa257d7adfa09662 server=zns1012.fzv2.zeronews.cc:7000 hostname=zeronews"}
+{"level":"info","time":"2026-08-16 16:56:25","message":"[diag] received NewBackendEndpoint: id=bf1767227f5741079c1050ea46acb645 type=https domain=\"624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc\" tunnel_id=b67e84b1f8604d0e9718344118c5822f"}
+{"level":"info","time":"2026-08-16 16:56:25","message":"endpoint [bf1767227f5741079c1050ea46acb645] added (type=https, domain=624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc)"}
+{"level":"info","time":"2026-08-16 16:56:25","message":"endpoint [624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc] active (type=https)"}
+{"level":"info","time":"2026-08-16 16:56:59","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:56:59","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:02","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:02","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:02","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:02","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65383 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:03","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:03","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:05","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:05","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:09","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:09","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65383 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:13","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:13","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:18","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:18","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:62479 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:19","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:19","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:19","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:19","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:19","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:19","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65383 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:20","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:20","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:62479 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:22","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:22","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:48361 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:48361 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:31","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:31","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:32","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:32","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:33","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:33","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:35","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:35","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:36","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:36","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:62479 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:48361 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46009 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46015 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46027 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65383 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:57:37","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:02","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:02","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:43110->127.0.0.1:8287: read tcp 127.0.0.1:43110->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:05","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:05","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:43126->127.0.0.1:8287: read tcp 127.0.0.1:43126->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:08","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:08","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:43132->127.0.0.1:8287: read tcp 127.0.0.1:43132->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:13","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:13","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:43154->127.0.0.1:8287: read tcp 127.0.0.1:43154->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:18","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:18","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:45662->127.0.0.1:8287: read tcp 127.0.0.1:45662->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:18","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:18","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:45664->127.0.0.1:8287: read tcp 127.0.0.1:45664->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:18","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:18","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:43146->127.0.0.1:8287: read tcp 127.0.0.1:43146->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:19","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:19","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65383 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:19","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:19","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46009 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:20","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:20","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:49680->127.0.0.1:8287: read tcp 127.0.0.1:49680->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:20","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:20","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:22","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:22","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:49690->127.0.0.1:8287: read tcp 127.0.0.1:49690->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:29","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:29","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:49702->127.0.0.1:8287: read tcp 127.0.0.1:49702->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:29","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:29","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:49708->127.0.0.1:8287: read tcp 127.0.0.1:49708->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:29","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:29","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:49696->127.0.0.1:8287: read tcp 127.0.0.1:49696->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:29","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:29","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:49724->127.0.0.1:8287: read tcp 127.0.0.1:49724->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:31","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:31","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:36240->127.0.0.1:8287: read tcp 127.0.0.1:36240->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:31","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:31","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:36248->127.0.0.1:8287: read tcp 127.0.0.1:36248->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:32","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:32","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:36262->127.0.0.1:8287: read tcp 127.0.0.1:36262->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:32","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:32","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:36264->127.0.0.1:8287: read tcp 127.0.0.1:36264->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:34","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:34","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:36278->127.0.0.1:8287: read tcp 127.0.0.1:36278->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:35","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:35","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:36294->127.0.0.1:8287: read tcp 127.0.0.1:36294->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:36","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:36","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:36300->127.0.0.1:8287: read tcp 127.0.0.1:36300->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:37","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:37","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:50538->127.0.0.1:8287: read tcp 127.0.0.1:50538->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:38","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 16:58:38","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:38","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:50552->127.0.0.1:8287: read tcp 127.0.0.1:50552->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 16:58:38","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:50566->127.0.0.1:8287: read tcp 127.0.0.1:50566->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:40","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:40","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:50590->127.0.0.1:8287: read tcp 127.0.0.1:50590->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:40","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:40","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:50594->127.0.0.1:8287: read tcp 127.0.0.1:50594->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:41","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:41","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:50608->127.0.0.1:8287: read tcp 127.0.0.1:50608->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:41","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:41","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:50612->127.0.0.1:8287: read tcp 127.0.0.1:50612->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:43","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:43","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:44","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:44","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:45","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:45","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:46","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:46","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:47","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:47","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:48","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:48","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46015 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65383 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46009 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:48361 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:58:49","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46027 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:58:58","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:58","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:43400->127.0.0.1:8287: read tcp 127.0.0.1:43400->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:58:59","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:58:59","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:50578->127.0.0.1:8287: stream closed]"}
+{"level":"info","time":"2026-08-16 16:59:17","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:59:17","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:59:20","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 16:59:20","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:20","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:46148->127.0.0.1:8287: read tcp 127.0.0.1:46148->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 16:59:20","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:46134->127.0.0.1:8287: read tcp 127.0.0.1:46134->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:22","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:22","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:46152->127.0.0.1:8287: read tcp 127.0.0.1:46152->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:26","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:59:26","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:59:27","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:59:27","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:59:32","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 16:59:32","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 16:59:45","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:45","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:43414->127.0.0.1:8287: read tcp 127.0.0.1:43414->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:46","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:46","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:43426->127.0.0.1:8287: read tcp 127.0.0.1:43426->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:46","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:46","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:43442->127.0.0.1:8287: read tcp 127.0.0.1:43442->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:47","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:47","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57234->127.0.0.1:8287: read tcp 127.0.0.1:57234->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:49","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:49","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57238->127.0.0.1:8287: read tcp 127.0.0.1:57238->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:50","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:50","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57246->127.0.0.1:8287: read tcp 127.0.0.1:57246->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:52","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:52","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57268->127.0.0.1:8287: read tcp 127.0.0.1:57268->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:52","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:52","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57290->127.0.0.1:8287: read tcp 127.0.0.1:57290->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 16:59:53","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 16:59:53","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 16:59:53","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 16:59:53","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 16:59:53","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57284->127.0.0.1:8287: read tcp 127.0.0.1:57284->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 16:59:53","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57282->127.0.0.1:8287: read tcp 127.0.0.1:57282->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 16:59:53","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57296->127.0.0.1:8287: read tcp 127.0.0.1:57296->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 16:59:53","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57260->127.0.0.1:8287: read tcp 127.0.0.1:57260->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:00:02","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:02","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:03","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:03","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:07","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:07","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46027 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:50117 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46009 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:46015 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65383 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65371 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:50115 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:65355 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:15","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:50133 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:50189 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:50151 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:50165 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:50147 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:00:16","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.25 DstAddr: SrcPort:50175 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:00:17","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:00:17","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:39418->127.0.0.1:8287: read tcp 127.0.0.1:39418->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:00:26","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:00:26","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:39420->127.0.0.1:8287: read tcp 127.0.0.1:39420->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:00:28","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:00:28","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:55646->127.0.0.1:8287: read tcp 127.0.0.1:55646->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:00:33","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:00:33","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:55662->127.0.0.1:8287: read tcp 127.0.0.1:55662->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47232->127.0.0.1:8287: read tcp 127.0.0.1:47232->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47208->127.0.0.1:8287: read tcp 127.0.0.1:47208->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47204->127.0.0.1:8287: read tcp 127.0.0.1:47204->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47260->127.0.0.1:8287: read tcp 127.0.0.1:47260->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47322->127.0.0.1:8287: stream closed]"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:00:54","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47216->127.0.0.1:8287: read tcp 127.0.0.1:47216->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47266->127.0.0.1:8287: read tcp 127.0.0.1:47266->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47238->127.0.0.1:8287: stream closed]"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47292->127.0.0.1:8287: stream closed]"}
+{"level":"error","time":"2026-08-16 17:00:54","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47276->127.0.0.1:8287: stream closed]"}
+{"level":"error","time":"2026-08-16 17:00:55","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47306->127.0.0.1:8287: stream closed]"}
+{"level":"error","time":"2026-08-16 17:00:55","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47318->127.0.0.1:8287: stream closed]"}
+{"level":"info","time":"2026-08-16 17:01:03","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:01:03","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:54036->127.0.0.1:8287: read tcp 127.0.0.1:54036->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:01:04","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:01:04","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:54048->127.0.0.1:8287: read tcp 127.0.0.1:54048->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:01:08","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:01:08","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47194->127.0.0.1:8287: read tcp 127.0.0.1:47194->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:01:17","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:01:17","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47254->127.0.0.1:8287: read tcp 127.0.0.1:47254->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:01:25","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:01:25","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:47304->127.0.0.1:8287: read tcp 127.0.0.1:47304->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:35:18","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:18","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:55505 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:24","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:24","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:55505 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:25","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:25","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:55505 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:26","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:26","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:55505 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:27","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:27","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:55505 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:28","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:28","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:55505 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:29","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:29","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:55505 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:55505 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:50461 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:50431 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:50457 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:50479 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:50447 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:50475 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:35:30","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:50439 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:36:07","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:36:07","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:50461 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:36:07","message":"endpoint has new request: bf1767227f5741079c1050ea46acb645"}
+{"level":"info","time":"2026-08-16 17:36:07","message":"start work conn msg: &{EndpointID:bf1767227f5741079c1050ea46acb645 LocalIP:127.0.0.1 LocalPort:8287 SrcAddr:10.64.202.190 DstAddr: SrcPort:50439 DstPort:0 Error:}"}
+{"level":"info","time":"2026-08-16 17:36:23","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:23","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:55000->127.0.0.1:8287: read tcp 127.0.0.1:55000->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:36:24","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:24","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:55002->127.0.0.1:8287: read tcp 127.0.0.1:55002->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:36:25","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:25","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:55008->127.0.0.1:8287: read tcp 127.0.0.1:55008->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:36:26","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:26","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:55024->127.0.0.1:8287: read tcp 127.0.0.1:55024->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:36:27","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:27","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57960->127.0.0.1:8287: read tcp 127.0.0.1:57960->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:36:28","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:28","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57974->127.0.0.1:8287: read tcp 127.0.0.1:57974->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:36:29","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:29","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57980->127.0.0.1:8287: read tcp 127.0.0.1:57980->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:36:30","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:36:30","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:30","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:58032->127.0.0.1:8287: read tcp 127.0.0.1:58032->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 17:36:30","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:57988->127.0.0.1:8287: read tcp 127.0.0.1:57988->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:36:30","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:30","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:58050->127.0.0.1:8287: read tcp 127.0.0.1:58050->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:36:31","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:36:31","message":"remote conn is closed by limiter"}
+{"level":"info","time":"2026-08-16 17:36:31","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:36:31","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:58024->127.0.0.1:8287: read tcp 127.0.0.1:58024->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 17:36:31","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:58046->127.0.0.1:8287: read tcp 127.0.0.1:58046->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 17:36:31","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:58008->127.0.0.1:8287: read tcp 127.0.0.1:58008->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:37:04","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:37:04","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:58002->127.0.0.1:8287: read tcp 127.0.0.1:58002->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:37:07","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:37:07","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:58054->127.0.0.1:8287: read tcp 127.0.0.1:58054->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:37:07","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:37:07","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:41082->127.0.0.1:8287: read tcp 127.0.0.1:41082->127.0.0.1:8287: use of closed network connection]"}
+{"level":"info","time":"2026-08-16 17:37:07","message":"remote conn is closed by limiter"}
+{"level":"error","time":"2026-08-16 17:37:07","message":"concat local conn with remote conn failed: [writeto tcp 127.0.0.1:41074->127.0.0.1:8287: read tcp 127.0.0.1:41074->127.0.0.1:8287: use of closed network connection]"}
+{"level":"error","time":"2026-08-16 17:57:03","message":"err happend when read msg from channel: EOF\n"}
+{"level":"info","time":"2026-08-16 17:57:03","message":"endpoint [https 624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc] closed"}
+{"level":"info","time":"2026-08-16 17:57:03","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:57:03","message":"connect to cloud server failed (attempt 1): dial tcp: lookup zns1012.fzv2.zeronews.cc on 0.250.250.200:53: no such host"}
+{"level":"info","time":"2026-08-16 17:57:04","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:57:04","message":"connect to cloud server failed (attempt 2): dial tcp: lookup zns1012.fzv2.zeronews.cc on 0.250.250.200:53: no such host"}
+{"level":"info","time":"2026-08-16 17:57:05","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:57:05","message":"connect to cloud server failed (attempt 3): dial tcp: lookup zns1012.fzv2.zeronews.cc on 0.250.250.200:53: no such host"}
+{"level":"info","time":"2026-08-16 17:57:07","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:57:07","message":"connect to cloud server failed (attempt 4): dial tcp: lookup zns1012.fzv2.zeronews.cc on 0.250.250.200:53: no such host"}
+{"level":"info","time":"2026-08-16 17:57:08","message":"trying to connect zeronews cloud server"}
+{"level":"info","time":"2026-08-16 17:57:10","message":"authtoken: bdb0ff0196744ef4a9a3ed8cb8e37613, clientid: 550733a27e8a435faa257d7adfa09662"}
+{"level":"info","time":"2026-08-16 17:57:10","message":"prepared client login metadata: client_id=550733a27e8a435faa257d7adfa09662 cloud_server_addr=zns1012.fzv2.zeronews.cc:7000 runtime_goos=linux runtime_goarch=arm64 env_client_arch=\"\" build_client_arch=\"\" env_client_version=\"\" build_client_version=\"4.0.6\" resolved_os=\"linux\" resolved_arch=\"arm64\" resolved_version=\"4.0.6\" resolved_resource_version=\"4.0.6\" resolved_partner_channel=\"docker\" resolved_hostname=\"zeronews\" runtime_hostname=\"zeronews\""}
+{"level":"info","time":"2026-08-16 17:57:10","message":"sending client login message to cloud server: client_id=550733a27e8a435faa257d7adfa09662 remote_server=zns1012.fzv2.zeronews.cc:7000 partner_channel=\"docker\" os=\"linux\" arch=\"arm64\" hostname=\"zeronews\" version=\"4.0.6\" resource_version=\"4.0.6\" timestamp=1786874230"}
+{"level":"info","time":"2026-08-16 17:57:10","message":"client login message sent: client_id=550733a27e8a435faa257d7adfa09662 remote_server=zns1012.fzv2.zeronews.cc:7000 partner_channel=\"docker\" os=\"linux\" arch=\"arm64\" version=\"4.0.6\" resource_version=\"4.0.6\""}
+{"level":"info","time":"2026-08-16 17:57:10","message":"Session Connected: client_id=550733a27e8a435faa257d7adfa09662 server=zns1012.fzv2.zeronews.cc:7000 hostname=zeronews"}
+{"level":"info","time":"2026-08-16 17:57:10","message":"[diag] received NewBackendEndpoint: id=bf1767227f5741079c1050ea46acb645 type=https domain=\"624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc\" tunnel_id=b67e84b1f8604d0e9718344118c5822f"}
+{"level":"info","time":"2026-08-16 17:57:10","message":"endpoint [bf1767227f5741079c1050ea46acb645] added (type=https, domain=624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc)"}
+{"level":"info","time":"2026-08-16 17:57:10","message":"endpoint [624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc] active (type=https)"}
+{"level":"error","time":"2026-08-16 17:59:06","message":"err happend when read msg from channel: EOF\n"}
+{"level":"info","time":"2026-08-16 17:59:06","message":"endpoint [https 624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc] closed"}
+{"level":"info","time":"2026-08-16 17:59:06","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:59:11","message":"connect to cloud server failed (attempt 1): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 17:59:12","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:59:17","message":"connect to cloud server failed (attempt 2): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 17:59:18","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:59:23","message":"connect to cloud server failed (attempt 3): EOF"}
+{"level":"info","time":"2026-08-16 17:59:24","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:59:29","message":"connect to cloud server failed (attempt 4): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 17:59:31","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:59:36","message":"connect to cloud server failed (attempt 5): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 17:59:39","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:59:44","message":"connect to cloud server failed (attempt 6): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 17:59:48","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 17:59:53","message":"connect to cloud server failed (attempt 7): EOF"}
+{"level":"info","time":"2026-08-16 18:00:00","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:00:05","message":"connect to cloud server failed (attempt 8): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:00:11","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:00:16","message":"connect to cloud server failed (attempt 9): EOF"}
+{"level":"info","time":"2026-08-16 18:00:34","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:00:39","message":"connect to cloud server failed (attempt 10): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:00:57","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:01:02","message":"connect to cloud server failed (attempt 11): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:01:20","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:01:25","message":"connect to cloud server failed (attempt 12): EOF"}
+{"level":"info","time":"2026-08-16 18:02:12","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:02:17","message":"connect to cloud server failed (attempt 13): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:03:12","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:03:17","message":"connect to cloud server failed (attempt 14): context deadline exceeded"}

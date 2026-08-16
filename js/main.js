@@ -1,26 +1,35 @@
 /**
- * main.js - 应用入口，初始化所有模块
+ * main.js - 应用入口，优先渲染界面，再按访问场景分批加载数据
  */
 
-async function init() {
-    // 加载数据 + 旧数据字段迁移（补评论 id / contact）
-    migrateCommentsIfNeeded();
-    await loadProfileData();
-    if (typeof loadTrashFromStorage === 'function') loadTrashFromStorage();
-    if (typeof loadMusicFromStorage === 'function') await loadMusicFromStorage();
-    // 拉取首页简历数据（写入 localStorage 缓存）
-    if (typeof loadHomeResumeDataFromApi === 'function') await loadHomeResumeDataFromApi();
-    // 拉取站点评论（覆盖 state.comments）
-    if (typeof loadCommentsFromApi === 'function') await loadCommentsFromApi();
-    // 拉取空间动态（写入内存缓存）
-    if (typeof loadSpaceFeedsFromApi === 'function') await loadSpaceFeedsFromApi();
-    // 拉取所有 KV 配置数据（图册命名、封面计数、图片库、文件、备忘、快捷链接）
-    if (typeof loadKvFromApi === 'function') await loadKvFromApi();
+function hideSkeleton(delay = 120) {
+    setTimeout(() => {
+        const skeleton = document.getElementById('skeletonOverlay');
+        if (skeleton) skeleton.style.display = 'none';
+    }, delay);
+}
 
-    // 初始化分类/标签结构（必须在 renderLeftNav 之前，且 articles 已加载）
-    if (typeof initCategories === 'function') await initCategories();
+function runIdle(task, timeout = 1200) {
+    if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(task, { timeout });
+    } else {
+        setTimeout(task, 80);
+    }
+}
 
-    // 渲染基础 UI
+function getInitialView() {
+    const hash = String(window.location.hash || '').replace(/^#\/?/, '');
+    if (hash.startsWith('space')) return 'space';
+    if (hash.startsWith('list') || hash.startsWith('articles')) return 'list';
+    if (hash.startsWith('admin')) return 'adminControl';
+    if (hash.startsWith('gallery')) return 'gallery';
+    if (hash.startsWith('trash')) return 'trash';
+    return 'home';
+}
+
+function renderShell(view) {
+    if (typeof initCategories === 'function') initCategories();
+
     renderProfile();
     setTheme(state.theme);
     if (typeof applyThemeCustomizations === 'function') applyThemeCustomizations();
@@ -32,49 +41,113 @@ async function init() {
     renderFriendLinks();
     renderFilters();
     renderComments();
-
-    // 顶栏跳动提示标语
     if (typeof renderTopNoticeBanner === 'function') renderTopNoticeBanner();
-
-    // 访客统计
-    updateVisitorStats();
     updateStats();
-
-    // 绑定事件
-    bindEvents();
-
-    // 音乐播放器增强
-    initMusicPlayer();
-
-    // 渲染文章列表
     renderArticles();
-
-    // 默认激活首页（个人简历与介绍）
-    switchView('home');
-
-    // 置顶轮播
+    switchView(view);
     changeHero(0);
+    updateMusicStatus();
+}
 
-    // 恢复音乐播放状态：用当前索引下的歌（网易云 API 真实 URL）
-    if (state.musicPlaying) {
-        playSongByIndex(state.curSongIdx || 0, true);
+function refreshArticleUi() {
+    if (typeof syncCategoriesFromArticles === 'function') syncCategoriesFromArticles();
+    if (typeof initCategories === 'function') initCategories();
+    renderLeftNav();
+    renderHotList();
+    renderTagCloud();
+    renderArchive();
+    renderFilters();
+    renderArticles();
+    changeHero(0);
+}
+
+function refreshDeferredUi() {
+    renderProfile();
+    renderFriendLinks();
+    renderComments();
+    if (typeof renderTopNoticeBanner === 'function') renderTopNoticeBanner();
+    if (typeof renderMusicPlayerUI === 'function') renderMusicPlayerUI();
+}
+
+async function loadPrimaryData(view) {
+    const tasks = [
+        loadProfileData().then(renderProfile),
+    ];
+
+    if (view === 'home') {
+        if (typeof loadHomeResumeDataFromApi === 'function') {
+            tasks.push(loadHomeResumeDataFromApi().then(() => switchView('home')));
+        }
+    } else if (view === 'space') {
+        if (typeof loadSpaceFeedsFromApi === 'function') {
+            tasks.push(loadSpaceFeedsFromApi().then(() => {
+                if (typeof renderSpaceView === 'function') renderSpaceView();
+            }));
+        }
     } else {
-        updateMusicStatus();
+        tasks.push(loadArticlesFromFile().then(refreshArticleUi));
     }
 
-    // 隐藏骨架屏
-    setTimeout(() => {
-        const skeleton = document.getElementById('skeletonOverlay');
-        if (skeleton) skeleton.style.display = 'none';
-    }, 800);
+    await Promise.allSettled(tasks);
+}
+
+function loadDeferredData(view) {
+    const jobs = [];
+
+    if (view !== 'home' && typeof loadHomeResumeDataFromApi === 'function') {
+        jobs.push(loadHomeResumeDataFromApi);
+    }
+    if (view !== 'space' && typeof loadSpaceFeedsFromApi === 'function') {
+        jobs.push(loadSpaceFeedsFromApi);
+    }
+    if (typeof loadCommentsFromApi === 'function') {
+        jobs.push(() => loadCommentsFromApi().then(renderComments));
+    }
+    if (typeof loadMusicFromStorage === 'function') {
+        jobs.push(() => loadMusicFromStorage().then(() => {
+            if (typeof initMusicPlayer === 'function') initMusicPlayer();
+            if (state.musicPlaying) {
+                playSongByIndex(state.curSongIdx || 0, true);
+            } else {
+                updateMusicStatus();
+            }
+        }));
+    }
+    if (typeof loadKvFromApi === 'function') {
+        jobs.push(() => loadKvFromApi().then(refreshDeferredUi));
+    }
+
+    jobs.forEach((job, index) => {
+        runIdle(() => {
+            Promise.resolve()
+                .then(job)
+                .catch(err => console.warn('[Init] 后台数据加载失败:', err && err.message));
+        }, 800 + index * 400);
+    });
+}
+
+async function init() {
+    migrateCommentsIfNeeded();
+    if (typeof loadArticlesFromCache === 'function') loadArticlesFromCache();
+    if (typeof loadProfileFromCache === 'function') loadProfileFromCache();
+    if (typeof loadCommentsFromCache === 'function') loadCommentsFromCache();
+    if (typeof loadTrashFromStorage === 'function') loadTrashFromStorage();
+
+    const initialView = getInitialView();
+    renderShell(initialView);
+    bindEvents();
+    if (typeof initMusicPlayer === 'function') initMusicPlayer();
+    hideSkeleton();
+
+    updateVisitorStats();
+    await loadPrimaryData(initialView);
+    loadDeferredData(initialView);
 }
 
 // DOM 就绪后启动
 window.addEventListener('DOMContentLoaded', () => {
-    loadArticlesFromFile().then(init).catch(err => {
+    init().catch(err => {
         console.error('[Init] 启动失败:', err);
-        // 即便初始化抛错，也尝试隐藏骨架屏，避免页面卡在加载态
-        const skeleton = document.getElementById('skeletonOverlay');
-        if (skeleton) skeleton.style.display = 'none';
+        hideSkeleton(0);
     });
 });

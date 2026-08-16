@@ -137,6 +137,39 @@ async function loadArticlesFromFile() {
     }
 }
 
+function loadArticlesFromCache() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.articles) || 'null');
+        if (Array.isArray(saved) && saved.length) {
+            articles = saved;
+        }
+    } catch (e) {
+        // Keep bundled defaults when cache is unavailable.
+    }
+}
+
+function loadProfileFromCache() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('blogProfile') || 'null');
+        if (saved && typeof saved === 'object') {
+            profile = Object.assign({}, defaultProfile, saved);
+        }
+    } catch (error) {
+        profile = Object.assign({}, defaultProfile);
+    }
+}
+
+function loadCommentsFromCache() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.comments) || 'null');
+        if (Array.isArray(saved)) {
+            state.comments = saved;
+        }
+    } catch (error) {
+        // Keep current comments when cache is unavailable.
+    }
+}
+
 function saveArticlesToStorage() {
     // 数据持久化已迁移到后端；此函数仅保留为离线缓存写入，避免破坏旧调用点。
     try {

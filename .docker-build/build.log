@@ -1,17 +1,16 @@
 [builder] CARGO_TARGET_DIR=/cargo-target
 [builder] cargo build --release 开始...
-   Compiling boko-backend v0.1.0 (/build/backend)
 warning: associated function `forbidden` is never used
-   --> src/models.rs:256:12
+   --> src/models.rs:238:12
     |
-252 | impl AppError {
+234 | impl AppError {
     | ------------- associated function in this implementation
 ...
-256 |     pub fn forbidden(msg: impl Into<String>) -> Self {
+238 |     pub fn forbidden(msg: impl Into<String>) -> Self {
     |            ^^^^^^^^^
     |
     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
 warning: `boko-backend` (bin "boko-backend") generated 1 warning
-    Finished `release` profile [optimized] target(s) in 15.19s
+    Finished `release` profile [optimized] target(s) in 0.04s
 [builder] 构建完成: 4.5M
