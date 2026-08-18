@@ -12,6 +12,7 @@
 
 use anyhow::{Context, Result};
 use rusqlite::Connection;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 /// Simple connection wrapper. SQLite is single-writer; for this minimalist
@@ -44,8 +45,41 @@ INSERT OR IGNORE INTO music_config (id, api_base) VALUES (1, '');
 
 const KV_SEED_MARKER: &str = "seed_demo_v1";
 
+/// Resolve the default database path when `BOKO_DB_PATH` is not set.
+///
+/// The database must NOT live inside the project tree — it holds persistent
+/// user data and should survive redeploys. We follow the XDG base directory
+/// spec (`$XDG_DATA_HOME`, falling back to `$HOME/.local/share`), which keeps
+/// the file out of the repo on both local dev machines and servers.
+/// Docker deployments override this entirely via `BOKO_DB_PATH`.
+pub fn default_db_path() -> String {
+    // XDG base directory spec: $XDG_DATA_HOME, or $HOME/.local/share if unset.
+    let base = match std::env::var("XDG_DATA_HOME") {
+        Ok(v) if !v.is_empty() => std::path::PathBuf::from(v),
+        _ => {
+            let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+            let mut p = std::path::PathBuf::from(home);
+            p.push(".local");
+            p.push("share");
+            p
+        }
+    };
+    let mut p = base;
+    p.push("boko");
+    p.push("boko.db");
+    p.to_string_lossy().into_owned()
+}
+
 /// Open (or create) the SQLite database file, apply schema & seed.
 pub fn open(path: &str) -> Result<Db> {
+    // Ensure the parent directory exists so a fresh deploy doesn't crash.
+    if let Some(parent) = Path::new(path).parent() {
+        if !parent.as_os_str().is_empty() {
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("failed to create db directory {}", parent.display()))?;
+        }
+    }
+
     let conn = Connection::open(path)
         .with_context(|| format!("failed to open sqlite db at {}", path))?;
 
