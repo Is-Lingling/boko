@@ -133,6 +133,13 @@ async function init() {
     if (typeof loadCommentsFromCache === 'function') loadCommentsFromCache();
     if (typeof loadTrashFromStorage === 'function') loadTrashFromStorage();
 
+    // 初始化主题（支持系统偏好跟随）
+    if (typeof initTheme === 'function') initTheme();
+    if (typeof watchSystemTheme === 'function') watchSystemTheme();
+
+    // 初始化响应式系统
+    if (typeof initResponsive === 'function') initResponsive();
+
     const initialView = getInitialView();
     renderShell(initialView);
     bindEvents();

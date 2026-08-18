@@ -1,0 +1,762 @@
+/**
+ * article-unified.css - 文章阅读与编辑器界面统一样式
+ *
+ * 本文件统一文章阅读界面（.inline-detail-card）与编辑器界面（.inline-editor-card）的
+ * 排版、字体、间距、代码块、图片等样式，确保两者显示一致。
+ * 同时优化响应式布局，适配手机端、平板端和桌面端。
+ */
+
+/* ============================================
+   1. 文章阅读卡片背景颜色优化
+   ============================================ */
+
+.inline-detail-card {
+    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    border-radius: var(--card-radius, 20px);
+    padding: 28px 32px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+    margin-bottom: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+body.dark .inline-detail-card {
+    background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+    border-color: rgba(51, 65, 85, 0.5);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+}
+
+.inline-detail-card:hover {
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+}
+
+body.dark .inline-detail-card:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* ============================================
+   2. 统一 Markdown 内容排版样式
+   ============================================ */
+
+.inline-content,
+.markdown-content,
+.vditor-reset {
+    font-size: 16px;
+    line-height: 1.85;
+    color: var(--text-secondary, #475569);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+body.dark .inline-content,
+body.dark .markdown-content,
+body.dark .vditor-reset {
+    color: var(--text-secondary, #cbd5e1);
+}
+
+/* 标题统一 */
+.inline-content h1,
+.markdown-content h1,
+.vditor-reset h1 {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.35;
+    margin: 32px 0 16px;
+    color: var(--text-main, #0f172a);
+    border-bottom: 2px solid var(--primary-border, rgba(99, 102, 241, 0.25));
+    padding-bottom: 10px;
+}
+
+.inline-content h2,
+.markdown-content h2,
+.vditor-reset h2 {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 28px 0 14px;
+    color: var(--text-main, #0f172a);
+    border-bottom: 1px solid var(--border-color, rgba(226, 232, 240, 0.8));
+    padding-bottom: 8px;
+}
+
+.inline-content h3,
+.markdown-content h3,
+.vditor-reset h3 {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.45;
+    margin: 24px 0 12px;
+    color: var(--text-main, #0f172a);
+}
+
+.inline-content h4,
+.markdown-content h4,
+.vditor-reset h4 {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 20px 0 10px;
+    color: var(--text-main, #0f172a);
+}
+
+.inline-content h5,
+.markdown-content h5,
+.vditor-reset h5 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 18px 0 8px;
+    color: var(--text-main, #0f172a);
+}
+
+.inline-content h6,
+.markdown-content h6,
+.vditor-reset h6 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 16px 0 8px;
+    color: var(--text-muted, #64748b);
+}
+
+body.dark .inline-content h1,
+body.dark .inline-content h2,
+body.dark .inline-content h3,
+body.dark .inline-content h4,
+body.dark .markdown-content h1,
+body.dark .markdown-content h2,
+body.dark .markdown-content h3,
+body.dark .markdown-content h4,
+body.dark .vditor-reset h1,
+body.dark .vditor-reset h2,
+body.dark .vditor-reset h3,
+body.dark .vditor-reset h4 {
+    color: var(--text-main, #f8fafc);
+}
+
+body.dark .inline-content h5,
+body.dark .markdown-content h5,
+body.dark .vditor-reset h5 {
+    color: var(--text-main, #f8fafc);
+}
+
+/* 段落 */
+.inline-content p,
+.markdown-content p,
+.vditor-reset p {
+    margin-bottom: 18px;
+    text-align: justify;
+}
+
+/* 引用块 */
+.inline-content blockquote,
+.markdown-content blockquote,
+.vditor-reset blockquote {
+    border-left: 4px solid var(--primary, #6366f1);
+    padding: 12px 18px;
+    margin: 18px 0;
+    background: var(--primary-light, rgba(99, 102, 241, 0.08));
+    border-radius: 0 10px 10px 0;
+    color: var(--text-secondary, #475569);
+    font-style: italic;
+}
+
+body.dark .inline-content blockquote,
+body.dark .markdown-content blockquote,
+body.dark .vditor-reset blockquote {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--text-secondary, #cbd5e1);
+}
+
+/* 列表 */
+.inline-content ul,
+.markdown-content ul,
+.vditor-reset ul,
+.inline-content ol,
+.markdown-content ol,
+.vditor-reset ol {
+    margin: 14px 0;
+    padding-left: 28px;
+}
+
+.inline-content li,
+.markdown-content li,
+.vditor-reset li {
+    margin-bottom: 6px;
+    line-height: 1.7;
+}
+
+/* 行内代码 */
+.inline-content code:not(pre code),
+.markdown-content code:not(pre code),
+.vditor-reset code:not(pre code) {
+    background: var(--primary-light, rgba(99, 102, 241, 0.1));
+    color: var(--primary, #6366f1);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.88em;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Menlo, Monaco, Consolas, monospace;
+    border: 1px solid var(--primary-border, rgba(99, 102, 241, 0.2));
+}
+
+body.dark .inline-content code:not(pre code),
+body.dark .markdown-content code:not(pre code),
+body.dark .vditor-reset code:not(pre code) {
+    background: rgba(129, 140, 248, 0.15);
+    color: var(--primary, #818cf8);
+    border-color: rgba(129, 140, 248, 0.25);
+}
+
+/* 分割线 */
+.inline-content hr,
+.markdown-content hr,
+.vditor-reset hr {
+    border: none;
+    border-top: 2px solid var(--border-color, #e2e8f0);
+    margin: 28px 0;
+}
+
+body.dark .inline-content hr,
+body.dark .markdown-content hr,
+body.dark .vditor-reset hr {
+    border-color: #334155;
+}
+
+/* 表格 */
+.inline-content table,
+.markdown-content table,
+.vditor-reset table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    font-size: 14px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.inline-content th,
+.markdown-content th,
+.vditor-reset th {
+    background: var(--primary-light, rgba(99, 102, 241, 0.08));
+    color: var(--text-main, #0f172a);
+    font-weight: 700;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--primary-border, rgba(99, 102, 241, 0.25));
+}
+
+.inline-content td,
+.markdown-content td,
+.vditor-reset td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+    color: var(--text-secondary, #475569);
+}
+
+.inline-content tr:last-child td,
+.markdown-content tr:last-child td,
+.vditor-reset tr:last-child td {
+    border-bottom: none;
+}
+
+.inline-content tr:hover td,
+.markdown-content tr:hover td,
+.vditor-reset tr:hover td {
+    background: rgba(99, 102, 241, 0.03);
+}
+
+body.dark .inline-content th,
+body.dark .markdown-content th,
+body.dark .vditor-reset th {
+    background: rgba(129, 140, 248, 0.12);
+    color: var(--text-main, #f8fafc);
+    border-color: rgba(129, 140, 248, 0.25);
+}
+
+body.dark .inline-content td,
+body.dark .markdown-content td,
+body.dark .vditor-reset td {
+    border-color: #334155;
+    color: var(--text-secondary, #cbd5e1);
+}
+
+body.dark .inline-content tr:hover td,
+body.dark .markdown-content tr:hover td,
+body.dark .vditor-reset tr:hover td {
+    background: rgba(129, 140, 248, 0.06);
+}
+
+/* 图片与图注 */
+.md-image-figure {
+    text-align: center;
+    margin: 24px auto;
+    display: block;
+}
+
+.md-centered-img {
+    max-width: 100%;
+    border-radius: 12px;
+    margin: 0 auto;
+    display: block;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.md-centered-img:hover {
+    transform: scale(1.01);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+}
+
+.md-img-caption {
+    font-size: 13px;
+    color: var(--text-muted, #64748b);
+    margin-top: 10px;
+    text-align: center;
+    font-style: italic;
+}
+
+/* 链接 */
+.inline-content a,
+.markdown-content a,
+.vditor-reset a {
+    color: #2563eb;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s ease;
+}
+
+.inline-content a:hover,
+.markdown-content a:hover,
+.vditor-reset a:hover {
+    color: #1d4ed8;
+}
+
+body.dark .inline-content a,
+body.dark .markdown-content a,
+body.dark .vditor-reset a {
+    color: #60a5fa;
+}
+
+body.dark .inline-content a:hover,
+body.dark .markdown-content a:hover,
+body.dark .vditor-reset a:hover {
+    color: #93c5fd;
+}
+
+/* ============================================
+   3. 编辑器卡片样式统一
+   ============================================ */
+
+.inline-editor-card {
+    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    border-radius: var(--card-radius, 20px);
+    padding: 24px 28px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+    margin-bottom: 16px;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+body.dark .inline-editor-card {
+    background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+    border-color: rgba(51, 65, 85, 0.5);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* 编辑器表单输入框统一 */
+.editor-form-grid input,
+.editor-form-grid textarea,
+.editor-form-grid select {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border-color, #d1d5db);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--text-main, #0f172a);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.editor-form-grid input:focus,
+.editor-form-grid textarea:focus,
+.editor-form-grid select:focus {
+    border-color: var(--primary, #6366f1);
+    box-shadow: 0 0 0 3px var(--primary-light, rgba(99, 102, 241, 0.15));
+    outline: none;
+}
+
+body.dark .editor-form-grid input,
+body.dark .editor-form-grid textarea,
+body.dark .editor-form-grid select {
+    background: #0f172a;
+    border-color: #334155;
+    color: var(--text-main, #f8fafc);
+}
+
+body.dark .editor-form-grid input:focus,
+body.dark .editor-form-grid textarea:focus,
+body.dark .editor-form-grid select:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+}
+
+/* ============================================
+   4. 响应式优化
+   ============================================ */
+
+/* 平板端 */
+@media (max-width: 900px) {
+    .inline-detail-card,
+    .inline-editor-card {
+        padding: 20px 24px;
+        border-radius: 16px;
+    }
+
+    .inline-content,
+    .markdown-content,
+    .vditor-reset {
+        font-size: 15px;
+        line-height: 1.8;
+    }
+
+    .inline-content h1,
+    .markdown-content h1,
+    .vditor-reset h1 {
+        font-size: 24px;
+    }
+
+    .inline-content h2,
+    .markdown-content h2,
+    .vditor-reset h2 {
+        font-size: 20px;
+    }
+
+    .inline-content h3,
+    .markdown-content h3,
+    .vditor-reset h3 {
+        font-size: 17px;
+    }
+}
+
+/* 手机端 */
+@media (max-width: 768px) {
+    .inline-detail-card,
+    .inline-editor-card {
+        padding: 16px 18px;
+        border-radius: 14px;
+        margin-bottom: 12px;
+    }
+
+    .inline-title {
+        font-size: 22px !important;
+        line-height: 1.3;
+    }
+
+    .inline-content,
+    .markdown-content,
+    .vditor-reset {
+        font-size: 15px;
+        line-height: 1.75;
+    }
+
+    .inline-content h1,
+    .markdown-content h1,
+    .vditor-reset h1 {
+        font-size: 20px;
+        margin: 24px 0 12px;
+    }
+
+    .inline-content h2,
+    .markdown-content h2,
+    .vditor-reset h2 {
+        font-size: 18px;
+        margin: 20px 0 10px;
+    }
+
+    .inline-content h3,
+    .markdown-content h3,
+    .vditor-reset h3 {
+        font-size: 16px;
+        margin: 18px 0 8px;
+    }
+
+    .inline-content ul,
+    .markdown-content ul,
+    .vditor-reset ul,
+    .inline-content ol,
+    .markdown-content ol,
+    .vditor-reset ol {
+        padding-left: 22px;
+    }
+
+    .code-block-wrapper {
+        margin: 16px -4px;
+        border-radius: 10px;
+    }
+
+    .code-pre-area code {
+        padding: 12px 14px;
+        font-size: 12px;
+    }
+
+    .line-numbers-gutter {
+        padding: 12px 8px;
+        font-size: 12px;
+        min-width: 32px;
+    }
+
+    .inline-cover {
+        max-height: 220px;
+        border-radius: 10px;
+    }
+
+    .detail-breadcrumb-bar {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .detail-action-tools {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .detail-like-favorite-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .detail-like-favorite-bar button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .editor-form-grid {
+        gap: 14px;
+    }
+
+    .editor-form-grid input,
+    .editor-form-grid textarea {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+}
+
+/* 小屏手机 */
+@media (max-width: 420px) {
+    .inline-detail-card,
+    .inline-editor-card {
+        padding: 14px 16px;
+        border-radius: 12px;
+    }
+
+    .inline-title {
+        font-size: 20px !important;
+    }
+
+    .inline-content,
+    .markdown-content,
+    .vditor-reset {
+        font-size: 14.5px;
+    }
+
+    .inline-content h1,
+    .markdown-content h1,
+    .vditor-reset h1 {
+        font-size: 18px;
+    }
+
+    .inline-content h2,
+    .markdown-content h2,
+    .vditor-reset h2 {
+        font-size: 16px;
+    }
+}
+
+/* ============================================
+   5. 缩放适配（Ctrl+/- 时的布局保护）
+   ============================================ */
+
+@media (max-width: 1100px) {
+    .yinying {
+        grid-template-columns: 200px 1fr 260px;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 960px) {
+    .yinying {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 10px 12px 30px;
+    }
+
+    .box1,
+    .box3 {
+        position: static;
+        max-height: none;
+    }
+
+    .top-left {
+        width: auto;
+        min-width: auto;
+        max-width: none;
+        border-right: none;
+        border-radius: var(--sidebar-radius, 18px) !important;
+    }
+}
+
+/* ============================================
+   6. 编辑器 Vditor 预览区与阅读区视觉统一
+   ============================================ */
+
+.vditor-reset {
+    line-height: 1.85 !important;
+}
+
+.vditor-reset h1 {
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    border-bottom: 2px solid var(--primary-border, rgba(99, 102, 241, 0.25)) !important;
+    padding-bottom: 10px !important;
+}
+
+.vditor-reset h2 {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid var(--border-color, #e2e8f0) !important;
+    padding-bottom: 8px !important;
+}
+
+.vditor-reset h3 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+}
+
+body.dark .vditor-reset h1,
+body.dark .vditor-reset h2,
+body.dark .vditor-reset h3 {
+    color: var(--text-main, #f8fafc) !important;
+}
+
+/* 代码块在 Vditor 预览中的统一 */
+.vditor-reset pre {
+    background: #0d1117 !important;
+    border-radius: 12px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35) !important;
+}
+
+.vditor-reset pre code {
+    background: transparent !important;
+    color: #c9d1d9 !important;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Menlo, Monaco, Consolas, monospace !important;
+    font-size: 13px !important;
+    line-height: 1.65 !important;
+    padding: 16px 20px !important;
+}
+
+/* ============================================
+   7. 首页与控制面板容器统一样式
+   ============================================ */
+
+/* 首页容器：与 .inline-detail-card 保持视觉统一 */
+.home-view-wrapper {
+    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    border-radius: var(--card-radius, 20px);
+    padding: 24px 28px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+body.dark .home-view-wrapper {
+    background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+    border-color: rgba(51, 65, 85, 0.5);
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* 控制台面板：继承 .inline-detail-card 样式 */
+.admin-control-card {
+    /* 与 .inline-detail-card 保持一致，无额外内联 padding 覆盖 */
+}
+
+/* 统一 inline-header 的换行行为，防止小屏幕下挤压变形 */
+.inline-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* 控制台网格响应式优化 */
+.admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+/* 防止 .box2 内部溢出导致水平滚动 */
+.box2 {
+    overflow-x: hidden;
+}
+
+/* 平板端（<=900px）：左侧边栏消失，主区域占满 */
+@media (max-width: 900px) {
+    .home-view-wrapper {
+        padding: 20px 24px;
+        border-radius: 16px;
+    }
+
+    .admin-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 16px;
+    }
+}
+
+/* 手机端（<=768px） */
+@media (max-width: 768px) {
+    .home-view-wrapper {
+        padding: 16px 18px;
+        border-radius: 14px;
+    }
+
+    .admin-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 14px;
+    }
+
+    /* 首页 Hero 区域在手机端紧凑显示 */
+    .resume-hero-card {
+        padding: 20px 18px;
+    }
+
+    .resume-section-card {
+        padding: 18px 16px;
+    }
+
+    .resume-contact-card {
+        padding: 20px 16px;
+    }
+}
+
+/* 小屏手机（<=420px） */
+@media (max-width: 420px) {
+    .home-view-wrapper {
+        padding: 14px 16px;
+        border-radius: 12px;
+    }
+
+    .admin-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .resume-hero-card {
+        padding: 16px 14px;
+    }
+
+    .resume-section-card {
+        padding: 14px 12px;
+    }
+
+    .resume-contact-card {
+        padding: 16px 12px;
+    }
+}

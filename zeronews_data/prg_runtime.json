@@ -1,8 +1,0 @@
-{
-  "pid": 7,
-  "listen_addr": "127.0.0.1:37271",
-  "connect_addr": "127.0.0.1:37271",
-  "api_prefix": "/api/v1",
-  "health_path": "/healthz",
-  "started_at": "2026-08-16T10:58:42.913386024Z"
-}
