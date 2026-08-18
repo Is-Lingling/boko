@@ -401,3 +401,40 @@
 {"level":"error","time":"2026-08-16 18:02:17","message":"connect to cloud server failed (attempt 13): context deadline exceeded"}
 {"level":"info","time":"2026-08-16 18:03:12","message":"trying to connect zeronews cloud server"}
 {"level":"error","time":"2026-08-16 18:03:17","message":"connect to cloud server failed (attempt 14): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:04:31","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:04:36","message":"connect to cloud server failed (attempt 15): EOF"}
+{"level":"info","time":"2026-08-16 18:06:07","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:06:12","message":"connect to cloud server failed (attempt 16): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:07:23","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:07:28","message":"connect to cloud server failed (attempt 17): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:09:35","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:09:40","message":"connect to cloud server failed (attempt 18): EOF"}
+{"level":"info","time":"2026-08-16 18:12:20","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:12:25","message":"connect to cloud server failed (attempt 19): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:58:42","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:58:47","message":"connect to cloud server failed (attempt 1): EOF"}
+{"level":"info","time":"2026-08-16 18:58:48","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:58:53","message":"connect to cloud server failed (attempt 2): EOF"}
+{"level":"info","time":"2026-08-16 18:58:54","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:58:59","message":"connect to cloud server failed (attempt 3): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:59:01","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:59:06","message":"connect to cloud server failed (attempt 4): EOF"}
+{"level":"info","time":"2026-08-16 18:59:07","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:59:12","message":"connect to cloud server failed (attempt 5): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:59:13","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:59:18","message":"connect to cloud server failed (attempt 6): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:59:23","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:59:28","message":"connect to cloud server failed (attempt 7): EOF"}
+{"level":"info","time":"2026-08-16 18:59:32","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:59:37","message":"connect to cloud server failed (attempt 8): EOF"}
+{"level":"info","time":"2026-08-16 18:59:42","message":"trying to connect zeronews cloud server"}
+{"level":"error","time":"2026-08-16 18:59:47","message":"connect to cloud server failed (attempt 9): context deadline exceeded"}
+{"level":"info","time":"2026-08-16 18:59:59","message":"trying to connect zeronews cloud server"}
+{"level":"info","time":"2026-08-16 18:59:59","message":"authtoken: bdb0ff0196744ef4a9a3ed8cb8e37613, clientid: 550733a27e8a435faa257d7adfa09662"}
+{"level":"info","time":"2026-08-16 18:59:59","message":"prepared client login metadata: client_id=550733a27e8a435faa257d7adfa09662 cloud_server_addr=zns1012.fzv2.zeronews.cc:7000 runtime_goos=linux runtime_goarch=arm64 env_client_arch=\"\" build_client_arch=\"\" env_client_version=\"\" build_client_version=\"4.0.6\" resolved_os=\"linux\" resolved_arch=\"arm64\" resolved_version=\"4.0.6\" resolved_resource_version=\"4.0.6\" resolved_partner_channel=\"docker\" resolved_hostname=\"zeronews\" runtime_hostname=\"zeronews\""}
+{"level":"info","time":"2026-08-16 18:59:59","message":"sending client login message to cloud server: client_id=550733a27e8a435faa257d7adfa09662 remote_server=zns1012.fzv2.zeronews.cc:7000 partner_channel=\"docker\" os=\"linux\" arch=\"arm64\" hostname=\"zeronews\" version=\"4.0.6\" resource_version=\"4.0.6\" timestamp=1786877999"}
+{"level":"info","time":"2026-08-16 18:59:59","message":"client login message sent: client_id=550733a27e8a435faa257d7adfa09662 remote_server=zns1012.fzv2.zeronews.cc:7000 partner_channel=\"docker\" os=\"linux\" arch=\"arm64\" version=\"4.0.6\" resource_version=\"4.0.6\""}
+{"level":"info","time":"2026-08-16 18:59:59","message":"Session Connected: client_id=550733a27e8a435faa257d7adfa09662 server=zns1012.fzv2.zeronews.cc:7000 hostname=zeronews"}
+{"level":"info","time":"2026-08-16 18:59:59","message":"[diag] received NewBackendEndpoint: id=bf1767227f5741079c1050ea46acb645 type=https domain=\"624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc\" tunnel_id=b67e84b1f8604d0e9718344118c5822f"}
+{"level":"info","time":"2026-08-16 18:59:59","message":"endpoint [bf1767227f5741079c1050ea46acb645] added (type=https, domain=624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc)"}
+{"level":"info","time":"2026-08-16 18:59:59","message":"endpoint [624bdd75aa724bb4a33aea0becd30aa9.hn.takin.cc] active (type=https)"}
