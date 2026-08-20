@@ -32,6 +32,8 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let db_path = std::env::var("BOKO_DB_PATH").unwrap_or_else(|_| db::default_db_path());
+    let mode = if db::is_local_mode() { "LOCAL" } else { "CLOUD" };
+    tracing::info!("Deployment mode: {} | Database: {}", mode, db_path);
     let db: Db = db::open(&db_path)?;
     tracing::info!("SQLite database ready at {}", db_path);
 

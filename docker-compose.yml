@@ -16,6 +16,7 @@ services:
       - BOKO_PORT=8287
       - BOKO_DB_PATH=/app/data/boko.db
       - BOKO_STATIC_DIR=/app
+      - BOKO_LOCAL_MODE=false
 
 volumes:
   boko_data:

@@ -2,9 +2,14 @@
 # Incrementally rebuild and restart the Boko container.
 #
 # Usage:
-#   ./docker-incremental.sh          # rebuild backend image and restart boko
+#   ./docker-incremental.sh          # rebuild backend image and restart boko (cloud mode)
 #   ./docker-incremental.sh backend  # same as default
 #   ./docker-incremental.sh frontend # frontend files are bind-mounted; just ensure boko is running
+#   ./docker-incremental.sh local    # run locally with BOKO_LOCAL_MODE=true (db in ./data/)
+#
+# Deployment modes:
+#   Cloud (default): BOKO_LOCAL_MODE=false, db at /app/data/boko.db (Docker volume)
+#   Local:           BOKO_LOCAL_MODE=true,  db at ./data/boko.db (project directory)
 
 set -eu
 
@@ -42,6 +47,28 @@ build_boko() {
     docker compose build boko
 }
 
+run_local() {
+    echo "============================================"
+    echo "  Boko — Local Development Mode"
+    echo "  Database : ./data/boko.db"
+    echo "  Port     : ${BOKO_PORT}"
+    echo "  Frontend : . (project root)"
+    echo "============================================"
+
+    BIN="./backend/target/release/boko-backend"
+    if [ ! -x "$BIN" ]; then
+        echo "Binary not found. Building with cargo..."
+        cargo build --release --manifest-path backend/Cargo.toml
+    fi
+
+    export BOKO_LOCAL_MODE=true
+    export BOKO_PORT="${BOKO_PORT}"
+    export BOKO_STATIC_DIR="."
+    # BOKO_DB_PATH intentionally unset — default_db_path() resolves ./data/boko.db
+
+    exec "$BIN"
+}
+
 case "$MODE" in
     backend|all)
         echo "Incremental backend rebuild with Docker BuildKit cache..."
@@ -56,8 +83,11 @@ case "$MODE" in
         wait_for_boko
         echo "Refresh the browser to see index.html/css/js/img changes."
         ;;
+    local)
+        run_local
+        ;;
     *)
-        echo "Usage: $0 [backend|frontend|all]"
+        echo "Usage: $0 [backend|frontend|local|all]"
         exit 2
         ;;
 esac

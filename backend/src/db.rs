@@ -45,15 +45,38 @@ INSERT OR IGNORE INTO music_config (id, api_base) VALUES (1, '');
 
 const KV_SEED_MARKER: &str = "seed_demo_v1";
 
+/// Whether the server is running in local development mode.
+///
+/// Controlled by the `BOKO_LOCAL_MODE` environment variable.
+/// - `true` / `1` / `yes` → local mode (database stored in `./data/boko.db`)
+/// - anything else or unset → cloud / Docker mode (database in XDG path or
+///   overridden via `BOKO_DB_PATH`)
+pub fn is_local_mode() -> bool {
+    match std::env::var("BOKO_LOCAL_MODE") {
+        Ok(v) => matches!(v.to_lowercase().as_str(), "1" | "true" | "yes"),
+        Err(_) => false,
+    }
+}
+
 /// Resolve the default database path when `BOKO_DB_PATH` is not set.
 ///
-/// The database must NOT live inside the project tree — it holds persistent
-/// user data and should survive redeploys. We follow the XDG base directory
-/// spec (`$XDG_DATA_HOME`, falling back to `$HOME/.local/share`), which keeps
-/// the file out of the repo on both local dev machines and servers.
-/// Docker deployments override this entirely via `BOKO_DB_PATH`.
+/// Deployment modes:
+/// - **Local mode** (`BOKO_LOCAL_MODE=true`): database lives in `./data/boko.db`
+///   relative to the current working directory, keeping everything self-contained
+///   for local development.
+/// - **Cloud / Docker mode** (default): database follows the XDG base directory
+///   spec (`$XDG_DATA_HOME`, falling back to `$HOME/.local/share`), keeping the
+///   file out of the repo. Docker deployments override via `BOKO_DB_PATH`.
 pub fn default_db_path() -> String {
-    // XDG base directory spec: $XDG_DATA_HOME, or $HOME/.local/share if unset.
+    if is_local_mode() {
+        // Local mode: store database in current directory under ./data/
+        let mut p = std::path::PathBuf::from(".");
+        p.push("data");
+        p.push("boko.db");
+        return p.to_string_lossy().into_owned();
+    }
+
+    // Cloud / Docker mode: XDG base directory spec
     let base = match std::env::var("XDG_DATA_HOME") {
         Ok(v) if !v.is_empty() => std::path::PathBuf::from(v),
         _ => {
@@ -100,23 +123,28 @@ pub fn open(path: &str) -> Result<Db> {
     // Demo data: articles / feeds / comments / playlist / friend_links / KV
     // defaults — apply ONLY on the very first run so we don't resurrect
     // rows the user intentionally deleted on subsequent restarts.
-    let has_marker: bool = conn
-        .prepare("SELECT 1 FROM kv_store WHERE key = ?1")
-        .ok()
-        .and_then(|mut stmt| {
-            stmt.query_row([KV_SEED_MARKER], |_r| Ok(true))
-                .ok()
-        })
-        .unwrap_or(false);
+    //
+    // In cloud / Docker mode the database starts empty (no demo content).
+    // Demo seed data is only applied in local development mode.
+    if is_local_mode() {
+        let has_marker: bool = conn
+            .prepare("SELECT 1 FROM kv_store WHERE key = ?1")
+            .ok()
+            .and_then(|mut stmt| {
+                stmt.query_row([KV_SEED_MARKER], |_r| Ok(true))
+                    .ok()
+            })
+            .unwrap_or(false);
 
-    if !has_marker {
-        conn.execute_batch(SEED_SQL)
-            .context("failed to apply seed.sql (demo data)")?;
-        conn.execute(
-            "INSERT OR IGNORE INTO kv_store (key, value) VALUES (?1, '1')",
-            [KV_SEED_MARKER],
-        )
-        .context("failed to write seed demo marker to kv_store")?;
+        if !has_marker {
+            conn.execute_batch(SEED_SQL)
+                .context("failed to apply seed.sql (demo data)")?;
+            conn.execute(
+                "INSERT OR IGNORE INTO kv_store (key, value) VALUES (?1, '1')",
+                [KV_SEED_MARKER],
+            )
+            .context("failed to write seed demo marker to kv_store")?;
+        }
     }
 
     Ok(Arc::new(Mutex::new(conn)))
