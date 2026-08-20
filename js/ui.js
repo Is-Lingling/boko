@@ -336,6 +336,8 @@ function switchView(viewName) {
 
     // 动态页专属标记：用于隐藏全局文章页右侧栏（.box3），避免与动态页自身日历列重复
     document.body.classList.toggle('view-space', view === 'space');
+    // 文章详情页标记：全局右侧栏(.box3) 仅在该视图显示（见 responsive.css body.view-detail 规则）
+    document.body.classList.toggle('view-detail', view === 'detail');
 
     const homeView = document.getElementById('homeView');
     const listView = document.getElementById('listView');
@@ -417,7 +419,7 @@ function switchView(viewName) {
     const layout = document.getElementById('pageLayout') || document.querySelector('.yinying');
     
     // 首页简历 (home)、编辑文章 (editor)、控制台 (adminControl)、图床 (gallery)、回收站 (trash)、个人动态 (space)、文件管理 (fileManager) 视图隐藏全局右侧栏
-    const hideSidebarViews = ['home', 'editor', 'adminControl', 'gallery', 'trash', 'space', 'fileManager'];
+    const hideSidebarViews = ['home', 'list', 'editor', 'adminControl', 'gallery', 'trash', 'space', 'fileManager'];
     const shouldHide = hideSidebarViews.includes(view);
 
     if (rightSidebar) {

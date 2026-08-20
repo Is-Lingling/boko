@@ -10,9 +10,20 @@
  * ========================================================================== */
 
 /* ---------- 1. 根级横向溢出防护（终极兜底，杜绝横向滚动条） ---------- */
-html, body {
+/* 关键：overflow-x 只放在 html 上，绝不放 body。
+   原因：overflow-x:hidden/clip 会把另一轴 overflow-y 强制为 auto，使该元素变成
+   “滚动容器”。若放在 body 上，body 就成了“不滚动的滚动容器”，position:sticky 的
+   顶栏/左右侧边栏的“最近滚动容器”会落到 body，导致它们无法钉在视口（随页面滚走）。
+   只放 html（html 本就是真正的滚动者），body 保持 overflow 默认(visible)，
+   sticky 直接绑定 html/viewport —— 顶栏与左右栏固定、仅中间区滚动。
+   （此前曾试用 overflow-x:clip，但 clip 在部分浏览器对 sticky 子元素有裁剪怪象，
+   故改回仅 html 设 hidden 的稳妥方案。） */
+html {
     max-width: 100%;
     overflow-x: hidden;
+}
+body {
+    max-width: 100%;
 }
 
 /* ---------- 2. 全局媒体与表格自适应 ---------- */
@@ -257,10 +268,11 @@ body {
         padding-right: 16px;
     }
     /* 尊重管理员“隐藏右栏”开关：.yinying.hide-right-sidebar 特异性更高，保持 230px 1fr */
-    .box1,
-    .box3 {
+    .box1 {
         display: block !important;
     }
+    /* 注意：.box3（全局右侧栏）不再在此强制显示；其显隐由 body.view-detail 规则统一控制，
+       仅文章详情页显示，避免泄露到首页/列表/动态/控制台/回收站/图床/文件管理/编辑器。 */
     .hamburger {
         display: none !important;
     }
@@ -527,5 +539,9 @@ body {
     }
     body.view-space .yinying {
         grid-template-columns: 230px 1fr !important;
+    }
+    /* 全局右侧栏(.box3) 仅文章详情页显示；其余页面（首页/列表/动态/控制台/回收站/图床/文件管理/编辑器）一律隐藏 */
+    body.view-detail .box3 {
+        display: block !important;
     }
 }
