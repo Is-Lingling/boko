@@ -271,8 +271,8 @@ body {
     .box1 {
         display: block !important;
     }
-    /* 注意：.box3（全局右侧栏）不再在此强制显示；其显隐由 body.view-detail 规则统一控制，
-       仅文章详情页显示，避免泄露到首页/列表/动态/控制台/回收站/图床/文件管理/编辑器。 */
+    /* 注意：.box3（全局右侧栏）不再在此强制显示；其显隐由 body.view-detail / body.view-list 规则统一控制，
+       仅文章详情页与文章列表页显示，避免泄露到首页/动态/控制台/回收站/图床/文件管理/编辑器。 */
     .hamburger {
         display: none !important;
     }
@@ -540,8 +540,9 @@ body {
     body.view-space .yinying {
         grid-template-columns: 230px 1fr !important;
     }
-    /* 全局右侧栏(.box3) 仅文章详情页显示；其余页面（首页/列表/动态/控制台/回收站/图床/文件管理/编辑器）一律隐藏 */
-    body.view-detail .box3 {
+    /* 全局右侧栏(.box3) 在文章详情页与文章列表页显示；其余页面（首页/动态/控制台/回收站/图床/文件管理/编辑器）一律隐藏 */
+    body.view-detail .box3,
+    body.view-list .box3 {
         display: block !important;
     }
 }

@@ -336,8 +336,10 @@ function switchView(viewName) {
 
     // 动态页专属标记：用于隐藏全局文章页右侧栏（.box3），避免与动态页自身日历列重复
     document.body.classList.toggle('view-space', view === 'space');
-    // 文章详情页标记：全局右侧栏(.box3) 仅在该视图显示（见 responsive.css body.view-detail 规则）
+    // 文章详情页 / 文章列表页标记：全局右侧栏(.box3) 在这两个视图显示
+    // （见 responsive.css 中 body.view-detail / body.view-list 规则；与“仅文章相关页面显示右侧栏”的需求一致）
     document.body.classList.toggle('view-detail', view === 'detail');
+    document.body.classList.toggle('view-list', view === 'list');
 
     const homeView = document.getElementById('homeView');
     const listView = document.getElementById('listView');
@@ -418,8 +420,9 @@ function switchView(viewName) {
     const rightSidebar = document.querySelector('.box3');
     const layout = document.getElementById('pageLayout') || document.querySelector('.yinying');
     
-    // 首页简历 (home)、编辑文章 (editor)、控制台 (adminControl)、图床 (gallery)、回收站 (trash)、个人动态 (space)、文件管理 (fileManager) 视图隐藏全局右侧栏
-    const hideSidebarViews = ['home', 'list', 'editor', 'adminControl', 'gallery', 'trash', 'space', 'fileManager'];
+    // 首页简历 (home)、编辑文章 (editor)、控制台 (adminControl)、图床 (gallery)、回收站 (trash)、个人动态 (space)、文件管理 (fileManager) 视图隐藏全局右侧栏。
+    // 注意：'list'（文章列表页）已从隐藏列表移除 —— 文章列表页与文章详情页同样需要显示全局右侧栏（留言/统计/热门/标签云/友情链接）。
+    const hideSidebarViews = ['home', 'editor', 'adminControl', 'gallery', 'trash', 'space', 'fileManager'];
     const shouldHide = hideSidebarViews.includes(view);
 
     if (rightSidebar) {
@@ -2134,7 +2137,24 @@ function generateTOC(contentElId, sidebarBoxClass = '.box3') {
 
     // 筛选内容中的标题 h1, h2, h3, h4
     const headings = Array.from(contentEl.querySelectorAll('h1, h2, h3, h4'));
-    if (!headings.length) return;
+    if (!headings.length) {
+        // 无标题：右侧栏应显示 5 张卡片。若上篇文章遗留了 TOC，则还原为卡片。
+        if (box3.querySelector('#articleTocCard')) {
+            if (box3.dataset.originalContent) {
+                box3.innerHTML = box3.dataset.originalContent;
+                delete box3.dataset.originalContent;
+            }
+            if (window._tocScrollHandler) {
+                window.removeEventListener('scroll', window._tocScrollHandler);
+            }
+            // 重新渲染动态组件，确保数据最新
+            if (typeof renderSidebarComments === 'function') renderSidebarComments();
+            if (typeof renderHotArticles === 'function') renderHotArticles();
+            if (typeof renderTagCloud === 'function') renderTagCloud();
+            if (typeof renderFriendLinks === 'function') renderFriendLinks();
+        }
+        return;
+    }
 
     // 为每个标题注入唯一 ID 锚点
     headings.forEach((h, index) => {
@@ -2213,7 +2233,7 @@ function generateTOC(contentElId, sidebarBoxClass = '.box3') {
         </div>
     `;
 
-    // 暂存侧边栏原有 DOM 结构并替换为 TOC
+    // 有标题：把整个右侧栏替换为“文章目录”（仅显示目录，不显示 5 张卡片）
     if (!box3.dataset.originalContent) {
         box3.dataset.originalContent = box3.innerHTML;
     }
@@ -2306,7 +2326,7 @@ function generateTOC(contentElId, sidebarBoxClass = '.box3') {
     window.addEventListener('scroll', window._tocScrollHandler);
 }
 
-/** 还原右侧边栏（退出文章详情视图时） */
+/** 还原右侧边栏（退出文章详情视图时）：把之前被 TOC 替换的内容还原为 5 张卡片 */
 function restoreSidebar() {
     const box3 = document.querySelector('.box3');
     if (box3 && box3.dataset.originalContent) {
