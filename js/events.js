@@ -588,6 +588,7 @@ function bindEvents() {
     if (closeThemeBtn) closeThemeBtn.addEventListener('click', window.closeThemeModal);
     if (saveThemeBtn) saveThemeBtn.addEventListener('click', () => {
         window.closeThemeModal();
+        if (typeof saveThemeSettings === 'function') saveThemeSettings();
         if (typeof showToast === 'function') showToast('主题外观配置已保存！');
     });
     if (themeModal) {
@@ -2928,6 +2929,7 @@ function bindEvents() {
 
             applyThemeCustomizations();
             applyThemeParams();
+            if (typeof saveThemeSettings === 'function') saveThemeSettings();
         });
     }
 

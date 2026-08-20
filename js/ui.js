@@ -334,6 +334,9 @@ function switchView(viewName) {
         view = 'home';
     }
 
+    // 动态页专属标记：用于隐藏全局文章页右侧栏（.box3），避免与动态页自身日历列重复
+    document.body.classList.toggle('view-space', view === 'space');
+
     const homeView = document.getElementById('homeView');
     const listView = document.getElementById('listView');
     const detailView = document.getElementById('detailView');

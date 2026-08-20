@@ -74,6 +74,18 @@ async function loadPrimaryData(view) {
         loadProfileData().then(renderProfile),
     ];
 
+    // 关键修复：文章列表必须始终以后端 API（SQLite）为唯一数据源。
+    // 原先只在非 home/space 视图才调用 loadArticlesFromFile()，导致默认落地页 home
+    // 始终停留在 per-device 的 localStorage['articlesData'] 缓存——换新设备/清除本地
+    // 数据后看不到任何文章，且无法跨设备同步。现在对所有视图都先拉取 API 再渲染。
+    tasks.push(loadArticlesFromFile().then(refreshArticleUi));
+
+    // 主题外观同样属于站点级数据：管理员在后台改主题，所有访客必须看到一致效果。
+    // 从后端 KV（theme_settings）拉取并应用，覆盖本机 localStorage 缓存。
+    if (typeof loadThemeSettingsFromApi === 'function') {
+        tasks.push(loadThemeSettingsFromApi());
+    }
+
     if (view === 'home') {
         if (typeof loadHomeResumeDataFromApi === 'function') {
             tasks.push(loadHomeResumeDataFromApi().then(() => switchView('home')));
@@ -84,8 +96,6 @@ async function loadPrimaryData(view) {
                 if (typeof renderSpaceView === 'function') renderSpaceView();
             }));
         }
-    } else {
-        tasks.push(loadArticlesFromFile().then(refreshArticleUi));
     }
 
     await Promise.allSettled(tasks);

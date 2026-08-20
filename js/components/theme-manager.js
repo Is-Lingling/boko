@@ -51,6 +51,10 @@
     function toggleTheme() {
         const current = (typeof state !== 'undefined' && state.theme) ? state.theme : 'light';
         setTheme(current === 'dark' ? 'light' : 'dark');
+        // 管理员切换深色/浅色也属于站点外观配置，需写回后端以保证全站一致
+        if (typeof state !== 'undefined' && state.isAdmin && typeof saveThemeSettings === 'function') {
+            saveThemeSettings();
+        }
     }
 
     /**

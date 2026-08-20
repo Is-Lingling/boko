@@ -1,0 +1,531 @@
+/* ============================================================================
+ * responsive.css  —  移动端优先（Mobile-First）响应式布局重构
+ * 加载顺序：必须位于 index.css / article-unified.css 之后，以覆盖其桌面端默认值。
+ * 设计目标：
+ *   - 桌面端  ≥1024px  ：三栏（左栏 230 / 内容 1fr / 右栏 290）
+ *   - 平板端  768–1023px：两栏（左栏 230 / 内容 1fr，右栏与移动抽屉隐藏）
+ *   - 移动端  <768px    ：单栏（左/右栏隐藏，顶栏汉堡抽屉导航）
+ * 约束遵守：禁止硬编码 width:xxxpx（改用相对单位 / max-width:100% / clamp）；
+ *          根元素 overflow-x 防护；弹性容器 flex-wrap；图片/视频/表格自适应。
+ * ========================================================================== */
+
+/* ---------- 1. 根级横向溢出防护（终极兜底，杜绝横向滚动条） ---------- */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* ---------- 2. 全局媒体与表格自适应 ---------- */
+img,
+video,
+canvas,
+svg,
+iframe {
+    max-width: 100%;
+    height: auto;
+}
+table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+pre,
+code,
+kbd,
+samp {
+    overflow-x: auto;
+    max-width: 100%;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 长文本/链接在窄屏下允许断开，避免撑破容器 */
+.article-content,
+.markdown-body,
+.page-box,
+.box2 {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* ============================================================================
+ * 3. 移动端基础样式（<768px）—— Mobile-First 的基准层
+ *    所有未在上限媒体查询中覆盖的规则，在手机上默认生效。
+ * ========================================================================== */
+.yinying {
+    grid-template-columns: 1fr;        /* 单栏堆叠 */
+    padding-left: 12px;
+    padding-right: 12px;
+    gap: 10px;
+}
+/* grid 子项允许收缩，避免内部宽元素撑出横向溢出 */
+.yinying > * {
+    min-width: 0;
+}
+.box1,
+.box3 {
+    display: none !important;          /* 移动端不显示两侧栏，改用抽屉 */
+}
+.hamburger {
+    display: inline-flex;              /* 显示汉堡按钮 */
+}
+
+/* ----- 顶栏：柔性收缩，绝不再裁剪右侧 ----- */
+.top {
+    flex-wrap: nowrap;
+    overflow: visible;                 /* 覆盖 index.css ≤900px 的 overflow:hidden（右侧被裁剪根因） */
+    height: auto;
+    min-height: 58px;
+    padding: 8px 12px;
+    gap: 8px;
+}
+/* 左侧 Logo 区：去掉硬编码 229px，仅容纳头像，释放右侧空间 */
+.top-left {
+    width: auto;
+    min-width: 0;
+    max-width: 56px;
+    height: auto;
+    flex: 0 0 auto;
+    border-right: none;
+    border-radius: var(--sidebar-radius, 18px);
+}
+.top-left .mingzi img {
+    height: 38px;
+}
+/* 公告栏在移动端隐藏，避免与搜索/操作按钮争抢空间 */
+.top-notice-banner {
+    display: none !important;
+}
+/* 顶栏操作区：占据剩余宽度、右对齐、可收缩 */
+.top-actions {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 6px;
+    justify-content: flex-end;
+}
+/* 搜索框在移动端折叠为 38px 圆形图标，聚焦/展开时最多占 60vw */
+.top-actions .search-form {
+    width: 38px;
+    min-width: 38px;
+    max-width: 38px;
+    flex: 0 0 auto;
+}
+.top-actions .search-form #search_input {
+    width: 100%;
+    opacity: 0;
+    pointer-events: none;
+}
+.top-actions .search-form:focus-within,
+.top-actions .search-form.is-expanded {
+    width: min(220px, 60vw) !important;
+    max-width: 60vw !important;
+}
+.top-actions .search-form:focus-within #search_input,
+.top-actions .search-form.is-expanded #search_input {
+    opacity: 1;
+    pointer-events: auto;
+}
+/* 主题/退出按钮在移动端圆形化（仅显示图标） */
+.theme-toggle span,
+#adminLogoutBtn span {
+    display: none;
+}
+.theme-toggle,
+#adminLogoutBtn {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+/* 移动端内联播放器收起，避免顶栏过长 */
+.mp-inline {
+    display: none !important;
+}
+
+/* 文章工具行 / 排序组允许换行，避免溢出 */
+.article-tools {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.sort-group {
+    flex-wrap: wrap;
+}
+
+/* 字号平滑缩放（移动端优先，桌面端自然封顶） */
+body {
+    font-size: clamp(14px, 4vw, 16px);
+}
+
+/* 内容区内边距收敛，避免贴边 */
+.box2 {
+    padding: 12px;
+    border-radius: 16px;
+}
+.page-box {
+    padding: 14px 0 16px;
+}
+
+/* ============================================================================
+ * 4. 平板端（768px – 1023px）
+ * ========================================================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .yinying {
+        grid-template-columns: 230px 1fr;   /* 左栏 + 内容 */
+        max-width: 1024px;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    .box1 {
+        display: block !important;           /* 显示左侧栏 */
+    }
+    .box3 {
+        display: none !important;            /* 右栏在平板隐藏 */
+    }
+    .hamburger {
+        display: none;                       /* 有左侧栏即不需要抽屉 */
+    }
+
+    .top {
+        overflow: visible;
+        height: 58px;
+        min-height: 58px;
+        padding: 0 16px;
+        flex-wrap: nowrap;
+    }
+    /* 恢复与左栏对齐的 229px（相对 230 设计，用 max-width:30vw 防止极端窄屏溢出） */
+    .top-left {
+        width: calc(230px - 1px);
+        min-width: calc(230px - 1px);
+        max-width: 30vw;
+        height: 58px;
+        flex: none;
+        border-right: 1px solid var(--border-color);
+        border-radius: var(--sidebar-radius, 18px) 0 0 var(--sidebar-radius, 18px);
+    }
+    .top-left .mingzi img {
+        height: 42px;
+    }
+    .top-notice-banner {
+        display: inline-flex !important;
+    }
+    .top-actions {
+        flex: 0 1 auto;
+        gap: 10px;
+    }
+    .top-actions .search-form {
+        width: min(140px, 20vw);
+        min-width: 38px;
+        max-width: min(140px, 20vw);
+    }
+    .top-actions .search-form:focus-within,
+    .top-actions .search-form.is-expanded {
+        width: min(280px, 40vw) !important;
+        max-width: min(280px, 40vw) !important;
+    }
+    .theme-toggle span,
+    #adminLogoutBtn span {
+        display: inline;
+    }
+    .theme-toggle,
+    #adminLogoutBtn {
+        width: auto;
+        min-width: 0;
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+    }
+    /* 平板顶栏同样收起内联播放器，保持整洁 */
+    .mp-inline {
+        display: none !important;
+    }
+    .box2 {
+        padding: 16px;
+    }
+}
+
+/* ============================================================================
+ * 5. 桌面端（≥1024px）—— 还原完整三栏与原始外观
+ * ========================================================================== */
+@media (min-width: 1024px) {
+    .yinying {
+        grid-template-columns: 230px 1fr 290px;
+        max-width: 1280px;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    /* 尊重管理员“隐藏右栏”开关：.yinying.hide-right-sidebar 特异性更高，保持 230px 1fr */
+    .box1,
+    .box3 {
+        display: block !important;
+    }
+    .hamburger {
+        display: none !important;
+    }
+
+    .top {
+        overflow: visible;
+        height: 58px;
+        min-height: 58px;
+        padding: 0;
+        flex-wrap: nowrap;
+    }
+    .top-left {
+        width: calc(230px - 1px);
+        min-width: calc(230px - 1px);
+        max-width: calc(230px - 1px);
+        height: 58px;
+        flex: none;
+        border-right: 1px solid var(--border-color);
+        border-radius: var(--sidebar-radius, 18px) 0 0 var(--sidebar-radius, 18px);
+    }
+    .top-left .mingzi img {
+        height: 42px;
+    }
+    .top-notice-banner {
+        display: inline-flex !important;
+    }
+    .top-actions {
+        flex: 0 1 auto;
+        gap: 10px;
+    }
+    .top-actions .search-form {
+        width: min(140px, 20vw);
+        min-width: 38px;
+        max-width: min(140px, 20vw);
+    }
+    .top-actions .search-form:focus-within,
+    .top-actions .search-form.is-expanded {
+        width: min(280px, 40vw) !important;
+        max-width: min(280px, 40vw) !important;
+    }
+    .theme-toggle span,
+    #adminLogoutBtn span {
+        display: inline;
+    }
+    .theme-toggle,
+    #adminLogoutBtn {
+        width: auto;
+        min-width: 0;
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+    }
+    /* 桌面端恢复内联播放器 */
+    .mp-inline {
+        display: flex !important;
+    }
+    .box2 {
+        padding: 16px;
+    }
+}
+
+/* 极窄屏（<380px）再收敛：搜索框聚焦宽度进一步收紧，保证按钮不被挤出 */
+@media (max-width: 380px) {
+    .top {
+        gap: 6px;
+        padding: 6px 10px;
+    }
+    .top-actions .search-form:focus-within,
+    .top-actions .search-form.is-expanded {
+        width: min(160px, 52vw) !important;
+        max-width: 52vw !important;
+    }
+    .box2 {
+        padding: 10px;
+        border-radius: 14px;
+    }
+}
+
+/* ============================================================================
+ * 6. 视图级移动端修复（首页 / 动态 / 控制台 / 回收站 内部宽元素溢出修正）
+ *    这些视图渲染在 .box2 内，而 .box2 带 overflow-x:hidden；
+ *    若内部存在最小宽度大于可用视口的栅格，会被静默裁剪（右侧被裁减 + 页面被挤压）。
+ *    此处统一将这些宽元素收敛为单列 / 可换行 / 相对单位。
+ * ========================================================================== */
+@media (max-width: 767px) {
+    /* R8 根因：article-unified.css:580 在 ≤1100px 把 .yinying 改为
+       `200px 1fr 260px`（三栏），且 box1/box3 在移动端是 display:none；
+       按 CSS 网格自动放置规则，.box2 会落入第一个 200px 轨道，
+       `1fr` 与 `260px` 轨道留空 → 视觉上"右半空白"。
+       必须在移动端用 !important 强制单栏，且不能影响桌面端。
+       （理论上前面的 base `1fr` 应胜出，但实测被 580 覆盖，加 !important 兜底） */
+    .yinying {
+        grid-template-columns: 1fr !important;
+        max-width: 100% !important;
+    }
+
+    /* 允许 .box2 内所有元素收缩，避免被固定 min-width 撑破容器 */
+    .box2,
+    .box2 * {
+        min-width: 0;
+    }
+
+    /* 覆盖 article-unified.css 在 ≤860px 把 .inline-detail-card 内边距清零的设定，
+       否则控制台 / 回收站 / 动态等卡片会贴边、显得“被挤压” */
+    .inline-detail-card {
+        padding: 14px !important;
+    }
+
+    /* 首页 Hero：头像与简介改为纵向堆叠并居中（强制 column，
+       否则 base 的 row 布局会让 .resume-intro 撑开并整体溢出右半屏） */
+    .resume-hero-content {
+        flex-direction: column !important;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        gap: 16px;
+    }
+    .resume-avatar {
+        width: 84px;
+        height: 84px;
+    }
+    .resume-intro {
+        flex-direction: column !important;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        max-width: 100%;
+    }
+    .resume-hero-tags,
+    .resume-cta-group {
+        justify-content: center;
+        flex-wrap: wrap !important;
+        gap: 10px;
+        max-width: 100%;
+    }
+
+    /* R8 续：resume 卡片内文本强制可断行（避免 .resume-main-title /
+       .resume-motto 等长中文/英文标题在窄屏单行溢出被 .box2 裁剪） */
+    .resume-container,
+    .home-view-wrapper,
+    .resume-hero-card,
+    .resume-section-card,
+    .resume-contact-card,
+    .resume-main-title,
+    .resume-motto,
+    .resume-greeting,
+    .resume-name-highlight,
+    .resume-cta-group,
+    .resume-hero-tags,
+    .resume-about-box,
+    .resume-project-card,
+    .resume-skill-category,
+    .resume-contact-content,
+    .resume-section-header,
+    .resume-section-title,
+    .resume-section-desc {
+        overflow-wrap: break-word;
+        word-break: break-word;
+        white-space: normal;
+        max-width: 100%;
+    }
+    .resume-avatar-box {
+        flex: 0 0 auto;
+    }
+
+    /* 首页：“关于我 / 精选作品” 栅格的 minmax(220/260px) 在窄屏会溢出，强制单列 */
+    .resume-about-grid,
+    .resume-projects-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* 列表页：覆盖内联 flex-wrap:nowrap，让排序 / 筛选 / 新增按钮换行 */
+    .article-tools {
+        flex-wrap: wrap !important;
+    }
+
+    /* 动态页：覆盖内联 grid-template-columns:1fr 310px，强制单列（右栏日历卡下移） */
+    .space-page-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .space-right-col {
+        width: 100%;
+    }
+
+    /* 控制台：平方卡片网格在手机上固定 2 列，避免 auto-fill 过窄 / 溢出 */
+    .admin-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    /* 回收站：卡片改为单列，操作按钮均分宽度 */
+    .trash-card {
+        grid-template-columns: 1fr !important;
+    }
+    .trash-card-actions {
+        justify-content: stretch;
+    }
+    .trash-btn {
+        flex: 1 1 auto;
+    }
+
+    /* 动态时间线图片画廊兜底 */
+    .feed-gallery {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important;
+    }
+
+    /* ===== 移动端管理员登录：由“被 logo 挤压的 56px 下拉”改为居中弹窗 =====
+       注意：.top 带 backdrop-filter，会成为 position:fixed 的包含块，
+       因此用 top:50vh（视口相关）+ left:50%（.top 满宽）实现居中。 */
+    .top-left .admin-login-dropdown,
+    .admin-login-dropdown {
+        position: fixed;
+        top: 50vh;
+        left: 50%;
+        right: auto;
+        bottom: auto;
+        width: min(340px, 90vw);
+        max-width: 90vw;
+        min-width: 0;
+        transform: translate(-50%, -50%) scale(0.97);
+        border-radius: 16px;
+        z-index: 100000;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.4);
+    }
+    .admin-login-dropdown.active {
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* 极小屏（<420px）进一步收敛首页内边距，杜绝 minmax 残留溢出 */
+@media (max-width: 420px) {
+    .resume-section-card,
+    .resume-hero-card {
+        padding: 16px 14px;
+    }
+    .home-view-wrapper {
+        padding: 12px 12px !important;
+    }
+}
+
+/* ============================================================================
+ * 7. 动态（space）页右侧日历：窗口缩小到 ≤1100px 时隐藏，对齐文章页右侧栏行为
+ *    （文章页 .box3 在 ≤1100px 即 display:none）。
+ *    说明：.space-right-col / .space-page-grid 均为内联样式，必须用 !important 覆盖。
+ * ========================================================================== */
+@media (max-width: 1100px) {
+    .space-right-col {
+        display: none !important;
+    }
+    .space-page-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ============================================================================
+ * 8. 动态页：隐藏全局文章页右侧栏（.box3），改用页面自身日历列，避免“两个右侧栏”
+ *    .box3 是全局元素，仅靠 #spaceView.active 无法选中兄弟节点，故用 body.view-space 状态类。
+ *    仅在 ≥768px 应用网格收敛，移动端（<768）本就单栏且 .box3 已隐藏，无需 230px 轨道。
+ * ========================================================================== */
+@media (min-width: 768px) {
+    body.view-space .box3 {
+        display: none !important;
+    }
+    body.view-space .yinying {
+        grid-template-columns: 230px 1fr !important;
+    }
+}

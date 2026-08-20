@@ -389,6 +389,56 @@ async function loadKvFromApi() {
     await Promise.all(promises);
 }
 
+// ========== 主题外观（站点级，存于后端 KV，保证所有访客一致） ==========
+// 主题属于管理员配置的"站点外观"，应与文章/资料一样以数据库为唯一数据源，
+// 而非像点赞/收藏那样保留在各设备的 localStorage。所有访客（含新设备）都从
+// 后端拉取同一份 theme_settings；管理员在主题面板保存后写回后端，全站同步。
+const THEME_FIELDS = [
+    'theme', 'themeBg', 'themeFont', 'themeIconStyle', 'themePreset',
+    'themeRadius', 'themeSidebarRadius', 'themeOpacity',
+    'themeCardOpacity', 'themeSidebarOpacity', 'themeCardHeight', 'themeCardWidth',
+    'themeBlur', 'themePresetColor', 'themeRopeWidth',
+    'themeTopGap', 'themeGridGapX', 'themeCardGapY',
+    'themeArticleGapTop', 'themeArticleGapBottom', 'themeCustomBgUrl'
+];
+
+function collectThemeSettings() {
+    const obj = {};
+    THEME_FIELDS.forEach(k => { obj[k] = (state[k] !== undefined ? state[k] : null); });
+    return obj;
+}
+
+function applyThemeSettings(obj) {
+    if (!obj || typeof obj !== 'object') return;
+    THEME_FIELDS.forEach(k => {
+        if (obj[k] !== undefined && obj[k] !== null) state[k] = obj[k];
+    });
+    if (typeof setTheme === 'function') setTheme(state.theme);
+    if (typeof applyThemeCustomizations === 'function') applyThemeCustomizations();
+}
+
+/** 从后端拉取主题配置并应用到全局 state（所有访客看到一致外观） */
+async function loadThemeSettingsFromApi() {
+    try {
+        const v = await Api.getKv('theme_settings');
+        if (v && typeof v === 'object') {
+            applyThemeSettings(v);
+        }
+    } catch (err) {
+        console.warn('[API] 加载主题配置失败，使用本地缓存:', err && err.message);
+    }
+}
+
+/** 将当前主题配置写回后端（仅管理员可写，fire-and-forget） */
+function saveThemeSettings() {
+    if (!state.isAdmin) return;
+    Api.setKv('theme_settings', collectThemeSettings())
+        .catch(err => console.warn('[API] 保存主题配置失败:', err && err.message));
+}
+
+window.loadThemeSettingsFromApi = loadThemeSettingsFromApi;
+window.saveThemeSettings = saveThemeSettings;
+
 // ========== 图册命名管理 & 封面使用计数 ==========
 
 /** 读取图册图片的自定义命名映射 { url: name } */
