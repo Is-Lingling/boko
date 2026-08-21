@@ -30,92 +30,148 @@ const STORAGE_KEYS = {
 };
 
 // ========== 首页个人简历与介绍默认配置 ==========
+// 注：所有 hero 顶层字段（greeting/name/status/github/title/motto/avatar/tags/
+// primaryBtnText/primaryBtnLink/secondaryBtnText/secondaryBtnLink/githubBtnText）
+// 须与 openHomeResumeEditor('hero') 的表单保持兼容；下方 infoLines 为可自由增删的
+// 名片信息行（学历 / 身份 / 机构等），由编辑器维护，换行 = 一行。
 const defaultHomeResume = {
     hero: {
-        greeting: '你好，我是',
-        name: '是令令啊',
+        greeting: 'RESEARCHER · 科研工作者',
+        name: 'Zhang Fuhao',
+        chineseName: '张富豪',
         avatar: 'img/img6.jpg',
-        status: '探索创造中',
-        title: '全栈开发工程师 · 前端架构探索者 · 独立创作者',
-        motto: '“探索数字边界，专注于打造优雅、极致、有温度的交互与产品体验。热爱代码与设计在像素间的精妙交融。”',
-        tags: ['Web 全栈开发', '交互与 UI/UX 设计', '现代化前端架构', '极客生活探索'],
+        status: 'Open to Research Collaboration',
+        infoLines: [
+            'M.S. Candidate in Software Engineering (学硕)',
+            'Sichuan Normal University · 四川师范大学',
+            'Software Engineering · 2026 年 6 月预期毕业'
+        ],
+        location: 'Chengdu, China',
+        email: '',
+        title: 'Medical Image Analysis · 4D Flow MRI · Edge AI',
+        motto: '「以深度学习与物理信息建模 (PINN) 探索医学影像中的血流动力学与病理结构，致力于可解释、可落地的智能诊疗与边缘端 AI 研究。」',
+        // 研究兴趣 / 标签（编辑器与渲染共用）
+        tags: [
+            'Medical Image Analysis',
+            '4D Flow MRI',
+            'Intracranial Aneurysm',
+            'Aortic Dissection',
+            'Mamba · MeshCNN · PINN',
+            'Edge AI (RK3588 / NPU)',
+            'SAR Image',
+            'LLM (LoRA)'
+        ],
         github: 'https://github.com/Is-Lingling',
-        primaryBtnText: '阅读我的文章',
+        primaryBtnText: 'View Publications',
         primaryBtnLink: 'list',
-        secondaryBtnText: '空间动态',
+        secondaryBtnText: 'Contact / 联系',
         secondaryBtnLink: 'space',
         githubBtnText: 'GitHub'
     },
     aboutSection: {
-        title: '关于我 · About Me',
-        subtitle: '个人背景与技术哲学',
-        icon: 'info'
+        title: 'Publications · 发表论文',
+        subtitle: '代表性论文与预印本 · Selected Papers',
+        icon: 'book-open'
     },
-    about: [
-        { icon: 'layers', title: '全栈视野与工程化', desc: '深耕现代化 Web 生态，精通模块化组件设计、状态管理、性能极致优化与工程化构建流程，兼具良好的全栈开发视野。' },
-        { icon: 'palette', title: '极致美学与交互', desc: '笃信“Less, but better”设计哲学。热衷于玻璃拟态、流光微动效与丝滑触控反馈，让每一次点击都充满愉悦感。' },
-        { icon: 'lightbulb', title: '探索未知与敏捷实践', desc: '对前沿技术保持敏锐好奇心，积极将现代化 Web 标准、Canvas 图形渲染与 AI 智能体生产力工具落地于实际项目。' },
-        { icon: 'sprout', title: '知识沉淀与开放开源', desc: '坚持通过写作沉淀技术心得，乐于开源分享。在数字花园中记录每一次突破与成长，与同行者共同进步。' }
+    publications: [
+        {
+            title: 'Unsupervised Denoising of 4D Flow MRI via Diffusion Probabilistic Models',
+            authors: 'Zhang F. (equal contribution), Liu S., Li Y., Wang X., Chen H. (corresponding)',
+            venue: 'Medical Image Analysis (MedIA)',
+            year: '2026',
+            note: 'CCF-B · JCR Q1 · First Author'
+        },
+        {
+            title: 'Geometric Deep Learning for Intracranial Aneurysm Segmentation and Rupture Risk Prediction',
+            authors: 'Zhang F. (equal contribution), Liu S., Li Y., Wang X., Chen H. (corresponding)',
+            venue: 'Computerized Medical Imaging and Graphics (CMIG)',
+            year: '2025',
+            note: 'CCF-C · JCR Q2 · First Author'
+        }
     ],
     skillsSection: {
-        title: '专业技能 · Skills & Stack',
-        subtitle: '熟练运用的技术栈与工具链',
+        title: 'Research Skills · 科研技能栈',
+        subtitle: '医学影像 · 边缘智能 · 工具链',
         icon: 'code'
     },
     skillsCategories: [
         {
-            title: '前端开发 (Frontend Core)',
+            title: '医学影像与深度学习 (Medical Imaging & DL)',
             indicator: 'front',
-            items: ['JavaScript (ES6+)', 'TypeScript', 'Vue.js 3 / Pinia', 'React / Next.js', 'HTML5 / Semantic Web', 'CSS3 / Flexbox / Grid', 'TailwindCSS / Vanilla CSS', 'Canvas / CSS Animation']
+            items: ['PyTorch', 'CNN · Transformer · Mamba', 'Medical Image Segmentation', 'Image Classification', 'Unsupervised Denoising', 'PINN (Physics-Informed NN)', 'MeshCNN', '4D Flow MRI']
         },
         {
-            title: '后端服务与数据 (Backend & Storage)',
+            title: '边缘计算与嵌入式 AI (Edge AI & Embedded)',
             indicator: 'back',
-            items: ['Node.js / Express', 'Python / FastAPI', 'RESTful APIs / GraphQL', 'PostgreSQL / MySQL', 'Redis 缓存', 'LocalStorage / IndexedDB']
+            items: ['ARM Architecture (瑞芯微 RK3588)', 'ONNX 模型转换', '端侧 NPU 加速部署', '边缘推理优化']
         },
         {
-            title: '工程化与设计协同 (DevOps & Tools)',
+            title: '目标检测与多模态 (Detection & Multimodal)',
             indicator: 'tool',
-            items: ['Vite / Webpack', 'Git / GitHub Workflow', 'Docker 容器化', 'CI / CD 自动化流水线', 'Figma UI/UX 设计', 'Chrome DevTools 性能调优']
+            items: ['YOLOv8 瑕疵检测', 'CT / MRI / Flow MRI 数据治理', '多模态医学数据流水线', 'SAR 图像细粒度语义分割']
+        },
+        {
+            title: '大模型与工具链 (LLM & Toolchain)',
+            indicator: 'tool',
+            items: ['Ollama 本地模型部署', 'LLM 微调 (LoRA)', 'Python (PyTorch, NumPy)', 'LaTeX', 'Linux', 'English (CET-4, 熟练阅读文献)']
         }
     ],
     projectsSection: {
-        title: '精选作品 · Featured Projects',
-        subtitle: '近期主导与独立开发的代表项目',
+        title: 'Selected Projects · 科研项目',
+        subtitle: '代表性研究与工程实践',
         icon: 'layout'
     },
     projects: [
         {
-            badge: '核心开源项目',
-            title: 'Boko 现代化极简玻璃拟态博客系统',
-            desc: '一款采用原生 Web 技术与 CSS 变量驱动的高颜值个人博客平台。具备实时主题调色盘、卡片比例调优、纯净 PDF 打印导出、分类风箱折叠与完整管理后台。',
-            tags: ['Vanilla JS', 'Glassmorphism', 'CSS Variables', 'Responsive'],
+            badge: '四川省自然科学基金',
+            title: '颅内动脉瘤智能分割与破裂风险预测',
+            desc: '参与者。提出基于自注意力机制与边界感知搜索的网格分割模型，颅内动脉瘤分割准确率 98%；提出粗细粒度并行注意力模型，破裂风险预测准确率 92%。',
+            tags: ['网格分割', '自注意力', '破裂风险', 'CCF-C'],
             link: 'list',
             customUrl: ''
         },
         {
-            badge: '互动体验',
-            title: '个人动态空间与实时轻量互动 Feed',
-            desc: '支持富媒体图片上传、即时点赞动效、多层评论回复树与访客专属个性化标识，打造轻量化专属个人社交展示墙。',
-            tags: ['DOM Engine', 'Event Delegation', 'Web Storage'],
-            link: 'space',
+            badge: 'Michigan Tech 合作',
+            title: '4D Flow MRI 去噪 · PINN 血流动力学 · 主动脉夹层分割',
+            desc: '跨学科医学图像分析与物理信息建模：4D Flow MRI 无监督降噪、PINN 模拟颅内动脉瘤血流、MeshCNN 双分支注意力实现主动脉夹层网格分割 (精度 100%)。',
+            tags: ['4D Flow MRI', 'PINN', 'MeshCNN', 'Aortic Dissection'],
+            link: 'list',
+            customUrl: ''
+        },
+        {
+            badge: '华西医院合作',
+            title: '心外膜脂肪定量 · CT/MRI 数据处理',
+            desc: '设计完整心脏影像数据处理流程；在医生指导下人工标注构建高质量数据集；基于 MRI 优化心脏疾病分类模型，准确率达 98%。',
+            tags: ['CT', 'MRI', 'Cardiac Imaging', 'Classification'],
+            link: 'list',
+            customUrl: ''
+        },
+        {
+            badge: '四川省重大科技专项',
+            title: 'SAR 图像无监督降噪与细粒度语义分割',
+            desc: '拟提出基于扩散模型的 SAR 图像无监督降噪方法，及基于空间-频率注意力的 SAR 图像细粒度语义分割方法 (2025 年 7 月)。',
+            tags: ['SAR', 'Diffusion', 'Frequency Attention', 'Segmentation'],
+            link: 'list',
             customUrl: ''
         }
     ],
     timelineSection: {
-        title: '成长历程 · Milestones',
-        subtitle: '技术探索与创作轨迹',
+        title: 'Education & Experience · 学历与经历',
+        subtitle: '学术轨迹与研究时间线',
         icon: 'calendar'
     },
     timeline: [
-        { year: '2026', title: '深度全栈与智能体协作实践', desc: '全面重构与迭代个人博客生态系统，探索 AI 编程代理深度集成，打造高交互质感的前端精品应用。' },
-        { year: '2025', title: '现代化前端架构与设计系统规范', desc: '搭建高内聚低耦合的前端工程化基座，沉淀多套设计 Token 与响应式交互规范，提升研发效能。' },
-        { year: '2024', title: '独立数字花园启航', desc: '上线第一代个人站点，坚持技术随笔与心得记录，积累了丰富的前端重构与性能调优实战经验。' }
+        { year: '2023 – 至今', title: '四川师范大学 · 硕士在读 (软件工程 学硕)', desc: '2026 年 6 月预期毕业。研究方向：医学影像智能分析 (4D Flow MRI、颅内动脉瘤)。' },
+        { year: '2023 – 至今', title: '密歇根理工大学合作项目 · 参与者', desc: '开展心脑血管疾病相关的跨学科医学图像分析与物理信息建模研究：4D Flow MRI 无监督降噪、PINN 模拟颅内动脉瘤血流动力学、MeshCNN 主动脉夹层分割。' },
+        { year: '2025 – 至今', title: '四川省自然科学基金 · 参与者', desc: '参与核心算法的实现与验证：颅内动脉瘤网格分割 98%、破裂风险预测 92%。' },
+        { year: '2025 年 7 月', title: '四川省重大科技专项申请 · 参与者', desc: '负责技术方法撰写：拟提出基于扩散模型的 SAR 图像无监督降噪方法与基于空间-频率注意力的 SAR 细粒度语义分割方法。' },
+        { year: '2023 – 2024', title: '华西医院合作项目 · 参与者', desc: '负责心外膜脂肪定量的 CT/MRI 数据处理：设计完整心脏影像处理流程、人工标注、MRI 心脏疾病分类模型准确率 98%。' },
+        { year: '2019 – 2023', title: '黄河科技学院 · 工学学士 (机械设计制造及其自动化)', desc: '主修机械设计制造及其自动化，奠定扎实的工程与编程基础。' }
     ],
     contactSection: {
-        title: "让我们开始连接 · Let's Connect",
-        desc: '无论是技术探讨、项目合作，还是单纯想打个招呼，都欢迎随时与我联系！',
-        pills: ['邮箱交流', '博客留言', 'GitHub 开源'],
+        title: "Open to Collaboration · 欢迎学术交流",
+        desc: '无论是科研合作、学术访问，还是项目交流，都欢迎随时与我联系！期待与同行者共同推进医学影像智能分析的前沿探索。',
+        pills: ['邮件联系', '学术交流', 'GitHub 开源'],
         ctaText: '进入文章专区',
         ctaLink: 'list',
         customUrl: ''

@@ -4,6 +4,41 @@
 
 // ========== 主题 ==========
 
+// 主题配色预设：参考社区博客主题风格设计的整体配色方案（背景 / 文字 / 模块背景 / 强调色 多区域联动）
+// 每套含 light 与 dark 两套调色板；surface 为「r, g, b」字符串，用于生成半透明模块背景。
+window.THEME_PRESETS = {
+    indigo: {
+        name: '经典靛蓝', desc: '本站默认 · 干净现代',
+        light: { bg: '#f8fafc', bgGradient: 'linear-gradient(180deg, #f1f5f9 0%, #f8fafc 100%)', surface: '255, 255, 255', text: '#1e293b', textSecondary: '#475569', textMuted: '#94a3b8', border: 'rgba(226,232,240,0.8)', primary: '#6366f1' },
+        dark:  { bg: '#0b0f19', bgGradient: 'linear-gradient(180deg, #0f172a 0%, #0b0f19 100%)', surface: '15, 23, 42', text: '#e2e8f0', textSecondary: '#cbd5e1', textMuted: '#64748b', border: 'rgba(51,65,85,0.6)', primary: '#818cf8' }
+    },
+    aurora: {
+        name: '幻梦暖光', desc: 'Illusion 灵感 · 暖桃玻璃',
+        light: { bg: '#FDF8F5', bgGradient: 'linear-gradient(180deg, #fdf1ea 0%, #fdf8f5 100%)', surface: '253, 248, 245', text: '#2E2825', textSecondary: '#6b6058', textMuted: '#9b8f85', border: 'rgba(180,150,130,0.22)', primary: '#E0896B' },
+        dark:  { bg: '#0E0A08', bgGradient: 'linear-gradient(180deg, #1a120e 0%, #0E0A08 100%)', surface: '20, 14, 10', text: '#EDE0D8', textSecondary: '#c9b8ac', textMuted: '#8a7c70', border: 'rgba(237,224,216,0.12)', primary: '#EFA98E' }
+    },
+    ink: {
+        name: '墨青水墨', desc: 'Riven 灵感 · 墨青留白',
+        light: { bg: '#F2F5F4', bgGradient: 'linear-gradient(180deg, #eef3f1 0%, #f2f5f4 100%)', surface: '244, 247, 244', text: '#1f2a2e', textSecondary: '#46585c', textMuted: '#7a8a8c', border: 'rgba(31,42,46,0.10)', primary: '#2f7d74' },
+        dark:  { bg: '#0c1311', bgGradient: 'linear-gradient(180deg, #121c19 0%, #0c1311 100%)', surface: '14, 22, 20', text: '#d7e4e0', textSecondary: '#9fb4ae', textMuted: '#6f857f', border: 'rgba(215,228,224,0.12)', primary: '#4fb0a4' }
+    },
+    minimal: {
+        name: '极简留白', desc: 'OneBlog / Minimalism · 聚焦文字',
+        light: { bg: '#ffffff', bgGradient: 'linear-gradient(180deg, #fafafa 0%, #ffffff 100%)', surface: '255, 255, 255', text: '#1a1a1a', textSecondary: '#4a4a4a', textMuted: '#8a8a8a', border: 'rgba(0,0,0,0.08)', primary: '#3b6ea5' },
+        dark:  { bg: '#0f0f0f', bgGradient: 'linear-gradient(180deg, #161616 0%, #0f0f0f 100%)', surface: '20, 20, 20', text: '#ededed', textSecondary: '#b0b0b0', textMuted: '#7a7a7a', border: 'rgba(255,255,255,0.10)', primary: '#6f9fd8' }
+    },
+    nebula: {
+        name: '星云现代', desc: 'Blog-Astro 灵感 · 现代优雅',
+        light: { bg: '#f5f7fb', bgGradient: 'linear-gradient(180deg, #eef1f8 0%, #f5f7fb 100%)', surface: '245, 247, 251', text: '#1e2535', textSecondary: '#475069', textMuted: '#7c879b', border: 'rgba(30,40,70,0.10)', primary: '#6366f1' },
+        dark:  { bg: '#0b0f1a', bgGradient: 'linear-gradient(180deg, #0e1424 0%, #0b0f1a 100%)', surface: '13, 18, 30', text: '#e8ebf5', textSecondary: '#aab2cc', textMuted: '#7e879f', border: 'rgba(232,235,245,0.12)', primary: '#818cf8' }
+    },
+    clean: {
+        name: '清新素雅', desc: 'YUMU 灵感 · 简洁干净',
+        light: { bg: '#fbfbfa', bgGradient: 'linear-gradient(180deg, #f6f6f4 0%, #fbfbfa 100%)', surface: '251, 251, 250', text: '#2b2b2b', textSecondary: '#555555', textMuted: '#8c8c8c', border: 'rgba(0,0,0,0.07)', primary: '#4c9a8b' },
+        dark:  { bg: '#10100f', bgGradient: 'linear-gradient(180deg, #16160f 0%, #10100f 100%)', surface: '18, 18, 16', text: '#eaeaea', textSecondary: '#b5b5b0', textMuted: '#85857e', border: 'rgba(255,255,255,0.10)', primary: '#6fc2b0' }
+    }
+};
+
 function setTheme(theme) {
     document.body.classList.toggle('dark', theme === 'dark');
     localStorage.setItem(STORAGE_KEYS.theme, theme);
@@ -16,6 +51,10 @@ function setTheme(theme) {
     }
     if (typeof vditorInstance !== 'undefined' && vditorInstance) {
         vditorInstance.setTheme(theme === 'dark' ? 'dark' : 'classic', theme === 'dark' ? 'dark' : 'light');
+    }
+    // 主题切换后重新计算玻璃表面底色，使顶栏/侧栏与背景在明暗两套主题下都融为一体
+    if (typeof applyThemeCustomizations === 'function') {
+        applyThemeCustomizations();
     }
 }
 
@@ -2051,9 +2090,67 @@ function applyThemeCustomizations() {
     document.documentElement.style.setProperty('--glass-opacity', cardOpacity);
     document.documentElement.style.setProperty('--glass-blur', `${blur}px`);
 
-    document.documentElement.style.setProperty('--card-surface', `rgba(255, 255, 255, ${cardOpacity})`);
-    document.documentElement.style.setProperty('--sidebar-surface', `rgba(255, 255, 255, ${sidebarOpacity})`);
-    document.documentElement.style.setProperty('--surface', `rgba(255, 255, 255, ${cardOpacity})`);
+    // 主题预设：解析当前预设的明暗配色，统一控制 背景 / 文字 / 模块背景 / 边框 / 强调色 等多个区域
+    const isDark = document.body.classList.contains('dark');
+    const setThemeVar = (name, val) => { document.body.style.setProperty(name, val); };
+    // 中性默认底色（无预设 / 自定义强调色时使用，保证页面基础观感）
+    const neutralSurface = isDark ? '15, 23, 42' : '255, 255, 255';
+    const neutralBg = isDark ? '#0b0f19' : '#f8fafc';
+    const neutralBgGrad = isDark ? 'linear-gradient(180deg, #0f172a 0%, #0b0f19 100%)' : 'linear-gradient(180deg, #f1f5f9 0%, #f8fafc 100%)';
+    const neutralText = isDark ? '#e2e8f0' : '#1e293b';
+    const neutralSec = isDark ? '#cbd5e1' : '#475569';
+    const neutralMuted = isDark ? '#64748b' : '#94a3b8';
+    const neutralBorder = isDark ? 'rgba(51,65,85,0.6)' : 'rgba(226,232,240,0.8)';
+
+    const preset = (window.THEME_PRESETS && window.THEME_PRESETS[state.themePreset]) || null;
+    const pal = preset ? (isDark ? preset.dark : preset.light) : null;
+
+    // 预设强调色派生（明暗各自适配）
+    const applyPrimary = (hex) => {
+        document.documentElement.style.setProperty('--primary', hex);
+        try {
+            const h = (hex || '').replace('#', '');
+            if (h.length === 6) {
+                const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+                document.documentElement.style.setProperty('--primary-light', `rgba(${r}, ${g}, ${b}, 0.12)`);
+                document.documentElement.style.setProperty('--primary-border', `rgba(${r}, ${g}, ${b}, 0.28)`);
+                document.documentElement.style.setProperty('--primary-shadow', `rgba(${r}, ${g}, ${b}, 0.35)`);
+            }
+        } catch (e) { }
+    };
+
+    if (pal) {
+        const surfaceBase = pal.surface;
+        setThemeVar('--bg-body', pal.bg);
+        setThemeVar('--bg-card', `rgba(${surfaceBase}, 0.72)`);
+        setThemeVar('--card-surface', `rgba(${surfaceBase}, ${cardOpacity})`);
+        setThemeVar('--sidebar-surface', `rgba(${surfaceBase}, ${sidebarOpacity})`);
+        setThemeVar('--surface', `rgba(${surfaceBase}, ${cardOpacity})`);
+        setThemeVar('--text-main', pal.text);
+        setThemeVar('--text-secondary', pal.textSecondary);
+        setThemeVar('--text-muted', pal.textMuted);
+        setThemeVar('--border-color', pal.border);
+        // 页面背景：底色 + 渐变图同时写入，纹理模式（data-bg）的 !important 背景图会覆盖渐变图，
+        // 但底色保留，避免纹理透出透明/白色。
+        document.body.style.backgroundColor = pal.bg;
+        document.body.style.backgroundImage = pal.bgGradient;
+        // 强调色随预设（明暗各自适配）
+        applyPrimary(pal.primary);
+    } else {
+        // 自定义强调色模式：中性默认底色，强调色由下方 color picker 控制
+        const surfaceBase = neutralSurface;
+        setThemeVar('--bg-body', neutralBg);
+        setThemeVar('--bg-card', `rgba(${surfaceBase}, 0.72)`);
+        setThemeVar('--card-surface', `rgba(${surfaceBase}, ${cardOpacity})`);
+        setThemeVar('--sidebar-surface', `rgba(${surfaceBase}, ${sidebarOpacity})`);
+        setThemeVar('--surface', `rgba(${surfaceBase}, ${cardOpacity})`);
+        setThemeVar('--text-main', neutralText);
+        setThemeVar('--text-secondary', neutralSec);
+        setThemeVar('--text-muted', neutralMuted);
+        setThemeVar('--border-color', neutralBorder);
+        document.body.style.backgroundColor = neutralBg;
+        document.body.style.backgroundImage = neutralBgGrad;
+    }
 
     // 5. 文章卡片尺寸（高度百分比 & 宽度百分比）
     const cardHeightPercent = state.themeCardHeight || localStorage.getItem('themeCardHeight') || '100';
@@ -2063,20 +2160,12 @@ function applyThemeCustomizations() {
     document.documentElement.style.setProperty('--card-width-percent', `${cardWidth}%`);
     document.documentElement.style.setProperty('--card-max-width', `${cardWidth}%`);
 
-    // 6. 颜色 Preset 或 Color Picker & 衍生变量
+    // 6. 颜色 Color Picker（仅“自定义强调色”模式生效；预设模式下强调色已由预设控制）
     const primaryColor = state.themePresetColor || localStorage.getItem('themePresetColor') || '#6366f1';
-    document.documentElement.style.setProperty('--primary', primaryColor);
-    try {
-        const hex = primaryColor.replace('#', '');
-        if (hex.length === 6) {
-            const r = parseInt(hex.slice(0, 2), 16);
-            const g = parseInt(hex.slice(2, 4), 16);
-            const b = parseInt(hex.slice(4, 6), 16);
-            document.documentElement.style.setProperty('--primary-light', `rgba(${r}, ${g}, ${b}, 0.12)`);
-            document.documentElement.style.setProperty('--primary-border', `rgba(${r}, ${g}, ${b}, 0.28)`);
-            document.documentElement.style.setProperty('--primary-shadow', `rgba(${r}, ${g}, ${b}, 0.35)`);
-        }
-    } catch (e) { }
+    const effectivePrimary = pal ? pal.primary : primaryColor;
+    if (!pal) {
+        applyPrimary(primaryColor);
+    }
 
     // 7. 绳索悬挂粗细
     const ropeWidth = state.themeRopeWidth || localStorage.getItem('themeRopeWidth') || '3.5';
@@ -2110,7 +2199,26 @@ function applyThemeCustomizations() {
         previewStage.style.setProperty('--sidebar-opacity', sidebarOpacity);
         previewStage.style.setProperty('--glass-opacity', cardOpacity);
         previewStage.style.setProperty('--glass-blur', `${blur}px`);
-        previewStage.style.setProperty('--primary', primaryColor);
+        // 预设配色同步到沙盘（背景 / 文字 / 模块背景 / 边框 / 强调色）
+        const pBg = pal ? pal.bg : neutralBg;
+        const pSurface = pal ? pal.surface : neutralSurface;
+        const pBgGrad = pal ? pal.bgGradient : neutralBgGrad;
+        const pText = pal ? pal.text : neutralText;
+        const pSec = pal ? pal.textSecondary : neutralSec;
+        const pMuted = pal ? pal.textMuted : neutralMuted;
+        const pBorder = pal ? pal.border : neutralBorder;
+        previewStage.style.setProperty('--bg-body', pBg);
+        previewStage.style.setProperty('--bg-card', `rgba(${pSurface}, 0.72)`);
+        previewStage.style.setProperty('--card-surface', `rgba(${pSurface}, ${cardOpacity})`);
+        previewStage.style.setProperty('--sidebar-surface', `rgba(${pSurface}, ${sidebarOpacity})`);
+        previewStage.style.setProperty('--surface', `rgba(${pSurface}, ${cardOpacity})`);
+        previewStage.style.setProperty('--text-main', pText);
+        previewStage.style.setProperty('--text-secondary', pSec);
+        previewStage.style.setProperty('--text-muted', pMuted);
+        previewStage.style.setProperty('--border-color', pBorder);
+        previewStage.style.backgroundColor = pBg;
+        previewStage.style.backgroundImage = pBgGrad;
+        previewStage.style.setProperty('--primary', effectivePrimary);
 
         // 缩放尺寸到沙盘
         const miniHeight = Math.max(28, Math.round(50 * (Number(cardHeightPercent) / 100)));
@@ -2125,7 +2233,7 @@ function applyThemeCustomizations() {
     }
     const previewBlob1 = document.getElementById('previewBlob1');
     if (previewBlob1) {
-        previewBlob1.style.background = primaryColor;
+        previewBlob1.style.background = effectivePrimary;
     }
 }
 
@@ -2424,7 +2532,7 @@ function switchHomeResumeTab(tabName) {
 
     const panes = {
         hero: document.getElementById('hrePaneHero'),
-        about: document.getElementById('hrePaneAbout'),
+        publications: document.getElementById('hrePanePublications'),
         skills: document.getElementById('hrePaneSkills'),
         projects: document.getElementById('hrePaneProjects'),
         timeline: document.getElementById('hrePaneTimeline'),
@@ -2465,7 +2573,7 @@ function getHreCardControlsHtml(label, type) {
             <div style="display:flex; gap:6px; align-items:center;">
                 <button type="button" class="mini-admin-btn" onclick="moveHreRow(this, -1)" title="上移" style="padding:2px 6px;">${getIcon('prev', '', 12)}</button>
                 <button type="button" class="mini-admin-btn" onclick="moveHreRow(this, 1)" title="下移" style="padding:2px 6px;">${getIcon('next', '', 12)}</button>
-                <button type="button" class="mini-admin-btn" onclick="this.closest('.hre-edit-item-card').remove(); updateHreItemBadges('${type}');" style="color:var(--danger); border-color:var(--danger-light); padding:2px 8px;" title="删除">删除</button>
+                <button type="button" class="mini-admin-btn" onclick="this.closest('.hre-edit-item-card').remove(); updateHreItemBadges('${type}'); if(typeof updateHomeResumePreview==='function') updateHomeResumePreview();" style="color:var(--danger); border-color:var(--danger-light); padding:2px 8px;" title="删除">删除</button>
             </div>
         </div>
     `;
@@ -2481,17 +2589,18 @@ function moveHreRow(btn, direction) {
     } else if (direction === 1 && card.nextElementSibling) {
         parent.insertBefore(card.nextElementSibling, card);
     }
+    if (typeof updateHomeResumePreview === 'function') updateHomeResumePreview();
 }
 
 function updateHreItemBadges(type) {
     const containerMap = {
-        about: '#hreAboutCardsContainer',
+        publications: '#hrePublicationsListContainer',
         skills: '#hreSkillsListContainer',
         projects: '#hreProjectsListContainer',
         timeline: '#hreTimelineListContainer'
     };
     const prefixMap = {
-        about: '关于我卡片',
+        publications: '论文',
         skills: '分类',
         projects: '作品',
         timeline: '节点'
@@ -2506,62 +2615,214 @@ function updateHreItemBadges(type) {
     });
 }
 
-// 1. 关于我卡片编辑器
-function renderHreAboutEditor(aboutList) {
-    const container = document.getElementById('hreAboutCardsContainer');
+// 1. 发表论文编辑器
+function renderHrePublicationsEditor(publicationsList) {
+    const container = document.getElementById('hrePublicationsListContainer');
     if (!container) return;
     const esc = typeof escHtml === 'function' ? escHtml : (typeof escapeHtml === 'function' ? escapeHtml : (s => String(s == null ? '' : s)));
-    const items = aboutList || [];
-    const iconOptions = ['layers', 'palette', 'lightbulb', 'sprout', 'code', 'rocket', 'globe', 'sparkle', 'terminal', 'cpu', 'card', 'user'];
+    const items = publicationsList || [];
 
-    container.innerHTML = items.map((item, idx) => {
-        let currentIcon = item.icon || 'layers';
-        if (currentIcon.includes('🚀')) currentIcon = 'rocket';
-        else if (currentIcon.includes('🎨')) currentIcon = 'palette';
-        else if (currentIcon.includes('💡')) currentIcon = 'lightbulb';
-        else if (currentIcon.includes('🌱')) currentIcon = 'sprout';
-        else if (currentIcon.includes('💻')) currentIcon = 'code';
-
-        const optionsHtml = iconOptions.map(opt => `<option value="${opt}" ${opt === currentIcon ? 'selected' : ''}>${opt}</option>`).join('');
-
-        return `
-            <div class="hre-edit-item-card hre-about-edit-card" style="padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);" data-about-idx="${idx}">
-                ${getHreCardControlsHtml(`关于我卡片 #${idx + 1}`, 'about')}
-                <div style="display:flex; gap:10px; margin-bottom:8px; align-items:center;">
-                    <select class="hre-about-icon" style="padding:7px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main); min-width:110px;">
-                        ${optionsHtml}
-                    </select>
-                    <input type="text" class="hre-about-title" value="${esc(item.title || '')}" placeholder="卡片标题" style="flex:1;">
-                </div>
-                <textarea class="hre-about-desc" rows="2" placeholder="卡片描述内容..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;">${esc(item.desc || '')}</textarea>
+    container.innerHTML = items.map((item, idx) => `
+        <div class="hre-edit-item-card hre-publication-edit-card" style="padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);" data-pub-idx="${idx}">
+            ${getHreCardControlsHtml(`论文 #${idx + 1}`, 'publications')}
+            <div class="form-group" style="margin-bottom:8px;">
+                <label style="font-size:12px; color:var(--text-muted);">论文标题 (Title)</label>
+                <input type="text" class="hre-pub-title" value="${esc(item.title || '')}" placeholder="论文标题">
             </div>
-        `;
-    }).join('');
+            <div class="form-group" style="margin-bottom:8px;">
+                <label style="font-size:12px; color:var(--text-muted);">作者 (Authors)</label>
+                <input type="text" class="hre-pub-authors" value="${esc(item.authors || '')}" placeholder="Zhang F., Liu S., et al.">
+            </div>
+            <div style="display:grid; grid-template-columns:1.4fr 0.6fr; gap:8px; margin-bottom:8px;">
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:12px; color:var(--text-muted);">发表期刊 / 会议 (Venue)</label>
+                    <input type="text" class="hre-pub-venue" value="${esc(item.venue || '')}" placeholder="Medical Image Analysis">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label style="font-size:12px; color:var(--text-muted);">年份 (Year)</label>
+                    <input type="text" class="hre-pub-year" value="${esc(item.year || '')}" placeholder="2026">
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size:12px; color:var(--text-muted);">备注 (Note · 如分区 / 作者贡献)</label>
+                <input type="text" class="hre-pub-note" value="${esc(item.note || '')}" placeholder="CCF-B · JCR Q1 · First Author">
+            </div>
+        </div>
+    `).join('');
+    if (typeof updateHomeResumePreview === 'function') updateHomeResumePreview();
 }
 
-function addHreAboutRow() {
-    const container = document.getElementById('hreAboutCardsContainer');
+function addHrePublicationRow() {
+    const container = document.getElementById('hrePublicationsListContainer');
     if (!container) return;
-    const cards = container.querySelectorAll('.hre-about-edit-card');
+    const cards = container.querySelectorAll('.hre-publication-edit-card');
     const newIdx = cards.length;
-    const iconOptions = ['layers', 'palette', 'lightbulb', 'sprout', 'code', 'rocket', 'globe', 'sparkle', 'terminal', 'cpu', 'card', 'user'];
-    const optionsHtml = iconOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('');
 
     const div = document.createElement('div');
-    div.className = 'hre-edit-item-card hre-about-edit-card';
+    div.className = 'hre-edit-item-card hre-publication-edit-card';
     div.style.cssText = 'padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);';
-    div.setAttribute('data-about-idx', newIdx);
+    div.setAttribute('data-pub-idx', newIdx);
     div.innerHTML = `
-        ${getHreCardControlsHtml(`关于我卡片 #${newIdx + 1}`, 'about')}
-        <div style="display:flex; gap:10px; margin-bottom:8px; align-items:center;">
-            <select class="hre-about-icon" style="padding:7px 10px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main); min-width:110px;">
-                ${optionsHtml}
-            </select>
-            <input type="text" class="hre-about-title" value="" placeholder="卡片标题" style="flex:1;">
+        ${getHreCardControlsHtml(`论文 #${newIdx + 1}`, 'publications')}
+        <div class="form-group" style="margin-bottom:8px;">
+            <label style="font-size:12px; color:var(--text-muted);">论文标题 (Title)</label>
+            <input type="text" class="hre-pub-title" value="" placeholder="论文标题">
         </div>
-        <textarea class="hre-about-desc" rows="2" placeholder="卡片描述内容..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;"></textarea>
+        <div class="form-group" style="margin-bottom:8px;">
+            <label style="font-size:12px; color:var(--text-muted);">作者 (Authors)</label>
+            <input type="text" class="hre-pub-authors" value="" placeholder="Zhang F., Liu S., et al.">
+        </div>
+        <div style="display:grid; grid-template-columns:1.4fr 0.6fr; gap:8px; margin-bottom:8px;">
+            <div class="form-group" style="margin:0;">
+                <label style="font-size:12px; color:var(--text-muted);">发表期刊 / 会议 (Venue)</label>
+                <input type="text" class="hre-pub-venue" value="" placeholder="Medical Image Analysis">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label style="font-size:12px; color:var(--text-muted);">年份 (Year)</label>
+                <input type="text" class="hre-pub-year" value="" placeholder="2026">
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:12px; color:var(--text-muted);">备注 (Note · 如分区 / 作者贡献)</label>
+            <input type="text" class="hre-pub-note" value="" placeholder="CCF-B · JCR Q1 · First Author">
+        </div>
     `;
     container.appendChild(div);
+    if (typeof updateHomeResumePreview === 'function') updateHomeResumePreview();
+}
+
+// ========== 编辑弹窗实时预览 (Live Preview) ==========
+// 根据当前表单（含未保存的实时输入）构建首页数据模型，供左侧预览渲染
+function collectHomeResumePreviewModel() {
+    const base = (typeof getHomeResumeData === 'function') ? getHomeResumeData() : defaultHomeResume;
+    const v = (id, fallback) => {
+        const el = document.getElementById(id);
+        if (!el) return fallback;
+        const val = el.value;
+        return (val !== null && String(val).trim() !== '') ? val : fallback;
+    };
+    const sel = (id, fallback) => {
+        const el = document.getElementById(id);
+        return el && el.value ? el.value : fallback;
+    };
+
+    const hero = Object.assign({}, base.hero || {});
+    hero.greeting = v('hreHeroGreeting', hero.greeting);
+    hero.name = v('hreHeroName', hero.name);
+    hero.status = v('hreHeroStatus', hero.status);
+    hero.github = v('hreHeroGithub', hero.github);
+    hero.title = v('hreHeroTitle', hero.title);
+    hero.motto = v('hreHeroMotto', hero.motto);
+    hero.avatar = v('hreHeroAvatar', hero.avatar);
+    const rawInfoLines = document.getElementById('hreHeroInfoLines') ? document.getElementById('hreHeroInfoLines').value : '';
+    const infoLines = String(rawInfoLines || '').split(/[\n,，]/).map(t => t.trim()).filter(Boolean);
+    if (infoLines.length) hero.infoLines = infoLines;
+    const rawTags = document.getElementById('hreHeroTags') ? document.getElementById('hreHeroTags').value : '';
+    const tags = String(rawTags || '').split(/[\n,，]/).map(t => t.trim()).filter(Boolean);
+    if (tags.length) hero.tags = tags;
+    hero.primaryBtnText = v('hreHeroPrimaryBtnText', hero.primaryBtnText);
+    hero.primaryBtnLink = v('hreHeroPrimaryBtnLink', hero.primaryBtnLink);
+    hero.secondaryBtnText = v('hreHeroSecondaryBtnText', hero.secondaryBtnText);
+    hero.secondaryBtnLink = v('hreHeroSecondaryBtnLink', hero.secondaryBtnLink);
+
+    const aboutSection = Object.assign({}, base.aboutSection || {});
+    aboutSection.title = v('hrePubSectionTitle', aboutSection.title);
+    aboutSection.subtitle = v('hrePubSectionSubtitle', aboutSection.subtitle);
+    aboutSection.icon = sel('hrePubSectionIcon', aboutSection.icon || 'book-open');
+
+    const publications = collectHrePublicationsFromForm();
+
+    const skillsSection = Object.assign({}, base.skillsSection || {});
+    skillsSection.title = v('hreSkillsSectionTitle', skillsSection.title);
+    skillsSection.subtitle = v('hreSkillsSectionSubtitle', skillsSection.subtitle);
+    skillsSection.icon = sel('hreSkillsSectionIcon', skillsSection.icon || 'code');
+    const skillsCategories = collectHreSkillsFromForm();
+
+    const projectsSection = Object.assign({}, base.projectsSection || {});
+    projectsSection.title = v('hreProjectsSectionTitle', projectsSection.title);
+    projectsSection.subtitle = v('hreProjectsSectionSubtitle', projectsSection.subtitle);
+    projectsSection.icon = sel('hreProjectsSectionIcon', projectsSection.icon || 'layout');
+    const projects = collectHreProjectsFromForm();
+
+    const timelineSection = Object.assign({}, base.timelineSection || {});
+    timelineSection.title = v('hreTimelineSectionTitle', timelineSection.title);
+    timelineSection.subtitle = v('hreTimelineSectionSubtitle', timelineSection.subtitle);
+    timelineSection.icon = sel('hreTimelineSectionIcon', timelineSection.icon || 'calendar');
+    const timeline = collectHreTimelineFromForm();
+
+    const contactSection = Object.assign({}, base.contactSection || {});
+    contactSection.title = v('hreContactTitle', contactSection.title);
+    contactSection.desc = v('hreContactDesc', contactSection.desc);
+    const rawPills = document.getElementById('hreContactPills') ? document.getElementById('hreContactPills').value : '';
+    const pills = String(rawPills || '').split(/[,，\n]/).map(p => p.trim()).filter(Boolean);
+    if (pills.length) contactSection.pills = pills;
+    contactSection.ctaText = v('hreContactCtaText', contactSection.ctaText);
+    contactSection.ctaLink = v('hreContactCtaLink', contactSection.ctaLink);
+
+    return { hero, aboutSection, publications, skillsSection, skillsCategories, projectsSection, projects, timelineSection, timeline, contactSection };
+}
+
+function collectHrePublicationsFromForm() {
+    const rows = document.querySelectorAll('#hrePublicationsListContainer .hre-publication-edit-card');
+    const out = [];
+    rows.forEach(row => {
+        const title = row.querySelector('.hre-pub-title') ? row.querySelector('.hre-pub-title').value.trim() : '';
+        const authors = row.querySelector('.hre-pub-authors') ? row.querySelector('.hre-pub-authors').value.trim() : '';
+        const venue = row.querySelector('.hre-pub-venue') ? row.querySelector('.hre-pub-venue').value.trim() : '';
+        const year = row.querySelector('.hre-pub-year') ? row.querySelector('.hre-pub-year').value.trim() : '';
+        const note = row.querySelector('.hre-pub-note') ? row.querySelector('.hre-pub-note').value.trim() : '';
+        if (title) out.push({ title, authors, venue, year, note });
+    });
+    return out;
+}
+
+function collectHreSkillsFromForm() {
+    const rows = document.querySelectorAll('#hreSkillsListContainer .hre-skill-category-edit-card');
+    const out = [];
+    rows.forEach(row => {
+        const title = row.querySelector('.hre-skill-cat-title') ? row.querySelector('.hre-skill-cat-title').value.trim() : '';
+        const indicator = row.querySelector('.hre-skill-cat-indicator') ? row.querySelector('.hre-skill-cat-indicator').value : 'tool';
+        const itemsRaw = row.querySelector('.hre-skill-cat-items') ? row.querySelector('.hre-skill-cat-items').value : '';
+        const items = String(itemsRaw || '').split(/[,，\n]/).map(s => s.trim()).filter(Boolean);
+        if (title || items.length) out.push({ title, indicator, items });
+    });
+    return out;
+}
+
+function collectHreProjectsFromForm() {
+    const rows = document.querySelectorAll('#hreProjectsListContainer .hre-project-edit-card');
+    const out = [];
+    rows.forEach(row => {
+        const title = row.querySelector('.hre-proj-title') ? row.querySelector('.hre-proj-title').value.trim() : '';
+        const badge = row.querySelector('.hre-proj-badge') ? row.querySelector('.hre-proj-badge').value.trim() : '代表作品';
+        const desc = row.querySelector('.hre-proj-desc') ? row.querySelector('.hre-proj-desc').value.trim() : '';
+        const tagsRaw = row.querySelector('.hre-proj-tags') ? row.querySelector('.hre-proj-tags').value : '';
+        const tags = String(tagsRaw || '').split(/[,，\n]/).map(t => t.trim()).filter(Boolean);
+        const link = row.querySelector('.hre-proj-link') ? row.querySelector('.hre-proj-link').value : 'list';
+        const customUrl = row.querySelector('.hre-proj-custom-url') ? row.querySelector('.hre-proj-custom-url').value.trim() : '';
+        if (title) out.push({ badge, title, desc, tags, link, customUrl });
+    });
+    return out;
+}
+
+function collectHreTimelineFromForm() {
+    const rows = document.querySelectorAll('#hreTimelineListContainer .hre-timeline-edit-card');
+    const out = [];
+    rows.forEach(row => {
+        const year = row.querySelector('.hre-time-year') ? row.querySelector('.hre-time-year').value.trim() : '';
+        const tTitle = row.querySelector('.hre-time-title') ? row.querySelector('.hre-time-title').value.trim() : '';
+        const desc = row.querySelector('.hre-time-desc') ? row.querySelector('.hre-time-desc').value.trim() : '';
+        if (tTitle || year) out.push({ year, title: tTitle, desc });
+    });
+    return out;
+}
+
+// 实时渲染左侧预览（复用首页真实渲染函数，保证样式一致）
+function updateHomeResumePreview() {
+    const stage = document.getElementById('homeResumePreviewScroll');
+    if (!stage) return;
+    const model = collectHomeResumePreviewModel();
+    stage.innerHTML = (typeof buildHomeResumeHtml === 'function') ? buildHomeResumeHtml(model, false) : '';
 }
 
 // 2. 专业技能分类编辑器
@@ -2624,6 +2885,7 @@ function addHreSkillCategoryRow() {
         <textarea class="hre-skill-cat-items" rows="2" placeholder="输入技能项..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;"></textarea>
     `;
     container.appendChild(div);
+    if (typeof updateHomeResumePreview === 'function') updateHomeResumePreview();
 }
 
 // 3. 精选作品编辑器
@@ -2647,6 +2909,7 @@ function renderHreProjectsEditor(projectsList) {
                     <option value="list" ${item.link === 'list' ? 'selected' : ''}>跳转到文章列表</option>
                     <option value="space" ${item.link === 'space' ? 'selected' : ''}>跳转到空间动态</option>
                     <option value="custom" ${item.link === 'custom' ? 'selected' : ''}>自定义外部链接</option>
+                    <option value="none" ${item.link === 'none' ? 'selected' : ''}>无跳转（不链接）</option>
                 </select>
             </div>
             <div class="hre-proj-custom-url-row" style="display:${item.link === 'custom' ? 'block' : 'none'};">
@@ -2685,6 +2948,7 @@ function addHreProjectRow() {
                 <option value="list">跳转到文章列表</option>
                 <option value="space">跳转到空间动态</option>
                 <option value="custom">自定义外部链接</option>
+                <option value="none">无跳转（不链接）</option>
             </select>
         </div>
         <div class="hre-proj-custom-url-row" style="display:none;">
@@ -2692,6 +2956,7 @@ function addHreProjectRow() {
         </div>
     `;
     container.appendChild(div);
+    if (typeof updateHomeResumePreview === 'function') updateHomeResumePreview();
 }
 
 // 4. 成长历程编辑器
@@ -2730,6 +2995,7 @@ function addHreTimelineRow() {
         <textarea class="hre-time-desc" rows="2" placeholder="成长经历或突破描述..." style="width:100%; border-radius:8px; border:1px solid #cbd5e1; padding:8px; font-size:13px; outline:none; font-family:inherit;"></textarea>
     `;
     container.appendChild(div);
+    if (typeof updateHomeResumePreview === 'function') updateHomeResumePreview();
 }
 
 // 5. 打开首页编辑弹窗并回填
@@ -2750,6 +3016,7 @@ function openHomeResumeEditor(targetTab = 'hero') {
     const statusEl = document.getElementById('hreHeroStatus');
     const githubEl = document.getElementById('hreHeroGithub');
     const titleEl = document.getElementById('hreHeroTitle');
+    const infoLinesEl = document.getElementById('hreHeroInfoLines');
     const mottoEl = document.getElementById('hreHeroMotto');
     const avatarEl = document.getElementById('hreHeroAvatar');
     const tagsEl = document.getElementById('hreHeroTags');
@@ -2763,6 +3030,7 @@ function openHomeResumeEditor(targetTab = 'hero') {
     if (statusEl) statusEl.value = hero.status || '';
     if (githubEl) githubEl.value = hero.github || '';
     if (titleEl) titleEl.value = hero.title || '';
+    if (infoLinesEl) infoLinesEl.value = (hero.infoLines || []).join('\n');
     if (mottoEl) mottoEl.value = hero.motto || '';
     if (avatarEl) avatarEl.value = hero.avatar || '';
     if (tagsEl) tagsEl.value = (hero.tags || []).join('\n');
@@ -2771,15 +3039,15 @@ function openHomeResumeEditor(targetTab = 'hero') {
     if (secBtnTextEl) secBtnTextEl.value = hero.secondaryBtnText || '空间动态';
     if (secBtnLinkEl) secBtnLinkEl.value = hero.secondaryBtnLink || 'space';
 
-    // 2. 回填关于我
+    // 2. 回填发表论文板块
     const aboutSection = data.aboutSection || defaultHomeResume.aboutSection;
-    const aboutSecTitleEl = document.getElementById('hreAboutSectionTitle');
-    const aboutSecSubtitleEl = document.getElementById('hreAboutSectionSubtitle');
-    const aboutSecIconEl = document.getElementById('hreAboutSectionIcon');
+    const aboutSecTitleEl = document.getElementById('hrePubSectionTitle');
+    const aboutSecSubtitleEl = document.getElementById('hrePubSectionSubtitle');
+    const aboutSecIconEl = document.getElementById('hrePubSectionIcon');
     if (aboutSecTitleEl) aboutSecTitleEl.value = aboutSection.title || '';
     if (aboutSecSubtitleEl) aboutSecSubtitleEl.value = aboutSection.subtitle || '';
-    if (aboutSecIconEl) aboutSecIconEl.value = aboutSection.icon || 'info';
-    renderHreAboutEditor(data.about || defaultHomeResume.about);
+    if (aboutSecIconEl) aboutSecIconEl.value = aboutSection.icon || 'book-open';
+    renderHrePublicationsEditor(data.publications || defaultHomeResume.publications);
 
     // 3. 回填专业技能
     const skillsSection = data.skillsSection || defaultHomeResume.skillsSection;
@@ -2827,6 +3095,16 @@ function openHomeResumeEditor(targetTab = 'hero') {
 
     // 切换到目标 Tab
     switchHomeResumeTab(targetTab || 'hero');
+
+    // 绑定实时预览（输入即刷新，仅绑定一次）
+    const controls = document.querySelector('.home-resume-editor-controls');
+    if (controls && !controls._hrePreviewBound) {
+        controls.addEventListener('input', updateHomeResumePreview);
+        controls.addEventListener('change', updateHomeResumePreview);
+        controls._hrePreviewBound = true;
+    }
+    // 初始化左侧实时预览
+    updateHomeResumePreview();
 }
 
 function closeHomeResumeEditor() {
@@ -2843,6 +3121,8 @@ function saveHomeResumeEditor() {
     const status = document.getElementById('hreHeroStatus')?.value.trim() || defaultHomeResume.hero.status;
     const github = document.getElementById('hreHeroGithub')?.value.trim() || defaultHomeResume.hero.github;
     const title = document.getElementById('hreHeroTitle')?.value.trim() || defaultHomeResume.hero.title;
+    const rawInfoLines = document.getElementById('hreHeroInfoLines')?.value || '';
+    const infoLines = rawInfoLines.split(/[\n,，]/).map(t => t.trim()).filter(Boolean);
     const motto = document.getElementById('hreHeroMotto')?.value.trim() || defaultHomeResume.hero.motto;
     const avatar = document.getElementById('hreHeroAvatar')?.value.trim() || defaultHomeResume.hero.avatar;
     const rawTags = document.getElementById('hreHeroTags')?.value || '';
@@ -2852,19 +3132,21 @@ function saveHomeResumeEditor() {
     const secondaryBtnText = document.getElementById('hreHeroSecondaryBtnText')?.value.trim() || '空间动态';
     const secondaryBtnLink = document.getElementById('hreHeroSecondaryBtnLink')?.value.trim() || 'space';
 
-    // 2. 提取关于我
-    const aboutSecTitle = document.getElementById('hreAboutSectionTitle')?.value.trim() || defaultHomeResume.aboutSection.title;
-    const aboutSecSubtitle = document.getElementById('hreAboutSectionSubtitle')?.value.trim() || defaultHomeResume.aboutSection.subtitle;
-    const aboutSecIcon = document.getElementById('hreAboutSectionIcon')?.value || 'info';
+    // 2. 提取发表论文
+    const aboutSecTitle = document.getElementById('hrePubSectionTitle')?.value.trim() || defaultHomeResume.aboutSection.title;
+    const aboutSecSubtitle = document.getElementById('hrePubSectionSubtitle')?.value.trim() || defaultHomeResume.aboutSection.subtitle;
+    const aboutSecIcon = document.getElementById('hrePubSectionIcon')?.value || 'book-open';
 
-    const aboutRows = document.querySelectorAll('#hreAboutCardsContainer .hre-about-edit-card');
-    const about = [];
-    aboutRows.forEach(row => {
-        const icon = row.querySelector('.hre-about-icon')?.value.trim() || 'layers';
-        const aTitle = row.querySelector('.hre-about-title')?.value.trim() || '';
-        const desc = row.querySelector('.hre-about-desc')?.value.trim() || '';
-        if (aTitle || desc) {
-            about.push({ icon, title: aTitle, desc });
+    const pubRows = document.querySelectorAll('#hrePublicationsListContainer .hre-publication-edit-card');
+    const publications = [];
+    pubRows.forEach(row => {
+        const title = row.querySelector('.hre-pub-title')?.value.trim() || '';
+        const authors = row.querySelector('.hre-pub-authors')?.value.trim() || '';
+        const venue = row.querySelector('.hre-pub-venue')?.value.trim() || '';
+        const year = row.querySelector('.hre-pub-year')?.value.trim() || '';
+        const note = row.querySelector('.hre-pub-note')?.value.trim() || '';
+        if (title) {
+            publications.push({ title, authors, venue, year, note });
         }
     });
 
@@ -2929,12 +3211,13 @@ function saveHomeResumeEditor() {
     const dataToSave = {
         hero: { 
             greeting, name, status, github, title, motto, avatar, 
+            infoLines: infoLines.length ? infoLines : defaultHomeResume.hero.infoLines,
             tags: tags.length ? tags : defaultHomeResume.hero.tags,
             primaryBtnText, primaryBtnLink, secondaryBtnText, secondaryBtnLink,
             githubBtnText: 'GitHub'
         },
         aboutSection: { title: aboutSecTitle, subtitle: aboutSecSubtitle, icon: aboutSecIcon },
-        about: about.length ? about : defaultHomeResume.about,
+        publications: publications.length ? publications : defaultHomeResume.publications,
         skillsSection: { title: skillsSecTitle, subtitle: skillsSecSubtitle, icon: skillsSecIcon },
         skillsCategories: skillsCategories.length ? skillsCategories : defaultHomeResume.skillsCategories,
         projectsSection: { title: projectsSecTitle, subtitle: projectsSecSubtitle, icon: projectsSecIcon },

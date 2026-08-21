@@ -615,16 +615,26 @@ async function loadHomeResumeDataFromApi() {
     }
 }
 
-function getHomeResumeData() {
-    try {
-        const saved = localStorage.getItem(STORAGE_KEYS.homeResume);
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            const rawHero = parsed.hero || {};
+    function getHomeResumeData() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEYS.homeResume);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                const rawHero = parsed.hero || {};
             const cleanTags = (rawHero.tags || defaultHomeResume.hero.tags).map(t => 
                 String(t || '').replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}|\s+/gu, '').trim() || t
             );
             const cleanGreeting = String(rawHero.greeting || defaultHomeResume.hero.greeting).replace(/👋/g, '').trim();
+
+            // 向下兼容：旧字段 role / affiliation / department 迁移到可增删的 infoLines
+            let cleanInfoLines = Array.isArray(rawHero.infoLines)
+                ? rawHero.infoLines.map(s => String(s == null ? '' : s).trim()).filter(Boolean)
+                : [];
+            if (!cleanInfoLines.length) {
+                const oldParts = [rawHero.role, rawHero.affiliation, rawHero.department]
+                    .map(s => String(s == null ? '' : s).trim()).filter(Boolean);
+                cleanInfoLines = oldParts.length ? oldParts : (defaultHomeResume.hero.infoLines || []);
+            }
 
             // 关于我卡片
             const rawAbout = Array.isArray(parsed.about) && parsed.about.length ? parsed.about : defaultHomeResume.about;
@@ -678,6 +688,7 @@ function getHomeResumeData() {
                     ...rawHero,
                     greeting: cleanGreeting,
                     tags: cleanTags,
+                    infoLines: cleanInfoLines,
                     primaryBtnText: rawHero.primaryBtnText || defaultHomeResume.hero.primaryBtnText,
                     primaryBtnLink: rawHero.primaryBtnLink || defaultHomeResume.hero.primaryBtnLink,
                     secondaryBtnText: rawHero.secondaryBtnText || defaultHomeResume.hero.secondaryBtnText,
@@ -686,6 +697,7 @@ function getHomeResumeData() {
                 },
                 aboutSection: { ...defaultHomeResume.aboutSection, ...(parsed.aboutSection || {}) },
                 about: cleanAbout,
+                publications: Array.isArray(parsed.publications) && parsed.publications.length ? parsed.publications : defaultHomeResume.publications,
                 skillsSection: { ...defaultHomeResume.skillsSection, ...(parsed.skillsSection || {}) },
                 skillsCategories: cleanSkillsCategories,
                 projectsSection: { ...defaultHomeResume.projectsSection, ...(parsed.projectsSection || {}) },
@@ -1176,22 +1188,40 @@ function handleAdminLogout() {
 
 const FALLBACK_PLAYLIST = [
     {
-        id: 18706346,
-        name: "君をのせて",
-        artist: "井上あずみ",
-        picUrl: "https://p2.music.126.net/6y-Ys2CgX4yGqE1ic2x63g==/109951165406022565.jpg"
+        id: 2703854493,
+        name: "Find My Only Way (2021 Remastered Version)",
+        artist: "スピカ & 和氣あず未 & 高野麻里佳 & トウカイテイオー (CV. Machico) & 大橋彩香 & ダイワスカーレット (CV. 木村千咲) & 上田瞳 & 大西沙織",
+        picUrl: "https://p1.music.126.net/smvBInF11sMHH8qg2uMHlQ==/109951170973819467.jpg"
     },
     {
-        id: 186646,
-        name: "願いが叶う場所II",
-        artist: "麻枝准 / Key Sound Label",
-        picUrl: "https://p1.music.126.net/2fI-8R_f_1_s2t_H8x20_A==/109951163185361250.jpg"
+        id: 2703856201,
+        name: "七色の景色 (2021 Remastered Version)",
+        artist: "高野麻里佳",
+        picUrl: "https://p1.music.126.net/I9OAqaytb0aLwNqQqeSw3w==/109951170973810920.jpg"
     },
     {
-        id: 1.2,
-        name: "カノン (Canon in D)",
-        artist: "Johann Pachelbel",
-        picUrl: "https://p2.music.126.net/76_1Gz75P1d7rQx96v4-vA==/109951165609653775.jpg"
+        id: 2691794459,
+        name: "超える",
+        artist: "[Alexandros]",
+        picUrl: "https://p1.music.126.net/5JzlosVR6ZuQHNVXGwM19w==/109951170696288930.jpg"
+    },
+    {
+        id: 2694532375,
+        name: "∞",
+        artist: "高柳知葉",
+        picUrl: "https://p1.music.126.net/grOnKn2I65LCJahVfBMRVQ==/109951170720103366.jpg"
+    },
+    {
+        id: 2703854220,
+        name: "恋はダービー☆ (2021 Remastered Version)",
+        artist: "トウカイテイオー (CV. Machico)",
+        picUrl: "https://p1.music.126.net/ZYJl_dMZR2qKVEh2TAP7Ug==/109951170973803342.jpg"
+    },
+    {
+        id: 2703854221,
+        name: "Silent Star (2021 Remastered Version)",
+        artist: "高野麻里佳",
+        picUrl: "https://p1.music.126.net/ZYJl_dMZR2qKVEh2TAP7Ug==/109951170973803342.jpg"
     }
 ];
 

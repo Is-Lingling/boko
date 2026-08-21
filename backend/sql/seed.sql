@@ -113,5 +113,5 @@ INSERT OR IGNORE INTO kv_store (key, value) VALUES ('cover_usage', '{}');
 INSERT OR IGNORE INTO kv_store (key, value) VALUES ('article_content_images', '[]');
 INSERT OR IGNORE INTO kv_store (key, value) VALUES ('other_images', '[]');
 INSERT OR IGNORE INTO kv_store (key, value) VALUES ('files', '{"root":[]}');
-INSERT OR IGNORE INTO kv_store (key, value) VALUES ('custom_admin_links', '[{"title":"官方文档","url":"https://ndmiao.cn/"},{"title":"我的 GitHub","url":"https://github.com"}]');
+INSERT OR IGNORE INTO kv_store (key, value) VALUES ('custom_admin_links', '[{"title":"我的 GitHub","url":"https://github.com"}]');
 INSERT OR IGNORE INTO kv_store (key, value) VALUES ('calendar_memos', '{}');

@@ -188,6 +188,7 @@ function initAdminLoginDropdown() {
                     if (res.token) Api.setAdminToken(res.token);
                     state.isAdmin = true;
                     localStorage.setItem('isAdmin', 'true');
+                    if (u) localStorage.setItem('adminUsername', u);
                     if (typeof renderAdminUI === 'function') renderAdminUI();
                     if (typeof renderArticles === 'function') renderArticles();
                     toggleDropdown(false);
@@ -205,6 +206,7 @@ function initAdminLoginDropdown() {
                 if ((u === 'admin' && p === 'admin123')) {
                     state.isAdmin = true;
                     localStorage.setItem('isAdmin', 'true');
+                    if (u) localStorage.setItem('adminUsername', u);
                     if (typeof renderAdminUI === 'function') renderAdminUI();
                     if (typeof renderArticles === 'function') renderArticles();
                     toggleDropdown(false);
@@ -566,6 +568,9 @@ function bindEvents() {
         if (typeof applyThemeCustomizations === 'function') {
             applyThemeCustomizations();
         }
+        // 同步主题预设网格（按当前明暗模式刷新色板预览与高亮）
+        if (typeof buildPresetGrid === 'function') buildPresetGrid();
+        if (typeof syncPresetHighlight === 'function') syncPresetHighlight();
         modal.classList.add('active');
         modal.setAttribute('aria-hidden', 'false');
     };
@@ -635,6 +640,8 @@ function bindEvents() {
             const hex = hueToHex(h);
             state.themePresetColor = hex;
             localStorage.setItem('themePresetColor', hex);
+            state.themePreset = 'custom';
+            localStorage.setItem('themePreset', 'custom');
             if (colorPicker) colorPicker.value = hex;
             if (colorHexInput) colorHexInput.value = hex;
             if (colorHexDisplay) colorHexDisplay.textContent = hex;
@@ -657,6 +664,8 @@ function bindEvents() {
             if (swatchBoxEl) swatchBoxEl.style.backgroundColor = val;
             state.themePresetColor = val;
             localStorage.setItem('themePresetColor', val);
+            state.themePreset = 'custom';
+            localStorage.setItem('themePreset', 'custom');
             if (hueSlider) {
                 const h = hexToHue(val);
                 hueSlider.value = h;
@@ -674,6 +683,8 @@ function bindEvents() {
                 if (swatchBoxEl) swatchBoxEl.style.backgroundColor = val;
                 state.themePresetColor = val;
                 localStorage.setItem('themePresetColor', val);
+                state.themePreset = 'custom';
+                localStorage.setItem('themePreset', 'custom');
                 if (hueSlider) {
                     const h = hexToHue(val);
                     hueSlider.value = h;
@@ -690,6 +701,8 @@ function bindEvents() {
             if (color) {
                 state.themePresetColor = color;
                 localStorage.setItem('themePresetColor', color);
+                state.themePreset = 'custom';
+                localStorage.setItem('themePreset', 'custom');
                 if (colorPicker) colorPicker.value = color;
                 if (colorHexInput) colorHexInput.value = color;
                 if (colorHexDisplay) colorHexDisplay.textContent = color;
@@ -703,6 +716,45 @@ function bindEvents() {
             }
         });
     });
+
+    // 主题预设配色网格：由 THEME_PRESETS 动态生成，点击一键切换多区域配色
+    const presetGrid = document.getElementById('themePresetGrid');
+    function buildPresetGrid() {
+        if (!presetGrid || !window.THEME_PRESETS) return;
+        const isDarkNow = document.body.classList.contains('dark');
+        presetGrid.innerHTML = '';
+        Object.keys(window.THEME_PRESETS).forEach(key => {
+            const p = window.THEME_PRESETS[key];
+            const pal = isDarkNow ? p.dark : p.light;
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'theme-preset-card';
+            card.dataset.preset = key;
+            card.innerHTML =
+                '<span class="tp-swatch" style="background:' + pal.bgGradient + ';">' +
+                    '<span class="tp-accent" style="background:' + pal.primary + ';"></span>' +
+                '</span>' +
+                '<span class="tp-name">' + p.name + '</span>' +
+                '<span class="tp-desc">' + p.desc + '</span>';
+            card.addEventListener('click', () => {
+                state.themePreset = key;
+                localStorage.setItem('themePreset', key);
+                syncPresetHighlight();
+                if (typeof applyThemeCustomizations === 'function') applyThemeCustomizations();
+            });
+            presetGrid.appendChild(card);
+        });
+    }
+    function syncPresetHighlight() {
+        if (!presetGrid) return;
+        presetGrid.querySelectorAll('.theme-preset-card').forEach(c => {
+            c.classList.toggle('active', c.dataset.preset === state.themePreset);
+        });
+    }
+    if (presetGrid) {
+        buildPresetGrid();
+        syncPresetHighlight();
+    }
 
     // 文章卡片尺寸控制 (Card Height % & Card Width %)
     const cardHeightInput = document.getElementById('paramCardHeight');
@@ -1749,7 +1801,7 @@ function bindEvents() {
     const hreCancelBtn = document.getElementById('hreCancelBtn');
     const hreSaveBtn = document.getElementById('hreSaveBtn');
     const hreResetDefaultBtn = document.getElementById('hreResetDefaultBtn');
-    const hreAddAboutBtn = document.getElementById('hreAddAboutBtn');
+    const hreAddPublicationBtn = document.getElementById('hreAddPublicationBtn');
     const hreAddSkillCategoryBtn = document.getElementById('hreAddSkillCategoryBtn');
     const hreAddProjectBtn = document.getElementById('hreAddProjectBtn');
     const hreAddTimelineBtn = document.getElementById('hreAddTimelineBtn');
@@ -1758,7 +1810,7 @@ function bindEvents() {
     if (hreCancelBtn) hreCancelBtn.addEventListener('click', closeHomeResumeEditor);
     if (hreSaveBtn) hreSaveBtn.addEventListener('click', saveHomeResumeEditor);
     if (hreResetDefaultBtn) hreResetDefaultBtn.addEventListener('click', resetHomeResumeEditor);
-    if (hreAddAboutBtn) hreAddAboutBtn.addEventListener('click', addHreAboutRow);
+    if (hreAddPublicationBtn) hreAddPublicationBtn.addEventListener('click', addHrePublicationRow);
     if (hreAddSkillCategoryBtn) hreAddSkillCategoryBtn.addEventListener('click', addHreSkillCategoryRow);
     if (hreAddProjectBtn) hreAddProjectBtn.addEventListener('click', addHreProjectRow);
     if (hreAddTimelineBtn) hreAddTimelineBtn.addEventListener('click', addHreTimelineRow);
@@ -2507,6 +2559,9 @@ function bindEvents() {
     // 数据库查看卡片
     const openDbViewerBtn = document.getElementById('openDbViewerBtn');
     if (openDbViewerBtn) openDbViewerBtn.onclick = () => { if (typeof openDbViewerPanel === 'function') openDbViewerPanel(); };
+    // 账号管理卡片
+    const openAccountBtn = document.getElementById('openAccountBtn');
+    if (openAccountBtn) openAccountBtn.onclick = () => { if (typeof openAccountPanel === 'function') openAccountPanel(); };
 
     const fileNewFolderBtn = document.getElementById('fileNewFolderBtn');
     if (fileNewFolderBtn) {

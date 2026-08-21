@@ -65,3 +65,43 @@ pub async fn change_password(
         .map_err(|e| AppError::internal(e.to_string()))?;
     Ok(Json(serde_json::json!({ "ok": true })))
 }
+
+/// GET /api/auth/me  — 返回当前管理员用户名
+pub async fn me(
+    State(db): State<Db>,
+    headers: axum::http::HeaderMap,
+) -> ApiResult<serde_json::Value> {
+    if !crate::auth::is_authorized(headers.get("authorization").and_then(|v| v.to_str().ok())) {
+        return Err(AppError::unauthorized("unauthorized"));
+    }
+    let conn = db.lock().unwrap();
+    let username: String = conn.query_row(
+        "SELECT username FROM admin_user WHERE id=1", [], |r| r.get(0))
+        .map_err(|e| AppError::internal(e.to_string()))?;
+    Ok(Json(serde_json::json!({ "username": username })))
+}
+
+/// PUT /api/auth/username  (admin) — change username
+#[derive(serde::Deserialize)]
+pub struct ChangeUsernameInput {
+    #[serde(rename = "newUsername")]
+    pub new_username: String,
+}
+
+pub async fn change_username(
+    State(db): State<Db>,
+    headers: axum::http::HeaderMap,
+    Json(input): Json<ChangeUsernameInput>,
+) -> ApiResult<serde_json::Value> {
+    if !crate::auth::is_authorized(headers.get("authorization").and_then(|v| v.to_str().ok())) {
+        return Err(AppError::unauthorized("unauthorized"));
+    }
+    let new_username = input.new_username.trim().to_string();
+    if new_username.is_empty() {
+        return Err(AppError::bad_request("用户名不能为空"));
+    }
+    let conn = db.lock().unwrap();
+    conn.execute("UPDATE admin_user SET username=?1 WHERE id=1", params![new_username])
+        .map_err(|e| AppError::internal(e.to_string()))?;
+    Ok(Json(serde_json::json!({ "ok": true, "username": new_username })))
+}

@@ -117,4 +117,6 @@ fn api_router() -> Router<Db> {
         .route("/auth/logout", post(handlers::auth::logout))
         .route("/auth/check", get(handlers::auth::check))
         .route("/auth/password", put(handlers::auth::change_password))
+        .route("/auth/username", put(handlers::auth::change_username))
+        .route("/auth/me", get(handlers::auth::me))
 }

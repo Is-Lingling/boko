@@ -428,6 +428,14 @@
                             <span style="font-weight:700; font-size:14px; display:block; color:var(--text-main);">数据库查看</span>
                             <span style="font-size:11px; color:var(--text-muted); margin-top:4px;">浏览数据库表数据</span>
                         </div>
+                        <!-- 卡片：账号管理 -->
+                        <div class="admin-square-card" id="openAccountBtn" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; aspect-ratio:1/1; border:1px solid var(--primary-border, var(--border-color)); border-radius:16px; transition:all 0.3s ease; background:var(--primary-light); padding:16px; text-align:center;">
+                            <span style="font-size:32px; margin-bottom:10px; color:var(--primary);">
+                                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            </span>
+                            <span style="font-weight:700; font-size:14px; display:block; color:var(--text-main);">账号管理</span>
+                            <span style="font-size:11px; color:var(--text-muted); margin-top:4px;">修改用户名与密码</span>
+                        </div>
                         <!-- 自定义跳转链接卡片列表 -->
                         <div id="customAdminLinksList" style="display:contents;"></div>
                         <!-- 添加自定义链接卡片 -->
@@ -716,9 +724,9 @@
         </div>
     </div>
 
-    <!-- 首页个人简历与介绍编辑弹窗 (管理员专属) -->
+    <!-- 首页个人简历与介绍编辑弹窗 (管理员专属 · 双栏实时预览) -->
     <div class="modal" id="homeResumeEditorModal" aria-hidden="true">
-        <div class="modal-panel" style="grid-template-columns:1fr; max-width:780px; width:95%;">
+        <div class="modal-panel home-resume-editor-panel">
             <div class="modal-header">
                 <div style="display:flex; align-items:center; gap:8px;">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon" style="color:var(--primary);"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -726,266 +734,283 @@
                 </div>
                 <button class="modal-close" id="closeHomeResumeEditorBtn" aria-label="关闭编辑">×</button>
             </div>
-            <div class="modal-body" style="display:flex; flex-direction:column; gap:16px; max-height:75vh; overflow-y:auto; padding-right:6px;">
-                <!-- 导航选项卡 -->
-                <div class="image-option-tabs hre-tabs" style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button type="button" class="tab-btn active" data-hre-tab="hero">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        <span>Hero 名片</span>
-                    </button>
-                    <button type="button" class="tab-btn" data-hre-tab="about">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                        <span>关于我</span>
-                    </button>
-                    <button type="button" class="tab-btn" data-hre-tab="skills">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-                        <span>技能树</span>
-                    </button>
-                    <button type="button" class="tab-btn" data-hre-tab="projects">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                        <span>精选作品</span>
-                    </button>
-                    <button type="button" class="tab-btn" data-hre-tab="timeline">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        <span>成长历程</span>
-                    </button>
-                    <button type="button" class="tab-btn" data-hre-tab="contact">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                        <span>底部联系</span>
-                    </button>
+            <div class="home-resume-split-body">
+                <!-- 左侧：实时预览 (Live Preview) -->
+                <div class="home-resume-preview-pane">
+                    <div class="preview-pane-header">
+                        <span class="preview-live-dot"></span>
+                        <span>首页实时预览 · Live Preview</span>
+                    </div>
+                    <div class="home-resume-preview-scroll" id="homeResumePreviewScroll"></div>
                 </div>
 
-                <!-- 1. Hero 名片面板 -->
-                <div id="hrePaneHero" class="hre-pane" style="display:block;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <div class="form-group">
-                            <label>问候语前缀</label>
-                            <input type="text" id="hreHeroGreeting" placeholder="如：你好，我是">
-                        </div>
-                        <div class="form-group">
-                            <label>姓名 / 昵称 (高亮展示)</label>
-                            <input type="text" id="hreHeroName" placeholder="如：是令令啊">
-                        </div>
+                <!-- 右侧：编辑表单 -->
+                <div class="home-resume-editor-controls">
+                    <!-- 导航选项卡 -->
+                    <div class="image-option-tabs hre-tabs" style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button type="button" class="tab-btn active" data-hre-tab="hero">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            <span>Hero 名片</span>
+                        </button>
+                        <button type="button" class="tab-btn" data-hre-tab="publications">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            <span>发表论文</span>
+                        </button>
+                        <button type="button" class="tab-btn" data-hre-tab="skills">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            <span>技能树</span>
+                        </button>
+                        <button type="button" class="tab-btn" data-hre-tab="projects">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                            <span>精选作品</span>
+                        </button>
+                        <button type="button" class="tab-btn" data-hre-tab="timeline">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            <span>成长历程</span>
+                        </button>
+                        <button type="button" class="tab-btn" data-hre-tab="contact">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            <span>底部联系</span>
+                        </button>
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <div class="form-group">
-                            <label>状态徽章文本</label>
-                            <input type="text" id="hreHeroStatus" placeholder="如：探索创造中">
-                        </div>
-                        <div class="form-group">
-                            <label>GitHub 主页链接</label>
-                            <input type="url" id="hreHeroGithub" placeholder="https://github.com/...">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>主头衔 / 个人定位标语</label>
-                        <input type="text" id="hreHeroTitle" placeholder="如：全栈开发工程师 · 前端架构探索者 · 独立创作者">
-                    </div>
-                    <div class="form-group">
-                        <label>座右铭 / 核心个人简介</label>
-                        <textarea id="hreHeroMotto" rows="3" placeholder="输入座右铭或个人介绍..." style="width:100%; border-radius:10px; border:1px solid #cbd5e1; padding:10px; font-size:13.5px; outline:none; font-family:inherit;"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>头像图片（可直接输入图片 URL 或本地上传）</label>
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <input type="text" id="hreHeroAvatar" placeholder="img/img6.jpg" style="flex:1;">
-                            <label class="secondary-btn" style="padding:8px 14px; font-size:12.5px; border-radius:999px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; margin:0;">
-                                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                <span>本地上传</span>
-                                <input type="file" id="hreHeroAvatarFileInput" accept="image/*" style="display:none;" onchange="handleHeroAvatarFile(this)">
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>个性标签胶囊（以换行或逗号分隔）</label>
-                        <textarea id="hreHeroTags" rows="2" placeholder="Web 全栈开发&#10;交互与 UI/UX 设计&#10;现代化前端架构&#10;极客生活探索" style="width:100%; border-radius:10px; border:1px solid #cbd5e1; padding:10px; font-size:13.5px; outline:none; font-family:inherit;"></textarea>
-                    </div>
-                    <div style="padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body); margin-top:8px;">
-                        <label style="font-weight:700; font-size:13px; margin-bottom:8px; display:block;">Hero 快捷按钮配置</label>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
-                            <div>
-                                <label style="font-size:12px; color:var(--text-muted);">主按钮文本</label>
-                                <input type="text" id="hreHeroPrimaryBtnText" placeholder="阅读我的文章">
+
+                    <!-- 1. Hero 名片面板 -->
+                    <div id="hrePaneHero" class="hre-pane" style="display:block;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                            <div class="form-group">
+                                <label>问候语前缀</label>
+                                <input type="text" id="hreHeroGreeting" placeholder="如：你好，我是">
                             </div>
-                            <div>
-                                <label style="font-size:12px; color:var(--text-muted);">主按钮跳转目标</label>
-                                <input type="text" id="hreHeroPrimaryBtnLink" placeholder="list (文章列表) 或 自定义 URL">
+                            <div class="form-group">
+                                <label>姓名 / 昵称 (高亮展示)</label>
+                                <input type="text" id="hreHeroName" placeholder="如：是令令啊">
                             </div>
                         </div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                            <div>
-                                <label style="font-size:12px; color:var(--text-muted);">次按钮文本</label>
-                                <input type="text" id="hreHeroSecondaryBtnText" placeholder="空间动态">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                            <div class="form-group">
+                                <label>状态徽章文本</label>
+                                <input type="text" id="hreHeroStatus" placeholder="如：探索创造中">
                             </div>
-                            <div>
-                                <label style="font-size:12px; color:var(--text-muted);">次按钮跳转目标</label>
-                                <input type="text" id="hreHeroSecondaryBtnLink" placeholder="space (空间动态) 或 自定义 URL">
+                            <div class="form-group">
+                                <label>GitHub 主页链接</label>
+                                <input type="url" id="hreHeroGithub" placeholder="https://github.com/...">
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. 关于我面板 -->
-                <div id="hrePaneAbout" class="hre-pane" style="display:none;">
-                    <div style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:14px; padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">板块主标题</label>
-                            <input type="text" id="hreAboutSectionTitle" placeholder="关于我 · About Me">
-                        </div>
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">板块副标题</label>
-                            <input type="text" id="hreAboutSectionSubtitle" placeholder="个人背景与技术哲学">
-                        </div>
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">头部图标</label>
-                            <select id="hreAboutSectionIcon" style="width:100%; padding:7px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
-                                <option value="info">info (信息)</option>
-                                <option value="user">user (用户)</option>
-                                <option value="sparkle">sparkle (闪烁)</option>
-                                <option value="code">code (代码)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-size:13px; color:var(--text-muted);">关于我维度卡片列表（支持自定义添加/排序/删除）</span>
-                        <button type="button" class="secondary-btn" id="hreAddAboutBtn" style="padding:5px 14px; font-size:12.5px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            <span>添加卡片</span>
-                        </button>
-                    </div>
-                    <div id="hreAboutCardsContainer" style="display:flex; flex-direction:column; gap:14px;"></div>
-                </div>
-
-                <!-- 3. 专业技能面板 -->
-                <div id="hrePaneSkills" class="hre-pane" style="display:none;">
-                    <div style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:14px; padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">板块主标题</label>
-                            <input type="text" id="hreSkillsSectionTitle" placeholder="专业技能 · Skills & Stack">
-                        </div>
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">板块副标题</label>
-                            <input type="text" id="hreSkillsSectionSubtitle" placeholder="熟练运用的技术栈与工具链">
-                        </div>
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">头部图标</label>
-                            <select id="hreSkillsSectionIcon" style="width:100%; padding:7px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
-                                <option value="code">code (代码)</option>
-                                <option value="layers">layers (图层)</option>
-                                <option value="cpu">cpu (硬件/核心)</option>
-                                <option value="sliders">sliders (调节)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-size:13px; color:var(--text-muted);">技能分类矩阵（支持自定义分类与技能项）</span>
-                        <button type="button" class="secondary-btn" id="hreAddSkillCategoryBtn" style="padding:5px 14px; font-size:12.5px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            <span>添加技能分类</span>
-                        </button>
-                    </div>
-                    <div id="hreSkillsListContainer" style="display:flex; flex-direction:column; gap:14px;"></div>
-                </div>
-
-                <!-- 4. 精选作品面板 -->
-                <div id="hrePaneProjects" class="hre-pane" style="display:none;">
-                    <div style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:14px; padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">板块主标题</label>
-                            <input type="text" id="hreProjectsSectionTitle" placeholder="精选作品 · Featured Projects">
-                        </div>
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">板块副标题</label>
-                            <input type="text" id="hreProjectsSectionSubtitle" placeholder="近期主导与独立开发的代表项目">
-                        </div>
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">头部图标</label>
-                            <select id="hreProjectsSectionIcon" style="width:100%; padding:7px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
-                                <option value="layout">layout (布局)</option>
-                                <option value="rocket">rocket (火箭)</option>
-                                <option value="globe">globe (全球)</option>
-                                <option value="card">card (卡片)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-size:13px; color:var(--text-muted);">代表作品与项目卡片列表</span>
-                        <button type="button" class="secondary-btn" id="hreAddProjectBtn" style="padding:5px 14px; font-size:12.5px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            <span>添加作品卡片</span>
-                        </button>
-                    </div>
-                    <div id="hreProjectsListContainer" style="display:flex; flex-direction:column; gap:14px;"></div>
-                </div>
-
-                <!-- 5. 成长历程面板 -->
-                <div id="hrePaneTimeline" class="hre-pane" style="display:none;">
-                    <div style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:14px; padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">板块主标题</label>
-                            <input type="text" id="hreTimelineSectionTitle" placeholder="成长历程 · Milestones">
-                        </div>
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">板块副标题</label>
-                            <input type="text" id="hreTimelineSectionSubtitle" placeholder="技术探索与创作轨迹">
-                        </div>
-                        <div>
-                            <label style="font-size:12px; font-weight:700;">头部图标</label>
-                            <select id="hreTimelineSectionIcon" style="width:100%; padding:7px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
-                                <option value="calendar">calendar (日历)</option>
-                                <option value="sprout">sprout (萌芽)</option>
-                                <option value="archive">archive (归档)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-size:13px; color:var(--text-muted);">时间轴里程碑节点列表</span>
-                        <button type="button" class="secondary-btn" id="hreAddTimelineBtn" style="padding:5px 14px; font-size:12.5px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            <span>添加节点</span>
-                        </button>
-                    </div>
-                    <div id="hreTimelineListContainer" style="display:flex; flex-direction:column; gap:12px;"></div>
-                </div>
-
-                <!-- 6. 底部联系面板 -->
-                <div id="hrePaneContact" class="hre-pane" style="display:none;">
-                    <div class="form-group">
-                        <label>主标题</label>
-                        <input type="text" id="hreContactTitle" placeholder="让我们开始连接 · Let's Connect">
-                    </div>
-                    <div class="form-group">
-                        <label>描述文案</label>
-                        <textarea id="hreContactDesc" rows="2" placeholder="无论是技术探讨、项目合作，还是单纯想打个招呼，都欢迎随时与我联系！" style="width:100%; border-radius:10px; border:1px solid #cbd5e1; padding:10px; font-size:13.5px; outline:none; font-family:inherit;"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>联系方式胶囊标签（逗号或换行分隔）</label>
-                        <input type="text" id="hreContactPills" placeholder="邮箱交流, 博客留言, GitHub 开源">
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                        <div class="form-group">
-                            <label>CTA 按钮文字</label>
-                            <input type="text" id="hreContactCtaText" placeholder="进入文章专区">
                         </div>
                         <div class="form-group">
-                            <label>CTA 按钮跳转目标</label>
-                            <input type="text" id="hreContactCtaLink" placeholder="list (文章列表) 或 space 或 自定义 URL">
+                            <label>主头衔 / 个人定位标语</label>
+                            <input type="text" id="hreHeroTitle" placeholder="如：全栈开发工程师 · 前端架构探索者 · 独立创作者">
+                        </div>
+                        <div class="form-group">
+                            <label>名片信息行（学历 / 身份 / 机构等 · 每行一条，可自由新增或删除）</label>
+                            <textarea id="hreHeroInfoLines" rows="3" placeholder="M.S. Candidate in Software Engineering (学硕)&#10;Sichuan Normal University · 四川师范大学&#10;Software Engineering · 2026 年 6 月预期毕业" style="width:100%; border-radius:10px; border:1px solid #cbd5e1; padding:10px; font-size:13.5px; outline:none; font-family:inherit;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>座右铭 / 核心个人简介</label>
+                            <textarea id="hreHeroMotto" rows="3" placeholder="输入座右铭或个人介绍..." style="width:100%; border-radius:10px; border:1px solid #cbd5e1; padding:10px; font-size:13.5px; outline:none; font-family:inherit;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>头像图片（可直接输入图片 URL 或本地上传）</label>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <input type="text" id="hreHeroAvatar" placeholder="img/img6.jpg" style="flex:1;">
+                                <label class="secondary-btn" style="padding:8px 14px; font-size:12.5px; border-radius:999px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; margin:0;">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    <span>本地上传</span>
+                                    <input type="file" id="hreHeroAvatarFileInput" accept="image/*" style="display:none;" onchange="handleHeroAvatarFile(this)">
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>个性标签胶囊（以换行或逗号分隔）</label>
+                            <textarea id="hreHeroTags" rows="2" placeholder="Web 全栈开发&#10;交互与 UI/UX 设计&#10;现代化前端架构&#10;极客生活探索" style="width:100%; border-radius:10px; border:1px solid #cbd5e1; padding:10px; font-size:13.5px; outline:none; font-family:inherit;"></textarea>
+                        </div>
+                        <div style="padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body); margin-top:8px;">
+                            <label style="font-weight:700; font-size:13px; margin-bottom:8px; display:block;">Hero 快捷按钮配置</label>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
+                                <div>
+                                    <label style="font-size:12px; color:var(--text-muted);">主按钮文本</label>
+                                    <input type="text" id="hreHeroPrimaryBtnText" placeholder="阅读我的文章">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px; color:var(--text-muted);">主按钮跳转目标</label>
+                                    <input type="text" id="hreHeroPrimaryBtnLink" placeholder="list (文章列表) 或 自定义 URL">
+                                </div>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                <div>
+                                    <label style="font-size:12px; color:var(--text-muted);">次按钮文本</label>
+                                    <input type="text" id="hreHeroSecondaryBtnText" placeholder="空间动态">
+                                </div>
+                                <div>
+                                    <label style="font-size:12px; color:var(--text-muted);">次按钮跳转目标</label>
+                                    <input type="text" id="hreHeroSecondaryBtnLink" placeholder="space (空间动态) 或 自定义 URL">
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- 底部操作按钮 -->
-                <div class="submit-row" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <button type="button" class="secondary-btn" id="hreResetDefaultBtn" style="padding:8px 16px; border-radius:999px; font-size:13px; color:var(--danger, #ef4444); display:inline-flex; align-items:center; gap:5px;">
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                        <span>恢复默认预设</span>
-                    </button>
-                    <div style="display:flex; gap:10px;">
-                        <button type="button" class="secondary-btn" id="hreCancelBtn" style="padding:9px 20px; border-radius:999px; font-size:13.5px;">取消</button>
-                        <button type="button" class="primary-btn" id="hreSaveBtn" style="padding:9px 26px; border-radius:999px; font-size:13.5px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            <span>保存并生效</span>
+                    <!-- 2. 发表论文面板 -->
+                    <div id="hrePanePublications" class="hre-pane" style="display:none;">
+                        <div style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:14px; padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">板块主标题</label>
+                                <input type="text" id="hrePubSectionTitle" placeholder="Publications · 发表论文">
+                            </div>
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">板块副标题</label>
+                                <input type="text" id="hrePubSectionSubtitle" placeholder="代表性论文与预印本 · Selected Papers">
+                            </div>
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">头部图标</label>
+                                <select id="hrePubSectionIcon" style="width:100%; padding:7px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
+                                    <option value="book-open">book-open (书籍)</option>
+                                    <option value="info">info (信息)</option>
+                                    <option value="user">user (用户)</option>
+                                    <option value="sparkle">sparkle (闪烁)</option>
+                                    <option value="code">code (代码)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <span style="font-size:13px; color:var(--text-muted);">发表论文列表（按发表时间倒序，支持添加 / 排序 / 删除）</span>
+                            <button type="button" class="secondary-btn" id="hreAddPublicationBtn" style="padding:5px 14px; font-size:12.5px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>添加论文</span>
+                            </button>
+                        </div>
+                        <div id="hrePublicationsListContainer" style="display:flex; flex-direction:column; gap:14px;"></div>
+                    </div>
+
+                    <!-- 3. 专业技能面板 -->
+                    <div id="hrePaneSkills" class="hre-pane" style="display:none;">
+                        <div style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:14px; padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">板块主标题</label>
+                                <input type="text" id="hreSkillsSectionTitle" placeholder="专业技能 · Skills & Stack">
+                            </div>
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">板块副标题</label>
+                                <input type="text" id="hreSkillsSectionSubtitle" placeholder="熟练运用的技术栈与工具链">
+                            </div>
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">头部图标</label>
+                                <select id="hreSkillsSectionIcon" style="width:100%; padding:7px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
+                                    <option value="code">code (代码)</option>
+                                    <option value="layers">layers (图层)</option>
+                                    <option value="cpu">cpu (硬件/核心)</option>
+                                    <option value="sliders">sliders (调节)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <span style="font-size:13px; color:var(--text-muted);">技能分类矩阵（支持自定义分类与技能项）</span>
+                            <button type="button" class="secondary-btn" id="hreAddSkillCategoryBtn" style="padding:5px 14px; font-size:12.5px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>添加技能分类</span>
+                            </button>
+                        </div>
+                        <div id="hreSkillsListContainer" style="display:flex; flex-direction:column; gap:14px;"></div>
+                    </div>
+
+                    <!-- 4. 精选作品面板 -->
+                    <div id="hrePaneProjects" class="hre-pane" style="display:none;">
+                        <div style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:14px; padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">板块主标题</label>
+                                <input type="text" id="hreProjectsSectionTitle" placeholder="精选作品 · Featured Projects">
+                            </div>
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">板块副标题</label>
+                                <input type="text" id="hreProjectsSectionSubtitle" placeholder="近期主导与独立开发的代表项目">
+                            </div>
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">头部图标</label>
+                                <select id="hreProjectsSectionIcon" style="width:100%; padding:7px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
+                                    <option value="layout">layout (布局)</option>
+                                    <option value="rocket">rocket (火箭)</option>
+                                    <option value="globe">globe (全球)</option>
+                                    <option value="card">card (卡片)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <span style="font-size:13px; color:var(--text-muted);">代表作品与项目卡片列表</span>
+                            <button type="button" class="secondary-btn" id="hreAddProjectBtn" style="padding:5px 14px; font-size:12.5px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>添加作品卡片</span>
+                            </button>
+                        </div>
+                        <div id="hreProjectsListContainer" style="display:flex; flex-direction:column; gap:14px;"></div>
+                    </div>
+
+                    <!-- 5. 成长历程面板 -->
+                    <div id="hrePaneTimeline" class="hre-pane" style="display:none;">
+                        <div style="display:grid; grid-template-columns:2fr 2fr 1fr; gap:10px; margin-bottom:14px; padding:12px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-body);">
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">板块主标题</label>
+                                <input type="text" id="hreTimelineSectionTitle" placeholder="成长历程 · Milestones">
+                            </div>
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">板块副标题</label>
+                                <input type="text" id="hreTimelineSectionSubtitle" placeholder="技术探索与创作轨迹">
+                            </div>
+                            <div>
+                                <label style="font-size:12px; font-weight:700;">头部图标</label>
+                                <select id="hreTimelineSectionIcon" style="width:100%; padding:7px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:13px; background:var(--bg-card); color:var(--text-main);">
+                                    <option value="calendar">calendar (日历)</option>
+                                    <option value="sprout">sprout (萌芽)</option>
+                                    <option value="archive">archive (归档)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <span style="font-size:13px; color:var(--text-muted);">时间轴里程碑节点列表</span>
+                            <button type="button" class="secondary-btn" id="hreAddTimelineBtn" style="padding:5px 14px; font-size:12.5px; border-radius:999px; display:inline-flex; align-items:center; gap:4px;">
+                                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>添加节点</span>
+                            </button>
+                        </div>
+                        <div id="hreTimelineListContainer" style="display:flex; flex-direction:column; gap:12px;"></div>
+                    </div>
+
+                    <!-- 6. 底部联系面板 -->
+                    <div id="hrePaneContact" class="hre-pane" style="display:none;">
+                        <div class="form-group">
+                            <label>主标题</label>
+                            <input type="text" id="hreContactTitle" placeholder="让我们开始连接 · Let's Connect">
+                        </div>
+                        <div class="form-group">
+                            <label>描述文案</label>
+                            <textarea id="hreContactDesc" rows="2" placeholder="无论是技术探讨、项目合作，还是单纯想打个招呼，都欢迎随时与我联系！" style="width:100%; border-radius:10px; border:1px solid #cbd5e1; padding:10px; font-size:13.5px; outline:none; font-family:inherit;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>联系方式胶囊标签（逗号或换行分隔）</label>
+                            <input type="text" id="hreContactPills" placeholder="邮箱交流, 博客留言, GitHub 开源">
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                            <div class="form-group">
+                                <label>CTA 按钮文字</label>
+                                <input type="text" id="hreContactCtaText" placeholder="进入文章专区">
+                            </div>
+                            <div class="form-group">
+                                <label>CTA 按钮跳转目标</label>
+                                <input type="text" id="hreContactCtaLink" placeholder="list (文章列表) 或 space 或 自定义 URL">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部操作按钮 -->
+                    <div class="submit-row" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                        <button type="button" class="secondary-btn" id="hreResetDefaultBtn" style="padding:8px 16px; border-radius:999px; font-size:13px; color:var(--danger, #ef4444); display:inline-flex; align-items:center; gap:5px;">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                            <span>恢复默认预设</span>
                         </button>
+                        <div style="display:flex; gap:10px;">
+                            <button type="button" class="secondary-btn" id="hreCancelBtn" style="padding:9px 20px; border-radius:999px; font-size:13.5px;">取消</button>
+                            <button type="button" class="primary-btn" id="hreSaveBtn" style="padding:9px 26px; border-radius:999px; font-size:13.5px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="svg-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <span>保存并生效</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1081,7 +1106,10 @@
         </div>
     </div>
 
-    <!-- 新增图册图片 Modal -->
+    
+
+
+<!-- 新增图册图片 Modal -->
     <div class="modal" id="addGalleryImageModal" aria-hidden="true">
         <div class="modal-panel" style="grid-template-columns:1fr; max-width:440px;">
             <div class="modal-header">
@@ -1295,6 +1323,8 @@
                             <option value="mesh">现代高斯色彩网格 (Mesh Grid)</option>
                             <option value="dots">极简点状微观纹理 (Dot Pattern)</option>
                             <option value="galaxy">深空星云极夜 Glow (Galaxy Glow)</option>
+                            <option value="liquid-glass">液态玻璃 · 磨砂质感 (Liquid Glass)</option>
+                            <option value="warm-paper">暖调宣纸 · 自然留白 (Warm Paper)</option>
                         </select>
                     </div>
 
@@ -1348,6 +1378,13 @@
                             </div>
                             <input type="text" id="paramColorHex" value="#6366f1" placeholder="#6366f1" maxlength="7" style="flex:1; height:38px; padding:0 12px; border-radius:8px; border:1px solid var(--border-color); font-size:13px; font-weight:600; font-family:monospace; background:var(--bg-body); color:var(--text-main); outline:none; box-sizing:border-box; transition:border-color 0.2s ease; margin:0;">
                         </div>
+                    </div>
+
+                    <!-- 🎨 主题预设配色（背景 / 文字 / 模块背景 / 边框 / 强调色 多区域联动切换） -->
+                    <div class="form-group" style="padding-top:6px; border-top:1px dashed var(--border-color);">
+                        <label style="font-weight:700; font-size:13px; color:var(--text-main); margin-bottom:4px; display:block;">主题预设配色 (背景 / 文字 / 模块 / 强调色 联动)</label>
+                        <p style="font-size:11px; color:var(--text-muted); margin:0 0 8px; line-height:1.4;">参考社区博客主题风格设计的整体配色方案，一键切换多个区域。右侧色盘可在此基础上微调强调色。</p>
+                        <div id="themePresetGrid" class="theme-preset-grid"></div>
                     </div>
 
                     <!-- 📐 页面布局间隙控制器 (顶栏 / 左侧边栏 / 中间区域 / 右侧边栏 / 文章卡片上下独立间隙) -->
@@ -1566,5 +1603,6 @@
     <script src="js/components/responsive.js"></script>
     <script src="js/components/article-viewer.js"></script>
     <script src="js/components/article-editor.js"></script>
+
 </body>
 </html>

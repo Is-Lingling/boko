@@ -43,6 +43,11 @@
 
         // 触发主题变更事件，供其他组件监听
         window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+
+        // 重新应用主题（含玻璃表面底色：顶栏/侧栏需随明暗切换底色，避免暗黑下仍发白）
+        if (typeof applyThemeCustomizations === 'function') {
+            applyThemeCustomizations();
+        }
     }
 
     /**

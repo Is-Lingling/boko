@@ -132,7 +132,9 @@ const Api = {
     login: (username, password) => request('POST', '/api/auth/login', { username, password }),
     logout: () => request('POST', '/api/auth/logout'),
     checkAuth: () => request('GET', '/api/auth/check'),
+    getMe: () => request('GET', '/api/auth/me'),
     changePassword: (newPassword) => request('PUT', '/api/auth/password', { newPassword }),
+    changeUsername: (newUsername) => request('PUT', '/api/auth/username', { newUsername }),
 
     // Space feeds (动态/说说)
     listFeeds: () => request('GET', '/api/feeds'),

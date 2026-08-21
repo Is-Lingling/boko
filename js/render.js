@@ -1062,7 +1062,6 @@ function renderAll() {
 // ========== 管理面板快捷链接与图册数据处理与渲染 ==========
 
 const defaultAdminLinks = [
-    { title: "官方文档", url: "https://ndmiao.cn/" },
     { title: "我的 GitHub", url: "https://github.com" }
 ];
 
@@ -2078,10 +2077,26 @@ function renderHomeResumeView() {
     const data = typeof getHomeResumeData === 'function' ? getHomeResumeData() : defaultHomeResume;
     const isAdm = !!(state && state.isAdmin);
 
+    container.innerHTML = buildHomeResumeHtml(data, isAdm);
+
+    // 可见性兜底：科研名片依赖入场动画 fadeIn（opacity 0→1）。若动画在离屏 /
+    // 无头快照等场景被中断、停留在 from{opacity:0}，整屏会显示为空白。
+    // 真实浏览器 0.35s 内动画即结束（opacity=1），此处仅在仍为透明时才强制
+    // 显示，对正常用户无任何副作用。
+    setTimeout(() => {
+        if (container && parseFloat(getComputedStyle(container).opacity || '1') < 0.02) {
+            container.style.opacity = '1';
+            container.style.animation = 'none';
+        }
+    }, 600);
+}
+
+// 纯函数：根据首页数据模型构建简历 HTML 字符串（首页渲染与编辑弹窗实时预览共用）
+function buildHomeResumeHtml(data, isAdm) {
     const { 
         hero, 
         aboutSection = defaultHomeResume.aboutSection,
-        about, 
+        publications, 
         skillsSection = defaultHomeResume.skillsSection,
         skillsCategories = defaultHomeResume.skillsCategories,
         projectsSection = defaultHomeResume.projectsSection,
@@ -2096,12 +2111,40 @@ function renderHomeResumeView() {
         ? `<button type="button" class="mini-admin-btn resume-section-edit-btn" onclick="openHomeResumeEditor('${tab}')" title="编辑此模块">${getIcon('edit', '', 12)} 编辑${label}</button>`
         : '';
 
-    // 1. Hero 区域
-    const tagsHtml = (hero.tags || []).map(t => {
-        const cleanT = String(t || '').replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}|\s+/gu, '').trim() || t;
-        return `<span class="resume-tag-chip">${getIcon('tag', '', 12)} ${escHtml(cleanT)}</span>`;
-    }).join('');
+    // 1. Hero 区域 —— 科研名片 / Researcher Profile
     const heroAvatar = hero.avatar || 'img/img6.jpg';
+
+    // 研究兴趣 chips（学术风格，无 tag 图标）
+    const interestsHtml = (hero.tags || []).map(t => {
+        const cleanT = String(t || '').replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}|\s+/gu, '').trim() || t;
+        return `<span class="research-interest-chip">${escHtml(cleanT)}</span>`;
+    }).join('');
+
+    // 学术速览统计条已移除（用户要求不再展示 GPA / 排名 / 论文数 / 获奖数）
+
+    // 名片信息行（可自由增删）：infoLines，每行展示为一条
+    const infoLines = (hero.infoLines || []).map(s => String(s == null ? '' : s).trim()).filter(Boolean);
+    const infoLinesHtml = infoLines.length
+        ? `<div class="research-info-lines">${infoLines.map(l => `<div class="research-info-line">${escHtml(l)}</div>`).join('')}</div>`
+        : '';
+
+    // 研究方向（Focus）：主头衔 title
+    const focusHtml = (hero.title)
+        ? `<div class="research-focus"><span class="research-focus-dot"></span><span class="research-focus-prefix">Focus</span><span class="research-focus-text">${escHtml(hero.title)}</span></div>`
+        : '';
+
+    // 元信息行：location / email / github（小图标 + 文本）
+    const metaItems = [];
+    if (hero.location) metaItems.push(`<span class="research-meta-item">${getIcon('globe', '', 12)}<span>${escHtml(hero.location)}</span></span>`);
+    if (hero.email)    metaItems.push(`<a class="research-meta-item link" href="mailto:${escHtml(hero.email)}">${getIcon('mail', '', 12)}<span>${escHtml(hero.email)}</span></a>`);
+    if (hero.github)   metaItems.push(`<a class="research-meta-item link" href="${escHtml(hero.github)}" target="_blank" rel="noopener">${getIcon('github', '', 12)}<span>GitHub</span></a>`);
+    const identityMetaHtml = metaItems.length
+        ? `<div class="research-meta-row">${metaItems.join('<span class="research-meta-sep">·</span>')}</div>`
+        : '';
+
+    const mottoHtml = hero.motto
+        ? `<blockquote class="research-motto">${escHtml(hero.motto)}</blockquote>`
+        : '';
 
     // Hero 按钮动作解析
     const getHeroBtnAction = (linkTarget) => {
@@ -2120,24 +2163,21 @@ function renderHomeResumeView() {
     const primaryAction = getHeroBtnAction(hero.primaryBtnLink || 'list');
     const secondaryAction = getHeroBtnAction(hero.secondaryBtnLink || 'space');
 
-    // 2. 关于我（矢量 SVG 图标）
-    const aboutHtml = (about || []).map(item => {
-        let iconName = item.icon || 'layers';
-        if (iconName.includes('🚀')) iconName = 'rocket';
-        else if (iconName.includes('🎨')) iconName = 'palette';
-        else if (iconName.includes('💡')) iconName = 'lightbulb';
-        else if (iconName.includes('🌱')) iconName = 'sprout';
-        else if (iconName.includes('💻')) iconName = 'code';
-        const iconSvg = getIcon(iconName, '', 22) || getIcon('layers', '', 22);
-
-        return `
-            <div class="resume-about-box">
-                <div class="about-box-icon">${iconSvg}</div>
-                <h4>${escHtml(item.title || '')}</h4>
-                <p>${escHtml(item.desc || '')}</p>
+    // 2. 发表论文（列表形式，非卡片）
+    const publicationsHtml = (publications || []).map((p, i) => `
+        <div class="resume-publication-item">
+            <div class="pub-index">${String(i + 1).padStart(2, '0')}</div>
+            <div class="pub-body">
+                <div class="pub-title">${escHtml(p.title || '')}</div>
+                ${p.authors ? `<div class="pub-authors">${escHtml(p.authors)}</div>` : ''}
+                <div class="pub-meta">
+                    ${p.venue ? `<span class="pub-venue">${escHtml(p.venue)}</span>` : ''}
+                    ${p.year ? `<span class="pub-year">${escHtml(p.year)}</span>` : ''}
+                    ${p.note ? `<span class="pub-note">${escHtml(p.note)}</span>` : ''}
+                </div>
             </div>
-        `;
-    }).join('');
+        </div>
+    `).join('');
 
     // 3. 专业技能（动态分类矩阵）
     const skillsHtml = (skillsCategories || []).map((cat, catIdx) => {
@@ -2159,11 +2199,15 @@ function renderHomeResumeView() {
         const pTags = (p.tags || []).map(t => `<span>${escHtml(t)}</span>`).join('');
         let linkAction = "switchView('list'); activeFilters = []; renderArticles();";
         let isExternal = false;
+        let isNone = false;
         if (p.link === 'space') {
             linkAction = "switchView('space');";
         } else if (p.link === 'custom' && p.customUrl) {
             linkAction = `window.open('${escHtml(p.customUrl)}', '_blank');`;
             isExternal = true;
+        } else if (p.link === 'none') {
+            linkAction = 'void(0);';
+            isNone = true;
         }
 
         return `
@@ -2171,9 +2215,9 @@ function renderHomeResumeView() {
                 <div class="project-card-header">
                     <div class="project-badge">${escHtml(p.badge || '代表作品')}</div>
                     <div class="project-links">
-                        <a href="javascript:void(0)" onclick="${linkAction}" title="${isExternal ? '访问外部链接' : '查看详情'}" class="project-icon-link">
+                        ${isNone ? '' : `<a href="javascript:void(0)" onclick="${linkAction}" title="${isExternal ? '访问外部链接' : '查看详情'}" class="project-icon-link">
                             ${getIcon(isExternal ? 'link' : 'arrow-right', '', 16)}
-                        </a>
+                        </a>`}
                     </div>
                 </div>
                 <h3 class="project-title">${escHtml(p.title || '')}</h3>
@@ -2207,7 +2251,7 @@ function renderHomeResumeView() {
     const cleanCtaText = String(contactSection.ctaText || '进入文章专区').replace(/^👉\s*/, '').trim();
     const contactCtaAction = getHeroBtnAction(contactSection.ctaLink || 'list');
 
-    container.innerHTML = `
+    return `
         ${isAdm ? `
             <div class="resume-admin-bar">
                 <div class="resume-admin-bar-info">
@@ -2225,53 +2269,68 @@ function renderHomeResumeView() {
             </div>
         ` : ''}
 
-        <!-- 1. Hero 个人名片与主视觉 -->
-        <section class="resume-hero-card">
+        <!-- 1. Hero 科研名片 (Researcher Profile) -->
+        <section class="resume-hero-card research-hero">
             <div class="resume-hero-bg-glow"></div>
             ${adminEditBtn('hero', '名片')}
-            <div class="resume-hero-content">
+            <div class="research-hero-top">
                 <div class="resume-avatar-box">
-                    <img src="${escHtml(heroAvatar)}" alt="博主头像" class="resume-avatar" onerror="this.src='img/img6.jpg'">
+                    <img src="${escHtml(heroAvatar)}" alt="研究者头像" class="resume-avatar" onerror="this.src='img/img6.jpg'">
                     <span class="resume-status-badge" title="当前状态">
-                        <span class="status-dot"></span> ${escHtml(hero.status || '探索创造中')}
+                        <span class="status-dot"></span> ${escHtml(hero.status || 'Available')}
                     </span>
                 </div>
-                <div class="resume-intro">
-                    <div class="resume-greeting">${escHtml(cleanGreeting)} <span class="resume-name-highlight">${escHtml(hero.name || '是令令啊')}</span></div>
-                    <h1 class="resume-main-title">${escHtml(hero.title || '')}</h1>
-                    <p class="resume-motto">${escHtml(hero.motto || '')}</p>
-                    <div class="resume-hero-tags">${tagsHtml}</div>
-                    <div class="resume-cta-group">
-                        <button type="button" class="resume-btn primary" onclick="${primaryAction}" title="${escHtml(hero.primaryBtnText || '阅读我的文章')}">
-                            ${getIcon('book-open', '', 16)}
-                            <span>${escHtml(hero.primaryBtnText || '阅读我的文章')}</span>
-                        </button>
-                        <button type="button" class="resume-btn secondary" onclick="${secondaryAction}" title="${escHtml(hero.secondaryBtnText || '空间动态')}">
-                            ${getIcon('user', '', 16)}
-                            <span>${escHtml(hero.secondaryBtnText || '空间动态')}</span>
-                        </button>
-                        <a href="${escHtml(hero.github || 'https://github.com/Is-Lingling')}" target="_blank" rel="noopener" class="resume-btn outline" title="访问 GitHub 仓库">
-                            ${getIcon('github', '', 16)}
-                            <span>${escHtml(hero.githubBtnText || 'GitHub')}</span>
-                        </a>
+                <div class="research-identity">
+                    <div class="research-eyebrow">${escHtml(cleanGreeting)}</div>
+                    <div class="research-name-row">
+                        <span class="research-name">${escHtml(hero.name || '')}</span>
+                        ${hero.chineseName ? `<span class="research-name-cn">${escHtml(hero.chineseName)}</span>` : ''}
                     </div>
+                    ${infoLinesHtml}
+                    ${focusHtml}
+                    ${identityMetaHtml}
+                    ${mottoHtml}
                 </div>
+            </div>
+
+            <div class="research-section">
+                <div class="research-section-label">
+                    <span class="research-section-bar"></span>
+                    <span>Research Interests</span>
+                    <span class="research-section-label-cn">研究兴趣</span>
+                </div>
+                <div class="research-interests">${interestsHtml}</div>
+            </div>
+
+            <div class="resume-cta-group research-cta">
+                <button type="button" class="resume-btn primary" onclick="${primaryAction}" title="${escHtml(hero.primaryBtnText || 'View Publications')}">
+                    ${getIcon('book-open', '', 16)}
+                    <span>${escHtml(hero.primaryBtnText || 'View Publications')}</span>
+                </button>
+                <button type="button" class="resume-btn secondary" onclick="${secondaryAction}" title="${escHtml(hero.secondaryBtnText || 'Contact')}">
+                    ${getIcon('mail', '', 16)}
+                    <span>${escHtml(hero.secondaryBtnText || 'Contact')}</span>
+                </button>
+                <a href="${escHtml(hero.github || 'https://github.com/Is-Lingling')}" target="_blank" rel="noopener" class="resume-btn outline" title="访问 GitHub 仓库">
+                    ${getIcon('github', '', 16)}
+                    <span>${escHtml(hero.githubBtnText || 'GitHub')}</span>
+                </a>
             </div>
         </section>
 
-        <!-- 2. 关于我 (About Me) -->
+        <!-- 2. 发表论文 (Publications) -->
         <section class="resume-section-card" style="position:relative;">
             <div class="resume-section-header">
                 <div class="resume-section-icon">
-                    ${getIcon(aboutSection.icon || 'info', '', 20) || getIcon('info', '', 20)}
+                    ${getIcon(aboutSection.icon || 'book-open', '', 20) || getIcon('book-open', '', 20)}
                 </div>
                 <div style="flex:1;">
-                    <h2 class="resume-section-title">${escHtml(aboutSection.title || '关于我 · About Me')}</h2>
-                    <div class="resume-section-desc">${escHtml(aboutSection.subtitle || '个人背景与技术哲学')}</div>
+                    <h2 class="resume-section-title">${escHtml(aboutSection.title || 'Publications · 发表论文')}</h2>
+                    <div class="resume-section-desc">${escHtml(aboutSection.subtitle || '代表性论文与预印本')}</div>
                 </div>
-                ${adminEditBtn('about', '关于我')}
+                ${adminEditBtn('publications', '论文')}
             </div>
-            <div class="resume-about-grid">${aboutHtml}</div>
+            <div class="resume-publication-list">${publicationsHtml}</div>
         </section>
 
         <!-- 3. 核心专业技能 (Tech Stack & Skills) -->
@@ -2337,3 +2396,6 @@ function renderHomeResumeView() {
         </section>
     `;
 }
+
+
+
